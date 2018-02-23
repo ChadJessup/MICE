@@ -1,4 +1,4 @@
-﻿namespace MICUE
+﻿namespace MICE.TestApp
 {
     partial class Form1
     {
@@ -36,7 +36,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(673, 499);
             this.Name = "Form1";
-            this.Text = "MICE";
+            this.Text = "MICE TestApp";
             this.ResumeLayout(false);
 
         }
