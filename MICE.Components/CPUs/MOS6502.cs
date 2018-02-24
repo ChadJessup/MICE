@@ -32,7 +32,7 @@ namespace MICE.Components.CPUs
 
         // Gets a value indicating if the result of the last calculation needs to be carried over to allow for larger calculations.
         public bool WasCarry => this.P.Value.GetBit(0);
-        
+
         // Get a value indicating if the last instruction resulted in 0.
         public bool WasZero => this.P.Value.GetBit(1);
 

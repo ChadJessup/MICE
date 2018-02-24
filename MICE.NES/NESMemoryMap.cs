@@ -29,7 +29,7 @@ namespace MICE.Nintendo
 
             // $0200 - RAM - RAM
             this.MemoryMapper.Add(new RAM(0x0200, 0x07ff, "RAM"));
-            
+
             // $0800 - RAM - Mirrors $0000-$07FF
             this.MemoryMapper.Add(new MirroredMemory(0x0800, 0x0fff, 0x0000, 0x07ff, "Mirrored Ram #1"));
             this.MemoryMapper.Add(new MirroredMemory(0x1000, 0x17FF, 0x0000, 0x07ff, "Mirrored Ram #2"));
@@ -54,6 +54,7 @@ namespace MICE.Nintendo
             // PRG-ROM - $8000-$10000
             // $8000 - ROM - Lower Bank
             this.MemoryMapper.Add(new ExternalROM(0x8000, 0xBFFF, "PRG-ROM Lower Bank"));
+
             // $C000 - ROM - Upper Bank
             this.MemoryMapper.Add(new ExternalROM(0xC000, 0xFFFF, "PRG-ROM Upper Bank"));
         }

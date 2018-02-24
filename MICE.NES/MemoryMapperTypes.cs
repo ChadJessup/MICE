@@ -1,6 +1,6 @@
-﻿namespace MICE.Nintendo.MemoryMappers
+﻿namespace MICE.Nintendo
 {
-    public enum MemoryMapper
+    public enum MemoryMapperTypes
     {
         NROM = 0, // No mapper
         MMC1 = 1,
