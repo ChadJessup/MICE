@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 
 namespace MICE.Common.Interfaces
 {
@@ -7,5 +8,10 @@ namespace MICE.Common.Interfaces
     /// </summary>
     public interface ISystem
     {
+        string Name { get; }
+
+        Task PowerOn();
+        Task PowerOff();
+        Task Reset();
     }
 }

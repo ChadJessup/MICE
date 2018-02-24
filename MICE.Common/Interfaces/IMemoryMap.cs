@@ -5,10 +5,9 @@ using System.Text;
 namespace MICE.Common.Interfaces
 {
     /// <summary>
-    /// Interface that represents a CPU of a system.
+    /// Interface that represents memory that is mapped to various memory segments.
     /// </summary>
-    public interface ICPU : IIntegratedCircuit
+    public interface IMemoryMap
     {
-        Endianness Endianness { get; }
     }
 }

@@ -81,9 +81,9 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\MICE.Common\MICE.Common.csproj">
-      <Project>{6f9d83f1-abc5-4fee-a358-28f3bd5309a4}</Project>
-      <Name>MICE.Common</Name>
+    <ProjectReference Include="..\MICE.NES\MICE.Nintendo.csproj">
+      <Project>{30E26A15-7C9F-4602-811E-96D6E27F189C}</Project>
+      <Name>MICE.Nintendo</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
