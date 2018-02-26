@@ -21,13 +21,8 @@ namespace MICE.Nintendo
 
             // http://nesdev.com/NESDoc.pdf - Figure 2-3 CPU memory map
             // RAM - $0000-$1FFF
-            // $0000 - RAM - Zero Page
             this.MemoryMapper.Add(new RAM(0x0000, 0x00ff, "Zero Page"));
-
-            // $0100 - RAM - Stack
             this.MemoryMapper.Add(new RAM(0x0100, 0x01ff, "Stack"));
-
-            // $0200 - RAM - RAM
             this.MemoryMapper.Add(new RAM(0x0200, 0x07ff, "RAM"));
 
             // $0800 - RAM - Mirrors $0000-$07FF
@@ -43,19 +38,14 @@ namespace MICE.Nintendo
             // $2008 - I/O - Mirrors $2000-$2007
             // $4000 - I/O - I/O Registers (DMA for sprites?)
 
-            // Expansion ROM - $4020-$5FFF
-            // $4020 - Expansion ROM
+            // Expansion ROM
             this.MemoryMapper.Add(new ROM(0x4020, 0x5FFF, "Expansion ROM"));
 
-            // SRAM - $6000-$7FFF
-            // $6000 - SRAM
+            // SRAM - this is mapped into a Cartridge's memory specifically .
             this.MemoryMapper.Add(new SRAM(0x6000, 0x7FFF, "SRAM"));
 
-            // PRG-ROM - $8000-$10000
-            // $8000 - ROM - Lower Bank
+            // PRG-ROM - this is mapped into a cartridge, .
             this.MemoryMapper.Add(new ExternalROM(0x8000, 0xBFFF, "PRG-ROM Lower Bank"));
-
-            // $C000 - ROM - Upper Bank
             this.MemoryMapper.Add(new ExternalROM(0xC000, 0xFFFF, "PRG-ROM Upper Bank"));
         }
     }

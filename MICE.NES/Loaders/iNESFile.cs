@@ -11,6 +11,8 @@ namespace MICE.Nintendo.Loaders
         {
             public const int ROMBankSize = 16384;
             public const int ChrBankSize = 8192;
+
+            public const int SizeOfHeader = 16;
         }
 
         public ArraySegment<byte> Header { get; private set; } // header, expecting 16 bytes;
@@ -79,6 +81,7 @@ namespace MICE.Nintendo.Loaders
                 this.Trainer = new ArraySegment<byte>(bytes, 0x7000, 0x71ff - 0x7000);
             }
 
+            // We pull the memory mapper id from two separate bytes and combine them here...
             this.MemoryMappers = (MemoryMapperTypes)(this.MapperTypeUpperBits | this.MapperTypeLowerBits >> 4);
 
             if (this.HasBatteryBackedRAM)
@@ -88,7 +91,7 @@ namespace MICE.Nintendo.Loaders
 
             for (int i = 0; i < this.ProgramROMBankCount; i++)
             {
-                this.ROMBanks.Add(new ArraySegment<byte>(bytes, 16 + (i * Constants.ROMBankSize), Constants.ROMBankSize));
+                this.ROMBanks.Add(new ArraySegment<byte>(bytes, Constants.SizeOfHeader + (i * Constants.ROMBankSize), Constants.ROMBankSize));
             }
 
             var romBytes = this.ROMBanks[0].ToList();
