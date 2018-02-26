@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace MICE.Components.CPUs
+namespace MICE.CPU.MOS6502
 {
-    public class Ricoh2A03 : MOS6502
+    public class Opcodes
     {
     }
 }

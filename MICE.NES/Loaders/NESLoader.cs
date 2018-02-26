@@ -1,8 +1,5 @@
 ﻿using MICE.Common.Interfaces;
-using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Text;
 
 namespace MICE.Nintendo.Loaders
 {
@@ -12,24 +9,22 @@ namespace MICE.Nintendo.Loaders
     /// </summary>
     public class NESLoader : ILoader
     {
-        public static NESCartridge Load(string filePath)
+        public static NESCartridge CreateCartridge(string filePath)
         {
             if (!File.Exists(filePath))
             {
                 throw new FileNotFoundException($"Unable to find file at: {filePath}");
             }
 
-            return NESLoader.Load(File.ReadAllBytes(filePath));
+            return NESLoader.CreateCartridge(File.ReadAllBytes(filePath));
         }
 
-        public static NESCartridge Load(byte[] bytes)
+        public static NESCartridge CreateCartridge(byte[] bytes)
         {
-            var cartridge = new NESCartridge();
-
-            // We only suppport iNES format for now...eventually parse and handle unf;
-
+            // We only suppport iNES format for now...eventually parse and handle unf and other iNES versions;
             INESFile file = new INESFile().Parse(bytes);
 
+            var cartridge = file.LoadCartridge();
 
             return cartridge;
         }

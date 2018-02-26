@@ -1,6 +1,6 @@
 ﻿using MICE.Common.Interfaces;
 
-namespace MICE.Components.CPUs
+namespace MICE.Components.CPU
 {
     public abstract class Register : IRegister
     {

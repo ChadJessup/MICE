@@ -1,4 +1,4 @@
-﻿namespace MICE.Components.CPUs
+﻿namespace MICE.Components.CPU
 {
     public class Register8Bit : Register
     {

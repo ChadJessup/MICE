@@ -1,8 +1,9 @@
 ﻿using MICE.Common;
 using MICE.Common.Helpers;
 using MICE.Common.Interfaces;
+using MICE.Components.CPU;
 
-namespace MICE.Components.CPUs
+namespace MICE.CPU.MOS6502
 {
     public class MOS6502 : ICPU
     {

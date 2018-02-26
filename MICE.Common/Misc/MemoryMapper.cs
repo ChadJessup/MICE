@@ -6,7 +6,7 @@ using System.Linq;
 
 namespace MICE.Common.Misc
 {
-    public class MemoryMapper : ICollection<IMemorySegment>
+    public class MemoryMapper : ICollection<IMemorySegment>, IMemoryMap
     {
         private List<IMemorySegment> memorySegments = new List<IMemorySegment>();
         private int minimumRange = 0;
@@ -27,6 +27,13 @@ namespace MICE.Common.Misc
                 throw new InvalidOperationException($"Cannot add memory segment {item.Name}, there would be overlap with {existingSegment.Name}");
             }
 
+            existingSegment = this.memorySegments.FirstOrDefault(seg => seg.Name == item.Name);
+
+            if (existingSegment != null)
+            {
+                throw new InvalidOperationException($"Cannot add memory segment {item.Name}, there is already a segment with that name.");
+            }
+
             if (item.LowerIndex < this.minimumRange)
             {
                 this.minimumRange = item.LowerIndex;
@@ -39,6 +46,8 @@ namespace MICE.Common.Misc
 
             this.memorySegments.Add(item);
         }
+
+        public T Get<T>(string segmentName) where T : IMemorySegment => (T)this.memorySegments.Where(ms => ms is T).FirstOrDefault(ms => ms.Name == segmentName);
 
         // Standard collection methods...
         public bool IsReadOnly => false;

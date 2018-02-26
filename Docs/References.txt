@@ -1,0 +1,14 @@
+Collection of references I used to make this, or that I thought might be useful:
+http://nesdev.com/NESDoc.pdf
+http://blog.alexanderdickson.com/javascript-nes-emulator-part-1
+http://blog.alexanderdickson.com/javascript-nes-emulator-part-2
+http://wiki.nesdev.com/w/index.php/Emulator_tests
+http://nesdev.com/NES%20emulator%20development%20guide.txt
+http://fms.komkon.org/EMUL8/NES.html
+http://nesdev.com/NESTechFAQ.htm
+http://nesdev.com/NESprgmn.txt
+http://nesdev.com/2A03%20technical%20reference.txt
+
+Other C# NES Emulators - while I tried to implement everything without being swayed by how others did it, digging into how other C# devs do their thang was helpful in design:
+https://github.com/Xyene/Emulator.NES
+https://github.com/brandonpelfrey/dotnes

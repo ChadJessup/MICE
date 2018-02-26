@@ -2,20 +2,23 @@
 
 namespace MICE.Components.Memory
 {
-    public class SRAM : BinaryMemorySegment, ISRAM
+    public class External : MemorySegment
     {
-        public SRAM(int lowerIndex, int upperIndex, string name)
+        public IExternalHandler Handler { get; set; }
+
+        public External(int lowerIndex, int upperIndex, string name)
             : base(lowerIndex, upperIndex, name)
         {
         }
 
         public override byte Read(int index)
         {
-            return 0;
+            return this.Handler.Read(index);
         }
 
         public override void Write(int index, byte value)
         {
+            this.Handler.Write(index, value);
         }
     }
 }

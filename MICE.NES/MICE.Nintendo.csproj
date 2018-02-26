@@ -7,6 +7,7 @@
   <ItemGroup>
     <ProjectReference Include="..\MICE.Common\MICE.Common.csproj" />
     <ProjectReference Include="..\MICE.Components\MICE.Components.csproj" />
+    <ProjectReference Include="..\MICE.CPU.MOS6502\MICE.CPU.MOS6502.csproj" />
   </ItemGroup>
 
   <ItemGroup>

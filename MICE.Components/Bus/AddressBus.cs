@@ -1,6 +1,6 @@
 ﻿using MICE.Common.Interfaces;
 
-namespace MICE.Components.Buses
+namespace MICE.Components.Bus
 {
     public class AddressBus : IBus
     {

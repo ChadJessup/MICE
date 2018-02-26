@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Opcodes.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Opcodes.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MICE.Common\MICE.Common.csproj" />
+    <ProjectReference Include="..\MICE.Components\MICE.Components.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace MICE.Common.Interfaces
+﻿namespace MICE.Common.Interfaces
 {
     /// <summary>
     /// Inteferface that represents a segment of memory.

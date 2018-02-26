@@ -2,7 +2,7 @@
 
 namespace MICE.Nintendo.Interfaces
 {
-    public interface IMMC : IMemorySegment
+    public interface IMemoryManagementController : IMemorySegment, IExternalHandler
     {
     }
 }

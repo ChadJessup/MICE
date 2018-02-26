@@ -1,7 +1,11 @@
 ﻿using MICE.Common.Interfaces;
-using MICE.Components.Buses;
-using MICE.Components.CPUs;
+using MICE.Components.Bus;
+using MICE.Components.Memory;
+using MICE.CPU.MOS6502;
+using MICE.Nintendo.Loaders;
+using System;
 using System.Threading.Tasks;
+using System.Linq;
 
 namespace MICE.Nintendo
 {
@@ -33,6 +37,24 @@ namespace MICE.Nintendo
         public async Task Reset()
         {
             await Task.CompletedTask;
+        }
+
+        public async Task Run()
+        {
+            await Task.CompletedTask;
+        }
+
+        /// <summary>
+        /// Loads an <seealso cref="NESCartridge"/> into the NES system.
+        /// </summary>
+        /// <param name="cartridge">The cartridge to load.</param>
+        public void LoadCartridge(NESCartridge cartridge)
+        {
+            // Various parts of a cartridge are mapped seamlessly into the NES's memory map.
+            this.MemoryMap.Get<SRAM>("SRAM").Data = cartridge.SRAM;
+
+            this.MemoryMap.Get<External>("PRG-ROM Lower Bank").Handler = cartridge.Mapper;
+            this.MemoryMap.Get<External>("PRG-ROM Upper Bank").Handler = cartridge.Mapper;
         }
     }
 }
