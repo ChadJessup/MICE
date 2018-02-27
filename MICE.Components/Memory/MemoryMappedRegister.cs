@@ -6,23 +6,24 @@ namespace MICE.Components.Memory
     /// Memory segment that is actually mapped to a Register of a component.
     /// Reading/writing to this MemoryMappedSegment will directly reference the Register that is being mapped.
     /// </summary>
-    public class MemoryMappedRegister : MemoryMappedSegment, IRegister
+    public class MemoryMappedRegister<T> : MemoryMappedSegment, IRegister<T>
     {
-        private IRegister mappedRegister;
+        private IRegister<T> mappedRegister;
 
-        public MemoryMappedRegister(int lowerIndex, int upperIndex, IRegister mappedRegister, string name)
+        public MemoryMappedRegister(int lowerIndex, int upperIndex, IRegister<T> mappedRegister, string name)
             : base(lowerIndex, upperIndex, name)
         {
             this.mappedRegister = mappedRegister;
         }
 
-        public override byte Read(int index)
+        public T Read()
         {
-            return 0;
+            throw new System.NotImplementedException();
         }
 
-        public override void Write(int index, byte value)
+        public void Write(T value)
         {
+            throw new System.NotImplementedException();
         }
     }
 }

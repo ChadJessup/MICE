@@ -2,7 +2,7 @@
 
 namespace MICE.Components.CPU
 {
-    public abstract class Register : IRegister
+    public abstract class Register<T> : IRegister<T>
     {
         public string Name { get; private set; }
 
@@ -10,5 +10,8 @@ namespace MICE.Components.CPU
         {
             this.Name = name;
         }
+
+        public abstract void Write(T value);
+        public abstract T Read();
     }
 }

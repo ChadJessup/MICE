@@ -24,7 +24,7 @@ namespace MICE.Components.Memory
         public virtual bool IsIndexInRange(int index) => index >= this.LowerIndex && index <= this.UpperIndex;
         public virtual (int min, int max) GetRange() => (min: this.LowerIndex, max: this.UpperIndex);
 
-        public virtual byte Read(int index) => throw new InvalidOperationException("Cannot read from this memory segment.");
-        public virtual void Write(int index, byte value) => throw new InvalidOperationException("Cannot write to this memory segment.");
+        public abstract T Read<T>(int index);
+        public abstract void Write<T>(int index, T value);
     }
 }

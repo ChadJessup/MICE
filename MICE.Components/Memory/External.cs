@@ -11,14 +11,7 @@ namespace MICE.Components.Memory
         {
         }
 
-        public override byte Read(int index)
-        {
-            return this.Handler.Read(index);
-        }
-
-        public override void Write(int index, byte value)
-        {
-            this.Handler.Write(index, value);
-        }
+        public override T Read<T>(int index) => this.Handler.Read<T>(index);
+        public override void Write<T>(int index, T value) => this.Handler.Write(index, value);
     }
 }

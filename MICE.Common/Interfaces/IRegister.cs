@@ -1,10 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace MICE.Common.Interfaces
+﻿namespace MICE.Common.Interfaces
 {
-    public interface IRegister
+    public interface IRegister<T>
     {
+        void Write(T value);
+        T Read();
     }
 }

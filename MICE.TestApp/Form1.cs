@@ -16,9 +16,9 @@ namespace MICE.TestApp
 
         private void Go()
         {
-           // var cartridge = NESLoader.Load(@"C:\Emulators\NES\Games\Super Mario Bros.nes");
             var nes = new NES();
-            var cartridge = NESLoader.CreateCartridge(@"G:\Emulators\NES\Games\Super Mario Bros.nes");
+            var cartridge = NESLoader.CreateCartridge(@"C:\Emulators\NES\Games\Super Mario Bros.nes");
+           // var cartridge = NESLoader.CreateCartridge(@"G:\Emulators\NES\Games\Super Mario Bros.nes");
 
             nes.LoadCartridge(cartridge);
             Task.Factory.StartNew(() => nes.PowerOn());

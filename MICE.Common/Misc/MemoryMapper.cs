@@ -47,7 +47,7 @@ namespace MICE.Common.Misc
             this.memorySegments.Add(item);
         }
 
-        public T Get<T>(string segmentName) where T : IMemorySegment => (T)this.memorySegments.Where(ms => ms is T).FirstOrDefault(ms => ms.Name == segmentName);
+        public T GetMemorySegment<T>(string segmentName) where T : IMemorySegment => (T)this.memorySegments.Where(ms => ms is T).FirstOrDefault(ms => ms.Name == segmentName);
 
         // Standard collection methods...
         public bool IsReadOnly => false;
@@ -58,5 +58,22 @@ namespace MICE.Common.Misc
         public bool Contains(IMemorySegment item) => this.memorySegments.Contains(item);
         public IEnumerator<IMemorySegment> GetEnumerator() => this.memorySegments.GetEnumerator();
         public void CopyTo(IMemorySegment[] array, int arrayIndex) => this.memorySegments.CopyTo(array, arrayIndex);
+
+        public T Read<T>(int index)
+        {
+            for (int i = 0; i < this.memorySegments.Count; i++)
+            {
+                if (this.memorySegments[i].IsIndexInRange(index))
+                {
+                    return this.memorySegments[i].Read<T>(index);
+                }
+            }
+
+            return default(T);
+        }
+
+        public void Write<T>(int index, T value)
+        {
+        }
     }
 }

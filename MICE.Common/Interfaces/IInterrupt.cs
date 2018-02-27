@@ -4,7 +4,7 @@ using System.Text;
 
 namespace MICE.Common.Interfaces
 {
-    public interface IInterupt
+    public interface IInterrupt
     {
     }
 }

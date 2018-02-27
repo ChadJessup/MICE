@@ -12,7 +12,7 @@
         bool IsIndexInRange(int index);
 
         (int min, int max) GetRange();
-        byte Read(int index);
-        void Write(int index, byte value);
+        T Read<T>(int index);
+        void Write<T>(int index, T value);
     }
 }

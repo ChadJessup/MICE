@@ -12,12 +12,12 @@
             this.mirroredUpperIndex = mirroredUpperIndex;
         }
 
-        public override byte Read(int index)
+        public override T Read<T>(int index)
         {
-            return 0;
+            return default(T);
         }
 
-        public override void Write(int index, byte value)
+        public override void Write<T>(int index, T value)
         {
         }
     }

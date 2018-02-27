@@ -147,7 +147,6 @@ namespace MICE.Nintendo.Loaders
                 ROMBanks = this.ROMBanks,
             };
 
-            // TODO: Setup Mapper here...
             cartridge.InitializeMapper(this.MemoryMapperId);
 
             return cartridge;
