@@ -32,13 +32,15 @@ namespace MICE.Nintendo
             // $4000 - I/O - I/O Registers (DMA for sprites?)
 
             // Expansion Memory - seems to be able to be used by various Mappers for various reasons
+            // TODO: Route into cartridge as well?
             this.Add(new ExternalROM(0x4020, 0x5FFF, "Expansion Memory"));
 
             // SRAM - this is mapped into a Cartridge's memory for saving data across power cycles.
             this.Add(new SRAM(0x6000, 0x7FFF, "SRAM"));
 
-            // PRG-ROM - this is mapped into a cartridge, the data might be mirrored, across banks, or even internally routed further
+            // PRG-ROM - this is mapped into a cartridge, the data might be mirrored across banks, or even internally routed further
             // in a cartridge depending on what, if any, Mapper is being used.
+            // However, we assume there is always a Mapper which is essentially a noop Mapper.
             this.Add(new External(0x8000, 0xBFFF, "PRG-ROM Lower Bank"));
             this.Add(new External(0xC000, 0xFFFF, "PRG-ROM Upper Bank"));
         }

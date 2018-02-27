@@ -5,14 +5,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Opcodes.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Include="Opcodes.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\MICE.Common\MICE.Common.csproj" />
     <ProjectReference Include="..\MICE.Components\MICE.Components.csproj" />
   </ItemGroup>

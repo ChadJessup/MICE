@@ -1,5 +1,6 @@
 ﻿using MICE.Nintendo;
 using MICE.Nintendo.Loaders;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace MICE.TestApp
@@ -20,6 +21,7 @@ namespace MICE.TestApp
             var cartridge = NESLoader.CreateCartridge(@"G:\Emulators\NES\Games\Super Mario Bros.nes");
 
             nes.LoadCartridge(cartridge);
+            Task.Factory.StartNew(() => nes.PowerOn());
         }
     }
 }

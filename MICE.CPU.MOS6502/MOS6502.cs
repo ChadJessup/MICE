@@ -2,11 +2,14 @@
 using MICE.Common.Helpers;
 using MICE.Common.Interfaces;
 using MICE.Components.CPU;
+using System.Threading.Tasks;
 
 namespace MICE.CPU.MOS6502
 {
     public class MOS6502 : ICPU
     {
+        private Opcodes Opcodes = new Opcodes();
+
         public Endianness Endianness { get; } = Endianness.LittleEndian;
 
         // The MOS 6502 has six registers, 3 for general processing, and 3 for program use:
@@ -40,7 +43,7 @@ namespace MICE.CPU.MOS6502
         public bool WasZero => this.P.Value.GetBit(1);
 
         // Interrupt disable - Set to disable maskable interrupts
-        public bool AreInterruptDisabled => this.P.Value.GetBit(2);
+        public bool AreInterruptsDisabled => this.P.Value.GetBit(2);
 
         // Decimal mode - Set when in BCD mode.
         public bool IsDecimalMode => this.P.Value.GetBit(3);
@@ -56,5 +59,11 @@ namespace MICE.CPU.MOS6502
 
         // Negative flag - set if number is negative
         public bool WasNegative => this.P.Value.GetBit(7);
+
+        public async Task PowerOn()
+        {
+            
+            await Task.CompletedTask;
+        }
     }
 }

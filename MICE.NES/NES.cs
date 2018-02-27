@@ -5,7 +5,6 @@ using MICE.CPU.MOS6502;
 using MICE.Nintendo.Loaders;
 using System;
 using System.Threading.Tasks;
-using System.Linq;
 
 namespace MICE.Nintendo
 {
@@ -26,7 +25,14 @@ namespace MICE.Nintendo
 
         public async Task PowerOn()
         {
+            await this.CPU.PowerOn();
+
             await Task.CompletedTask;
+        }
+
+        private void SetupOpcodes()
+        {
+            throw new NotImplementedException();
         }
 
         public async Task PowerOff()
@@ -50,7 +56,7 @@ namespace MICE.Nintendo
         /// <param name="cartridge">The cartridge to load.</param>
         public void LoadCartridge(NESCartridge cartridge)
         {
-            // Various parts of a cartridge are mapped seamlessly into the NES's memory map.
+            // Various parts of a cartridge are mapped into the NES's memory map.
             this.MemoryMap.Get<SRAM>("SRAM").Data = cartridge.SRAM;
 
             this.MemoryMap.Get<External>("PRG-ROM Lower Bank").Handler = cartridge.Mapper;
