@@ -21,12 +21,11 @@ namespace MICE.Nintendo.Loaders
 
         public MirroringMode MirroringMode { get; set; }
 
-        public ArraySegment<byte> SRAM { get; set; }
+        public byte[] SRAM { get; set; }
 
-        public IEnumerable<ArraySegment<byte>> RAMBanks { get; set; }
-
-        public IEnumerable<ArraySegment<byte>> ROMBanks { get; set; }
-        public IEnumerable<ArraySegment<byte>> CharacterRomBanks { get; set; }
+        public IList<byte[]> RAMBanks { get; set; }
+        public IList<byte[]> ROMBanks { get; set; }
+        public IList<byte[]> CharacterRomBanks { get; set; }
 
         public MemoryMapperIds MapperId { get; private set; }
         public IMemoryManagementController Mapper { get; set; }
@@ -40,7 +39,7 @@ namespace MICE.Nintendo.Loaders
 
             if (Constants.Mappers.TryGetValue(memoryMapperId, out var mappedTuple))
             {
-                this.Mapper = (IMemoryManagementController)Activator.CreateInstance(mappedTuple.Mapper);
+                this.Mapper = (IMemoryManagementController)Activator.CreateInstance(mappedTuple.Mapper, this);
                 this.WasMapperInitialized = true;
                 // TODO: Logging, log what mapper, the name, etc, was used...
             }

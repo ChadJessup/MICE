@@ -9,6 +9,6 @@ namespace MICE.Components.Memory
         {
         }
 
-        public ArraySegment<byte> Data { get; set; }
+        public byte[] Data { get; set; }
     }
 }

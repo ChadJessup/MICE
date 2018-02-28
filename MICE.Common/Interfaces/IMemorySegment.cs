@@ -1,4 +1,6 @@
-﻿namespace MICE.Common.Interfaces
+﻿using System;
+
+namespace MICE.Common.Interfaces
 {
     /// <summary>
     /// Inteferface that represents a segment of memory.
@@ -10,9 +12,13 @@
         string Name { get; }
 
         bool IsIndexInRange(int index);
+        int GetOffsetInSegment(int index);
 
         (int min, int max) GetRange();
-        T Read<T>(int index);
-        void Write<T>(int index, T value);
+        byte ReadByte(int index);
+        ushort ReadShort(int index);
+
+        void Write(int index, byte value);
+        void Write(int index, ushort value);
     }
 }

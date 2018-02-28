@@ -5,6 +5,8 @@
     {
         None = 0,
 
+        Implied,
+        Relative,
         Accumulator,
         Immediate,
 

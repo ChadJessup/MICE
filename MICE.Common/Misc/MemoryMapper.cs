@@ -59,21 +59,35 @@ namespace MICE.Common.Misc
         public IEnumerator<IMemorySegment> GetEnumerator() => this.memorySegments.GetEnumerator();
         public void CopyTo(IMemorySegment[] array, int arrayIndex) => this.memorySegments.CopyTo(array, arrayIndex);
 
-        public T Read<T>(int index)
+        public ushort ReadShort(int index)
         {
-            for (int i = 0; i < this.memorySegments.Count; i++)
+            foreach (var segment in this.memorySegments.Where(seg => seg.IsIndexInRange(index)))
             {
-                if (this.memorySegments[i].IsIndexInRange(index))
-                {
-                    return this.memorySegments[i].Read<T>(index);
-                }
+                return segment.ReadShort(index);
             }
 
-            return default(T);
+            throw new InvalidOperationException($"Address was requested that hasn't been mapped ({index})");
         }
 
-        public void Write<T>(int index, T value)
+        public byte ReadByte(int index)
         {
+            foreach (var segment in this.memorySegments.Where(seg => seg.IsIndexInRange(index)))
+            {
+                return segment.ReadByte(index);
+            }
+
+            throw new InvalidOperationException($"Address was requested that hasn't been mapped ({index})");
+        }
+
+        public void Write(int index, byte value)
+        {
+            foreach (var segment in this.memorySegments.Where(seg => seg.IsIndexInRange(index)))
+            {
+                segment.Write(index, value);
+                return;
+            }
+
+            throw new InvalidOperationException($"Address was requested that hasn't been mapped ({index})");
         }
     }
 }

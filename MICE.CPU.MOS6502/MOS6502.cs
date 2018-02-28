@@ -3,7 +3,7 @@ using MICE.Common.Helpers;
 using MICE.Common.Interfaces;
 using MICE.Components.CPU;
 using System.Collections.Generic;
-using System.Threading.Tasks;
+using System.Threading;
 
 namespace MICE.CPU.MOS6502
 {
@@ -14,7 +14,7 @@ namespace MICE.CPU.MOS6502
             public const int StackPointerStart = 0xFD;
         }
 
-        private Opcodes Opcodes = new Opcodes();
+        private Opcodes Opcodes;
         private readonly IMemoryMap memoryMap;
 
         public MOS6502(IMemoryMap memoryMap)
@@ -60,13 +60,25 @@ namespace MICE.CPU.MOS6502
         // Below flags reflect the bits in the P register...
 
         // Get a value indicating if the last instruction resulted in 0.
-        public bool WasZero => this.P.Read().GetBit(1);
+        public bool WasZero
+        {
+            get => this.P.Read().GetBit(1);
+            set => this.P.SetBit(1, value);
+        }
 
         // Interrupt disable - Set to disable maskable interrupts
-        public bool AreInterruptsDisabled => this.P.Read().GetBit(2);
+        public bool AreInterruptsDisabled
+        {
+            get => this.P.Read().GetBit(2);
+            set => this.P.SetBit(2, value);
+        }
 
         // Decimal mode - Set when in BCD mode.
-        public bool IsDecimalMode => this.P.Read().GetBit(3);
+        public bool IsDecimalMode
+        {
+            get => this.P.Read().GetBit(3);
+            set => this.P.SetBit(3, value);
+        }
 
         // Breakpoint
         public bool WillBreak => this.P.Read().GetBit(4);
@@ -78,20 +90,80 @@ namespace MICE.CPU.MOS6502
         public bool WasOverflowed => this.P.Read().GetBit(6);
 
         // Negative flag - set if number is negative
-        public bool WasNegative => this.P.Read().GetBit(7);
-
-        public void PowerOn()
+        public bool WasNegative
         {
-            this.Reset();
+            get => this.P.Read().GetBit(7);
+            set => this.P.SetBit(7, value);
         }
 
-        public void Reset()
+        public void PowerOn(CancellationToken cancellationToken)
         {
-            this.A.Write(0);
+            this.Reset(cancellationToken);
+        }
+
+        public void Reset(CancellationToken cancellationToken)
+        {
+            this.Opcodes = new Opcodes(this);
+            this.A.Write(1);
             this.X.Write(0);
             this.Y.Write(0);
             this.SP.Write(Constants.StackPointerStart);
-            this.PC.Write(this.memoryMap.Read<ushort>(this.InterruptOffsets[InterruptType.Reset]));
+            this.PC.Write(this.memoryMap.ReadShort(this.InterruptOffsets[InterruptType.Reset]));
+        }
+
+        /// <summary>
+        /// Steps the CPU and returns the amount of Cycles that would have occurred if the CPU were real.
+        /// The cycles can be used by other components as a timing mechanism.
+        /// </summary>
+        /// <returns></returns>
+        public int Step()
+        {
+            // Grab an Opcode from the PC register:
+            var code = this.ReadNextByte();
+
+            // Grab our version of the opcode...
+            var opCode = this.Opcodes[code];
+
+            opCode.Instruction(opCode);
+
+            return opCode.Cycles;
+        }
+
+        public void WriteByte(ushort address, byte value, bool incrementPC = true)
+        {
+            ushort pc = this.PC;
+            this.memoryMap.Write(address, value);
+
+            if (incrementPC)
+            {
+                this.PC.Write(++pc);
+            }
+        }
+
+        public byte ReadNextByte(bool incrementPC = true)
+        {
+            ushort pc = this.PC;
+            var value = this.memoryMap.ReadByte(pc);
+
+            if (incrementPC)
+            {
+                this.PC.Write(++pc);
+            }
+
+            return value;
+        }
+
+        public ushort ReadNextShort(bool incrementPC = true)
+        {
+            ushort pc = this.PC.Read();
+            var value = this.memoryMap.ReadShort(pc);
+
+            if(incrementPC)
+            {
+                this.PC.Write(++pc);
+            }
+
+            return value;
         }
     }
 }

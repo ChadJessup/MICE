@@ -30,16 +30,16 @@ namespace MICE.Nintendo.Loaders
         public ArraySegment<byte> Header { get; private set; }
 
         public int ProgramROMBankCount { get; private set; } // Number of 16kb PRG-ROM Banks
-        public List<ArraySegment<byte>> ROMBanks { get; } = new List<ArraySegment<byte>>();
+        public List<byte[]> ROMBanks { get; } = new List<byte[]>();
 
         public int CharacterROMBankCount { get; private set; } // number of 8kb CHR-ROM / VROM banks, which contain pattern tables.
-        public List<ArraySegment<byte>> CharacterBanks { get; } = new List<ArraySegment<byte>>();
+        public List<byte[]> CharacterBanks { get; } = new List<byte[]>();
 
         public int RAMBankCount { get; private set; } // number of 8KB Ram Banks, assume 1 page of RAM when this is 0.
-        public List<ArraySegment<byte>> RAMBanks { get; } = new List<ArraySegment<byte>>();
+        public List<byte[]> RAMBanks { get; } = new List<byte[]>();
 
-        public ArraySegment<byte> Trainer { get; private set; }
-        public ArraySegment<byte> SRAM { get; private set; }
+        public byte[] Trainer { get; private set; }
+        public byte[] SRAM { get; private set; }
 
         public byte RomControlByte1 { get; private set; } // broken apart into flags below
         // bit 0     1 for vertical mirroring, 0 for horizontal mirroring.
@@ -115,12 +115,12 @@ namespace MICE.Nintendo.Loaders
 
             if (this.HasTrainer)
             {
-                this.Trainer = new ArraySegment<byte>(bytes, Constants.LocationOfTrainer, Constants.SizeOfTrainer);
+                this.Trainer = new ArraySegment<byte>(bytes, Constants.LocationOfTrainer, Constants.SizeOfTrainer).ToArray();
             }
             if (this.HasBatteryBackedRAM)
             {
                 // TODO: We'll want to load in a file here at a later time
-                this.SRAM = new ArraySegment<byte>(bytes, Constants.LocationOfSRAM, Constants.SizeOfSRAM);
+                this.SRAM = new ArraySegment<byte>(bytes, Constants.LocationOfSRAM, Constants.SizeOfSRAM).ToArray();
             }
 
             for (int i = 0; i < this.ProgramROMBankCount; i++)
@@ -129,7 +129,7 @@ namespace MICE.Nintendo.Loaders
                     ? Constants.SizeOfHeader + Constants.SizeOfTrainer
                     : Constants.SizeOfHeader;
 
-                this.ROMBanks.Add(new ArraySegment<byte>(bytes, romBankOffset + (i * Constants.ROMBankSize), Constants.ROMBankSize));
+                this.ROMBanks.Add(new ArraySegment<byte>(bytes, romBankOffset + (i * Constants.ROMBankSize), Constants.ROMBankSize).ToArray());
             }
 
             var romBytes = this.ROMBanks[0].ToList();

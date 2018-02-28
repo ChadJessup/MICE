@@ -4,13 +4,13 @@ using MICE.Components.Memory;
 namespace MICE.Nintendo
 {
     /// <summary>
-    /// A class that represents how NES memory is mapped out to various components.
+    /// A class that represents how the NES CPU's memory is mapped out to various components.
     /// </summary>
-    public class NESMemoryMap : MemoryMapper
+    public class CPUMemoryMap : MemoryMapper
     {
-        public NESMemoryMap()
+        public CPUMemoryMap()
         {
-            // NES memory is mapped out like below - with some trickery possible in the ROM itself to further map out memory.
+            // The NES CPU's memory is mapped out like below - with some trickery possible in the ROM itself to further map out memory.
 
             // http://nesdev.com/NESDoc.pdf - Figure 2-3 CPU memory map
             // RAM - $0000-$1FFF (including mirrored data)
@@ -40,7 +40,7 @@ namespace MICE.Nintendo
 
             // PRG-ROM - this is mapped into a cartridge, the data might be mirrored across banks, or even internally routed further
             // in a cartridge depending on what, if any, Mapper is being used.
-            // However, we assume there is always a Mapper which is essentially a noop Mapper.
+            // However, we assume there is always a Mapper which is essentially the noop (NROM) Mapper.
             this.Add(new External(0x8000, 0xBFFF, "PRG-ROM Lower Bank"));
             this.Add(new External(0xC000, 0xFFFF, "PRG-ROM Upper Bank"));
         }

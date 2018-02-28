@@ -1,14 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Threading;
 
 namespace MICE.Common.Interfaces
 {
     /// <summary>
     /// Interface that represents a CPU of a system.
     /// </summary>
-    public interface ICPU : IIntegratedCircuit
+    public interface ICPU : IMicroprocessor
     {
         Endianness Endianness { get; }
+        void Reset(CancellationToken cancellationToken);
     }
 }

@@ -2,14 +2,21 @@
 {
     public class Register8Bit : Register<byte>
     {
-        private byte value;
-
         public Register8Bit(string name)
             : base(name)
         {
         }
 
-        public override void Write(byte value) => this.value = value;
-        public override byte Read() => this.value;
+        public void SetBit(int index, bool value)
+        {
+            this.Value = value
+                ? (byte)(this.Value | (1 << index))
+                : (byte)(this.Value & ~(1 << index));
+        }
+
+        public override void Write(byte value) => this.Value = value;
+        public override byte Read() => this.Value;
+
+        public override string ToString() => $"{this.Value} - {this.Name}";
     }
 }

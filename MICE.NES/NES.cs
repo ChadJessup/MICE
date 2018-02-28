@@ -3,24 +3,34 @@ using MICE.Components.Bus;
 using MICE.Components.Memory;
 using MICE.CPU.MOS6502;
 using MICE.Nintendo.Loaders;
+using MICE.PPU.RicohRP2C02;
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace MICE.Nintendo
 {
     public class NES : ISystem
     {
+        private CancellationToken cancellationToken;
+
+        public NES(CancellationToken cancellationToken)
+        {
+            this.cancellationToken = cancellationToken;
+        }
+
         public string Name { get; } = "Nintendo Entertainment System";
 
         // Create components...
         public DataBus DataBus { get; } = new DataBus();
         public AddressBus AddressBus { get; } = new AddressBus();
         public ControlBus ControlBus { get; } = new ControlBus();
-        public NESMemoryMap MemoryMap { get; } = new NESMemoryMap();
+        public CPUMemoryMap MemoryMap { get; } = new CPUMemoryMap();
 
         public NESCartridge Cartridge { get; private set; }
 
         public Ricoh2A03 CPU { get; private set; }
+        public RicohRP2C02 PPU { get; private set; }
 
         // Hook them up...
 
@@ -32,8 +42,22 @@ namespace MICE.Nintendo
             }
 
             this.CPU = new Ricoh2A03(this.MemoryMap);
+            this.PPU = new RicohRP2C02();
 
-            this.CPU.PowerOn();
+            this.CPU.PowerOn(this.cancellationToken);
+            this.PPU.PowerOn(this.cancellationToken);
+        }
+
+        public void Step()
+        {
+            // 1 Step = 1 Frame to the NES. Since we're doing frame-based timing here, which seems to be the preferred method to emulate a console.
+            // 1 System step = 1 CPU step + (3 PPU steps * CPU Cycles in Step) + (1 Audio step * CPU cycles).
+            // Cycles are based on which instructions the CPU ran.
+
+            var cpuCycles = this.CPU.Step();
+
+            // TODO: PPU Cycles
+            // TODO: APU Cycles
         }
 
         private void SetupOpcodes()
@@ -51,10 +75,15 @@ namespace MICE.Nintendo
             await Task.CompletedTask;
         }
 
-        public async Task Run()
+        public Task Run() => Task.Factory.StartNew(() =>
         {
-            await Task.CompletedTask;
-        }
+            while (!this.cancellationToken.IsCancellationRequested)
+            {
+                this.Step();
+                // TODO: Get RAW Screen data from PPU.
+                // TODO: Audio.
+            }
+        });
 
         /// <summary>
         /// Loads an <seealso cref="NESCartridge"/> into the NES system.
@@ -67,8 +96,8 @@ namespace MICE.Nintendo
             // Various parts of a cartridge are mapped into the NES's memory map.
             this.MemoryMap.GetMemorySegment<SRAM>("SRAM").Data = cartridge.SRAM;
 
-            this.MemoryMap.GetMemorySegment<External>("PRG-ROM Lower Bank").Handler = cartridge.Mapper;
-            this.MemoryMap.GetMemorySegment<External>("PRG-ROM Upper Bank").Handler = cartridge.Mapper;
+            this.MemoryMap.GetMemorySegment<External>("PRG-ROM Lower Bank").AttachHandler(cartridge.Mapper);
+            this.MemoryMap.GetMemorySegment<External>("PRG-ROM Upper Bank").AttachHandler(cartridge.Mapper);
         }
     }
 }

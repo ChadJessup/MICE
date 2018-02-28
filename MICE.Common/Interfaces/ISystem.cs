@@ -12,5 +12,7 @@ namespace MICE.Common.Interfaces
         void PowerOn();
         Task PowerOff();
         Task Reset();
+        Task Run();
+        void Step();
     }
 }

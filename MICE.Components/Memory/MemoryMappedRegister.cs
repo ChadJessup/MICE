@@ -16,10 +16,18 @@ namespace MICE.Components.Memory
             this.mappedRegister = mappedRegister;
         }
 
+        public override int GetOffsetInSegment(int index) => throw new System.NotImplementedException();
+
         public T Read()
         {
             throw new System.NotImplementedException();
         }
+
+        public override byte ReadByte(int index) => throw new System.NotImplementedException();
+        public override ushort ReadShort(int index) => throw new System.NotImplementedException();
+
+        public override void Write(int index, byte value) => throw new System.NotImplementedException();
+        public override void Write(int index, ushort value) => throw new System.NotImplementedException();
 
         public void Write(T value)
         {

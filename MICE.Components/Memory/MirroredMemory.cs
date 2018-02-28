@@ -12,13 +12,24 @@
             this.mirroredUpperIndex = mirroredUpperIndex;
         }
 
-        public override T Read<T>(int index)
+        public override byte ReadByte(int index)
         {
-            return default(T);
+            throw new System.NotImplementedException();
         }
 
-        public override void Write<T>(int index, T value)
+        public override ushort ReadShort(int index)
         {
+            throw new System.NotImplementedException();
+        }
+
+        public override void Write(int index, byte value)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public override void Write(int index, ushort value)
+        {
+            throw new System.NotImplementedException();
         }
     }
 }

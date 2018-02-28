@@ -4,10 +4,12 @@
     <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\MICE.Common\MICE.Common.csproj" />
-    <ProjectReference Include="..\MICE.Components\MICE.Components.csproj" />
-    <ProjectReference Include="..\MICE.PPU.RicohRP2C02\MICE.PPU.RicohRP2C02.csproj" />
   </ItemGroup>
 
 </Project>

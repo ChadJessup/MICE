@@ -1,5 +1,6 @@
 ﻿using MICE.Nintendo;
 using MICE.Nintendo.Loaders;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -16,12 +17,16 @@ namespace MICE.TestApp
 
         private void Go()
         {
-            var nes = new NES();
-            var cartridge = NESLoader.CreateCartridge(@"C:\Emulators\NES\Games\Super Mario Bros.nes");
-           // var cartridge = NESLoader.CreateCartridge(@"G:\Emulators\NES\Games\Super Mario Bros.nes");
+            var cts = new CancellationTokenSource();
+            var token = cts.Token;
+            var nes = new NES(token);
+            // var cartridge = NESLoader.CreateCartridge(@"C:\Emulators\NES\Games\Super Mario Bros.nes");
+            var cartridge = NESLoader.CreateCartridge(@"G:\Emulators\NES\Games\Super Mario Bros.nes");
 
             nes.LoadCartridge(cartridge);
-            Task.Factory.StartNew(() => nes.PowerOn());
+            nes.PowerOn();
+
+            Task.Factory.StartNew(() => nes.Run());
         }
     }
 }

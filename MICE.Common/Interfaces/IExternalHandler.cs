@@ -2,7 +2,12 @@
 {
     public interface IExternalHandler
     {
-        T Read<T>(int index);
-        void Write<T>(int index, T value);
+        void AddMemorySegment(IMemorySegment memorySegment);
+
+        byte ReadByte(int index);
+        ushort ReadShort(int index);
+
+        void Write(int index, byte value);
+        void Write(int index, ushort value);
     }
 }
