@@ -10,12 +10,11 @@ namespace MICE.PPU.RicohRP2C02
 
         public void PowerOn(CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
         }
 
         public int Step()
         {
-            throw new NotImplementedException();
+            return 0;
         }
     }
 }

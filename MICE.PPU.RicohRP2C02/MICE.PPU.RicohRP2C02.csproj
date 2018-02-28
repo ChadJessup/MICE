@@ -10,6 +10,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\MICE.Common\MICE.Common.csproj" />
+    <ProjectReference Include="..\MICE.Components\MICE.Components.csproj" />
   </ItemGroup>
 
 </Project>
