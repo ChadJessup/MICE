@@ -2,6 +2,7 @@
 using MICE.Common.Helpers;
 using MICE.Common.Interfaces;
 using MICE.Components.CPU;
+using System;
 using System.Collections.Generic;
 using System.Threading;
 
@@ -54,17 +55,24 @@ namespace MICE.CPU.MOS6502
         // Flags representing state of processor
         public Register8Bit P = new Register8Bit("Processor Status");
 
-        // Gets a value indicating if the result of the last calculation needs to be carried over to allow for larger calculations.
-        public bool WasCarry => this.P.Read().GetBit(0);
-
         // Below flags reflect the bits in the P register...
+
+        /// <summary>
+        /// Gets a value indicating if the result of the last calculation needs to be carried over to allow for larger calculations.
+        /// </summary>
+        public bool WasCarry
+        {
+            get => this.P.GetBit(0);
+            set => this.P.SetBit(0, value);
+        }
+
 
         /// <summary>
         /// Gets or sets a value indicating if the last instruction resulted in 0.
         /// </summary>
         public bool WasZero
         {
-            get => this.P.Read().GetBit(1);
+            get => this.P.GetBit(1);
             set => this.P.SetBit(1, value);
         }
 
@@ -73,30 +81,52 @@ namespace MICE.CPU.MOS6502
         /// </summary>
         public bool AreInterruptsDisabled
         {
-            get => this.P.Read().GetBit(2);
+            get => this.P.GetBit(2);
             set => this.P.SetBit(2, value);
         }
 
-        // Decimal mode - Set when in BCD mode.
+        /// <summary>
+        /// Gets or sets a value indicating whether the CPU is in Decimal mode (BCD).
+        /// </summary>
         public bool IsDecimalMode
         {
-            get => this.P.Read().GetBit(3);
+            get => this.P.GetBit(3);
             set => this.P.SetBit(3, value);
         }
 
-        // Breakpoint
-        public bool WillBreak => this.P.Read().GetBit(4);
+        /// <summary>
+        /// Gets or sets a value that will cause the CPU to Break.
+        /// </summary>
+        public bool WillBreak
+        {
+            get => this.P.GetBit(4);
+            set => this.P.SetBit(3, value);
+        }
 
-        // Unused
-        public bool Unused => this.P.Read().GetBit(5);
+        /// <summary>
+        /// Unused bit.
+        /// </summary>
+        public bool Unused
+        {
+            get => this.P.GetBit(5);
+            set => this.P.SetBit(5, value);
+        }
 
-        // Overflow flag - Set if arithmetic overflow has occurred
-        public bool WasOverflowed => this.P.Read().GetBit(6);
+        /// <summary>
+        /// Overflow flag - Set if arithmetic overflow has occurred
+        /// </summary>
+        public bool WasOverflowed
+        {
+            get => this.P.GetBit(6);
+            set => this.P.SetBit(6, value);
+        }
 
-        // Negative flag - set if number is negative
+        /// <summary>
+        /// Negative flag - set if number is negative
+        /// </summary>
         public bool WasNegative
         {
-            get => this.P.Read().GetBit(7);
+            get => this.P.GetBit(7);
             set => this.P.SetBit(7, value);
         }
 
@@ -123,12 +153,21 @@ namespace MICE.CPU.MOS6502
         public int Step()
         {
             // Grab an Opcode from the PC register:
-            var code = this.ReadNextByte();
+            var code = this.ReadNextByte(incrementPC: false);
 
             // Grab our version of the opcode...
             var opCode = this.Opcodes[code];
 
+            // TODO: Put behind debug flag...
+
+            ushort oldPC = this.PC;
+
             opCode.Instruction(opCode);
+
+            if (oldPC + opCode.PCDelta != this.PC)
+            {
+                throw new InvalidOperationException($"Program Counter was not what was expected after executing instruction: {opCode.Name}.{Environment.NewLine}Was: 0x{oldPC:X}{Environment.NewLine}Is: 0x{this.PC.Read():X}{Environment.NewLine}Expected: 0x{oldPC + opCode.PCDelta:X}");
+            }
 
             return opCode.Cycles;
         }
@@ -142,6 +181,11 @@ namespace MICE.CPU.MOS6502
             {
                 this.PC.Write(++pc);
             }
+        }
+
+        public void IncrementPC(ushort count = 1)
+        {
+            this.PC.Write((ushort)(this.PC + count));
         }
 
         public byte ReadNextByte(bool incrementPC = true)
