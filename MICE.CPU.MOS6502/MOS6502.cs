@@ -59,14 +59,18 @@ namespace MICE.CPU.MOS6502
 
         // Below flags reflect the bits in the P register...
 
-        // Get a value indicating if the last instruction resulted in 0.
+        /// <summary>
+        /// Gets or sets a value indicating if the last instruction resulted in 0.
+        /// </summary>
         public bool WasZero
         {
             get => this.P.Read().GetBit(1);
             set => this.P.SetBit(1, value);
         }
 
-        // Interrupt disable - Set to disable maskable interrupts
+        /// <summary>
+        /// Interrupt disable - Set to disable maskable interrupts
+        /// </summary>
         public bool AreInterruptsDisabled
         {
             get => this.P.Read().GetBit(2);

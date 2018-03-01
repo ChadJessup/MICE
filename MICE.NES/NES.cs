@@ -25,12 +25,12 @@ namespace MICE.Nintendo
         public DataBus DataBus { get; } = new DataBus();
         public AddressBus AddressBus { get; } = new AddressBus();
         public ControlBus ControlBus { get; } = new ControlBus();
-        public CPUMemoryMap MemoryMap { get; } = new CPUMemoryMap();
+
+        public RicohRP2C02 PPU { get; private set; }
+        public CPUMemoryMap MemoryMap { get; private set; }
 
         public NESCartridge Cartridge { get; private set; }
-
         public Ricoh2A03 CPU { get; private set; }
-        public RicohRP2C02 PPU { get; private set; }
 
         // Hook them up...
 
@@ -41,11 +41,24 @@ namespace MICE.Nintendo
                 throw new InvalidOperationException("Cartridge must be loaded first, unable to power on.");
             }
 
-            this.CPU = new Ricoh2A03(this.MemoryMap);
             this.PPU = new RicohRP2C02();
+            this.MemoryMap = new CPUMemoryMap(this.PPU);
+
+            this.MapToCartridge();
+
+            this.CPU = new Ricoh2A03(this.MemoryMap);
 
             this.CPU.PowerOn(this.cancellationToken);
             this.PPU.PowerOn(this.cancellationToken);
+        }
+
+        private void MapToCartridge()
+        {
+            // Various parts of a cartridge are mapped into the NES's memory map.
+            this.MemoryMap.GetMemorySegment<SRAM>("SRAM").Data = this.Cartridge.SRAM;
+
+            this.MemoryMap.GetMemorySegment<External>("PRG-ROM Lower Bank").AttachHandler(this.Cartridge.Mapper);
+            this.MemoryMap.GetMemorySegment<External>("PRG-ROM Upper Bank").AttachHandler(this.Cartridge.Mapper);
         }
 
         public void Step()
@@ -92,12 +105,6 @@ namespace MICE.Nintendo
         public void LoadCartridge(NESCartridge cartridge)
         {
             this.Cartridge = cartridge;
-
-            // Various parts of a cartridge are mapped into the NES's memory map.
-            this.MemoryMap.GetMemorySegment<SRAM>("SRAM").Data = cartridge.SRAM;
-
-            this.MemoryMap.GetMemorySegment<External>("PRG-ROM Lower Bank").AttachHandler(cartridge.Mapper);
-            this.MemoryMap.GetMemorySegment<External>("PRG-ROM Upper Bank").AttachHandler(cartridge.Mapper);
         }
     }
 }

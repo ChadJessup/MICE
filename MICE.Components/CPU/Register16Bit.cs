@@ -10,6 +10,6 @@
         public override void Write(ushort value) => this.Value = value;
         public override ushort Read() => this.Value;
 
-        public override string ToString() => $"{this.Value} - {this.Name}";
+        public override string ToString() => $"0x{this.Value:X} - {this.Name}";
     }
 }

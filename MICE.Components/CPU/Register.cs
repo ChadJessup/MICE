@@ -2,7 +2,7 @@
 
 namespace MICE.Components.CPU
 {
-    public abstract class Register<T> : IRegister<T>
+    public abstract class Register<T> : IRegister<T> where T : struct
     {
         public string Name { get; private set; }
         protected T Value { get; set; }

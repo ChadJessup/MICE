@@ -66,7 +66,7 @@ namespace MICE.Common.Misc
                 return segment.ReadShort(index);
             }
 
-            throw new InvalidOperationException($"Address was requested that hasn't been mapped ({index})");
+            throw new InvalidOperationException($"Address was requested that hasn't been mapped (0x{index:X})");
         }
 
         public byte ReadByte(int index)
@@ -76,7 +76,7 @@ namespace MICE.Common.Misc
                 return segment.ReadByte(index);
             }
 
-            throw new InvalidOperationException($"Address was requested that hasn't been mapped ({index})");
+            throw new InvalidOperationException($"Address was requested that hasn't been mapped (0x{index:X})");
         }
 
         public void Write(int index, byte value)
@@ -87,7 +87,7 @@ namespace MICE.Common.Misc
                 return;
             }
 
-            throw new InvalidOperationException($"Address was requested that hasn't been mapped ({index})");
+            throw new InvalidOperationException($"Address was requested that hasn't been mapped (0x{index:X})");
         }
     }
 }

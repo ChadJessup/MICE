@@ -17,6 +17,6 @@
         public override void Write(byte value) => this.Value = value;
         public override byte Read() => this.Value;
 
-        public override string ToString() => $"{this.Value} - {this.Name}";
+        public override string ToString() => $"0x{this.Value:X} - {this.Name}";
     }
 }

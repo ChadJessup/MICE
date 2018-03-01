@@ -11,7 +11,7 @@ namespace MICE.Components.Memory
 
         public MemoryMappedSegment(int lowerIndex, int upperIndex, string name = "")
         {
-            if (lowerIndex >= upperIndex || lowerIndex == upperIndex)
+            if (lowerIndex > upperIndex)
             {
                 throw new InvalidOperationException($"{Name} The upper index ({upperIndex}) must be greater than the lower index ({lowerIndex})");
             }

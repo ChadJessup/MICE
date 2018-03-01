@@ -1,5 +1,6 @@
 ﻿using MICE.Common.Misc;
 using MICE.Components.Memory;
+using MICE.PPU.RicohRP2C02;
 
 namespace MICE.Nintendo
 {
@@ -8,7 +9,7 @@ namespace MICE.Nintendo
     /// </summary>
     public class CPUMemoryMap : MemoryMapper
     {
-        public CPUMemoryMap()
+        public CPUMemoryMap(RicohRP2C02 ppu)
         {
             // The NES CPU's memory is mapped out like below - with some trickery possible in the ROM itself to further map out memory.
 
@@ -24,12 +25,21 @@ namespace MICE.Nintendo
             this.Add(new MirroredMemory(0x1800, 0x1fff, 0x0000, 0x07ff, "Mirrored Ram #3"));
 
             // I/O Registers - $2000-$401F
-            // $2000 - I/O - I/O Registers
+            // These memory locations are mapped to the PPU's registers.
+            this.Add(new MemoryMappedRegister<byte>(0x2000, 0x2000, ppu.PPUCTRL, "Mapped PPU Control Register 1"));
+            this.Add(new MemoryMappedRegister<byte>(0x2001, 0x2001, ppu.PPUMASK, "Mapped PPU Control Register 2"));
+            this.Add(new MemoryMappedRegister<byte>(0x2002, 0x2002, ppu.PPUSTATUS, "Mapped PPU Status Register"));
+            this.Add(new MemoryMappedRegister<byte>(0x2003, 0x2003, ppu.OAMADDR, "Mapped PPU SPR-RAM Address Register"));
+            this.Add(new MemoryMappedRegister<byte>(0x2004, 0x2004, ppu.OAMDATA, "Mapped PPU SPR-RAM I/O Register"));
+            this.Add(new MemoryMappedRegister<byte>(0x2005, 0x2005, ppu.PPUSCROLL, "Mapped PPU Scroll Position Register"));
+            this.Add(new MemoryMappedRegister<byte>(0x2006, 0x2006, ppu.PPUADDR, "Mapped PPU Read/Write Address Register"));
+            this.Add(new MemoryMappedRegister<byte>(0x2007, 0x2007, ppu.PPUDATA, "Mapped PPU Read/Write Data Register"));
 
-            // this.Add(new MemoryMappedRegister());
+            // $2008 - I/O - Mirrors $2000-$2007 in a repeating pattern until $3FFF.
+            this.Add(new MirroredMemory(0x2008, 0x3FFF, 0x2000, 0x2007, "Mirrored PPU Registers"));
 
-            // $2008 - I/O - Mirrors $2000-$2007
-            // $4000 - I/O - I/O Registers (DMA for sprites?)
+            // $4014 - I/O - I/O Registers (DMA for sprites)
+            this.Add(new MemoryMappedRegister<byte>(0x4014, 0x4014, ppu.OAMDMA, "Mapped PPU Sprite DMA Register"));
 
             // Expansion Memory - seems to be able to be used by various Mappers for various reasons
             // TODO: Route into cartridge as well?
