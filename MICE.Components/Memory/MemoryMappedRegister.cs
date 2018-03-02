@@ -19,7 +19,7 @@ namespace MICE.Components.Memory
         public override int GetOffsetInSegment(int index) => throw new System.NotImplementedException();
 
         public T Read() => this.mappedRegister.Read();
-        public override byte ReadByte(int index) => throw new System.NotImplementedException();
+        public override byte ReadByte(int index) => (byte)(object)this.mappedRegister.Read();
         public override ushort ReadShort(int index) => throw new System.NotImplementedException();
 
         // TODO: blech...rethink generics here...

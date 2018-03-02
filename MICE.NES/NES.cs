@@ -71,6 +71,8 @@ namespace MICE.Nintendo
 
             // TODO: PPU Cycles
             // TODO: APU Cycles
+
+            CPU.CurrentCycle += cpuCycles;
         }
 
         private void SetupOpcodes()

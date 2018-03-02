@@ -5,10 +5,11 @@ namespace MICE.CPU.MOS6502
 {
     public class OpcodeContainer
     {
+        public int Cycles { get; set; }
+        public int PCDelta { get; set; }
+
         public AddressingMode AddressingMode { get; private set; } = AddressingMode.None;
-        public int Cycles { get; private set; }
         public int Code { get; private set; }
-        public int PCDelta { get; private set; }
         public string Name { get; private set; }
         public string Description { get; private set; }
 

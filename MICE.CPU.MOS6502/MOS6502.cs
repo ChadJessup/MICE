@@ -1,5 +1,4 @@
 ﻿using MICE.Common;
-using MICE.Common.Helpers;
 using MICE.Common.Interfaces;
 using MICE.Components.CPU;
 using System;
@@ -33,6 +32,11 @@ namespace MICE.CPU.MOS6502
 
         public Endianness Endianness { get; } = Endianness.LittleEndian;
 
+        /// <summary>
+        /// Gets or sets the current cycle (or tick) or the CPU.  This increments a specific amount for each instruction that occurs.
+        /// </summary>
+        public long CurrentCycle = 0;
+
         // The MOS 6502 has six registers, 3 for general processing, and 3 for program use:
 
         // Main registers:
@@ -55,12 +59,10 @@ namespace MICE.CPU.MOS6502
         // Flags representing state of processor
         public Register8Bit P = new Register8Bit("Processor Status");
 
-        // Below flags reflect the bits in the P register...
-
         /// <summary>
         /// Gets a value indicating if the result of the last calculation needs to be carried over to allow for larger calculations.
         /// </summary>
-        public bool WasCarry
+        public bool IsCarry
         {
             get => this.P.GetBit(0);
             set => this.P.SetBit(0, value);
@@ -70,7 +72,7 @@ namespace MICE.CPU.MOS6502
         /// <summary>
         /// Gets or sets a value indicating if the last instruction resulted in 0.
         /// </summary>
-        public bool WasZero
+        public bool IsZero
         {
             get => this.P.GetBit(1);
             set => this.P.SetBit(1, value);
@@ -115,7 +117,7 @@ namespace MICE.CPU.MOS6502
         /// <summary>
         /// Overflow flag - Set if arithmetic overflow has occurred
         /// </summary>
-        public bool WasOverflowed
+        public bool IsOverflowed
         {
             get => this.P.GetBit(6);
             set => this.P.SetBit(6, value);
@@ -124,7 +126,7 @@ namespace MICE.CPU.MOS6502
         /// <summary>
         /// Negative flag - set if number is negative
         /// </summary>
-        public bool WasNegative
+        public bool IsNegative
         {
             get => this.P.GetBit(7);
             set => this.P.SetBit(7, value);
@@ -152,27 +154,26 @@ namespace MICE.CPU.MOS6502
         /// <returns></returns>
         public int Step()
         {
+            // TODO: Put behind debug flag...
+            ushort oldPC = this.PC;
+
             // Grab an Opcode from the PC register:
-            var code = this.ReadNextByte(incrementPC: false);
+            var code = this.ReadNextByte();
 
             // Grab our version of the opcode...
             var opCode = this.Opcodes[code];
-
-            // TODO: Put behind debug flag...
-
-            ushort oldPC = this.PC;
 
             opCode.Instruction(opCode);
 
             if (oldPC + opCode.PCDelta != this.PC)
             {
-                throw new InvalidOperationException($"Program Counter was not what was expected after executing instruction: {opCode.Name}.{Environment.NewLine}Was: 0x{oldPC:X}{Environment.NewLine}Is: 0x{this.PC.Read():X}{Environment.NewLine}Expected: 0x{oldPC + opCode.PCDelta:X}");
+                throw new InvalidOperationException($"Program Counter was not what was expected after executing instruction: {opCode.Name} (0x{opCode.Code:X}).{Environment.NewLine}Was: 0x{oldPC:X}{Environment.NewLine}Is: 0x{this.PC.Read():X}{Environment.NewLine}Expected: 0x{oldPC + opCode.PCDelta:X}");
             }
 
             return opCode.Cycles;
         }
 
-        public void WriteByte(ushort address, byte value, bool incrementPC = true)
+        public void WriteByteAt(ushort address, byte value, bool incrementPC = true)
         {
             ushort pc = this.PC;
             this.memoryMap.Write(address, value);
@@ -183,15 +184,26 @@ namespace MICE.CPU.MOS6502
             }
         }
 
-        public void IncrementPC(ushort count = 1)
-        {
-            this.PC.Write((ushort)(this.PC + count));
-        }
-
-        public byte ReadNextByte(bool incrementPC = true)
+        public void WriteShortAt(ushort address, ushort value, bool incrementPC = true)
         {
             ushort pc = this.PC;
-            var value = this.memoryMap.ReadByte(pc);
+            var bytes = BitConverter.GetBytes(value);
+            this.memoryMap.Write(address, bytes[0]);
+            this.memoryMap.Write(address + 1, bytes[1]);
+            
+            if (incrementPC)
+            {
+                this.PC.Write(++pc);
+            }
+        }
+
+        public void IncrementPC(ushort count = 1) => this.PC.Write((ushort)(this.PC + count));
+        public void SetPCTo(ushort address) => this.PC.Write(address);
+        public byte ReadNextByte(bool incrementPC = true) => this.ReadByteAt(this.PC, incrementPC);
+        public byte ReadByteAt(ushort address, bool incrementPC = true)
+        {
+            ushort pc = this.PC;
+            var value = this.memoryMap.ReadByte(address);
 
             if (incrementPC)
             {
@@ -200,13 +212,13 @@ namespace MICE.CPU.MOS6502
 
             return value;
         }
-
-        public ushort ReadNextShort(bool incrementPC = true)
+        public ushort ReadNextShort(bool incrementPC = true) => this.ReadShortAt(this.PC, incrementPC);
+        public ushort ReadShortAt(ushort address, bool incrementPC = true)
         {
-            ushort pc = this.PC.Read();
-            var value = this.memoryMap.ReadShort(pc);
+            ushort pc = this.PC;
+            var value = this.memoryMap.ReadShort(address);
 
-            if(incrementPC)
+            if (incrementPC)
             {
                 this.PC.Write(++pc);
             }
