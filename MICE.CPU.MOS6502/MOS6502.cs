@@ -68,7 +68,6 @@ namespace MICE.CPU.MOS6502
             set => this.P.SetBit(0, value);
         }
 
-
         /// <summary>
         /// Gets or sets a value indicating if the last instruction resulted in 0.
         /// </summary>
@@ -190,7 +189,7 @@ namespace MICE.CPU.MOS6502
             var bytes = BitConverter.GetBytes(value);
             this.memoryMap.Write(address, bytes[0]);
             this.memoryMap.Write(address + 1, bytes[1]);
-            
+
             if (incrementPC)
             {
                 this.PC.Write(++pc);

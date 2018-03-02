@@ -69,7 +69,11 @@ namespace MICE.Nintendo
 
             var cpuCycles = this.CPU.Step();
 
-            // TODO: PPU Cycles
+            for (int i = 0; i < cpuCycles * 3; i++)
+            {
+                var ppuCycles = this.PPU.Step();
+            }
+
             // TODO: APU Cycles
 
             CPU.CurrentCycle += cpuCycles;

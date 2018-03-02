@@ -99,7 +99,6 @@ namespace MICE.CPU.MOS6502
 
             container.Cycles = cycles;
             container.PCDelta = pcDelta;
-
         }
 
         #endregion
