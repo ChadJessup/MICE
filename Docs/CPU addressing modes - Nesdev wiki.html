@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<!-- saved from url=(0056)https://wiki.nesdev.com/w/index.php/CPU_addressing_modes -->
+<html lang="en" dir="ltr" class="client-js"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<title>CPU addressing modes - Nesdev wiki</title>
+<meta name="generator" content="MediaWiki 1.24.1">
+<link rel="shortcut icon" href="https://wiki.nesdev.com/favicon.ico">
+<link rel="search" type="application/opensearchdescription+xml" href="https://wiki.nesdev.com/w/opensearch_desc.php" title="Nesdev wiki (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.nesdev.com/w/api.php?action=rsd">
+<link rel="alternate" hreflang="x-default" href="https://wiki.nesdev.com/w/index.php/CPU_addressing_modes">
+<link rel="alternate" type="application/atom+xml" title="Nesdev wiki Atom feed" href="https://wiki.nesdev.com/w/index.php?title=Special:RecentChanges&amp;feed=atom">
+<link rel="stylesheet" href="./CPU addressing modes - Nesdev wiki_files/load.php">
+<!--[if IE 6]><link rel="stylesheet" href="/w/skins/MonoBook/IE60Fixes.css?303" media="screen" /><![endif]-->
+<!--[if IE 7]><link rel="stylesheet" href="/w/skins/MonoBook/IE70Fixes.css?303" media="screen" /><![endif]--><style>
+.mw-collapsible-toggle{float:right;-moz-user-select:none;-webkit-user-select:none;-ms-user-select:none;user-select:none}.mw-customtoggle,.mw-collapsible-toggle{cursor:pointer} caption .mw-collapsible-toggle{float:none} li .mw-collapsible-toggle{float:none} .mw-collapsible-toggle-li{list-style:none}
+/* cache key: nesdev_wiki-mw1_:resourceloader:filter:minify-css:7:869aa9133c31e6040d4830b259da96a8 */
+.suggestions{overflow:hidden;position:absolute;top:0;left:0;width:0;border:none;z-index:1099;padding:0;margin:-1px 0 0 0}.suggestions-special{position:relative;background-color:white;cursor:pointer;border:solid 1px #aaaaaa;padding:0;margin:0;margin-top:-2px;display:none;padding:0.25em 0.25em;line-height:1.25em}.suggestions-results{background-color:white;cursor:pointer;border:solid 1px #aaaaaa;padding:0;margin:0}.suggestions-result{color:black;margin:0;line-height:1.5em;padding:0.01em 0.25em;text-align:left; overflow:hidden;-o-text-overflow:ellipsis; text-overflow:ellipsis;white-space:nowrap}.suggestions-result-current{background-color:#4C59A6;color:white}.suggestions-special .special-label{color:gray;text-align:left}.suggestions-special .special-query{color:black;font-style:italic;text-align:left}.suggestions-special .special-hover{background-color:silver}.suggestions-result-current .special-label,.suggestions-result-current .special-query{color:white}.highlight{font-weight:bold}
+/* cache key: nesdev_wiki-mw1_:resourceloader:filter:minify-css:7:f8d0c6895ce3ae14434c16b8fca59432 */
+.postedit-container{margin:0 auto;position:fixed;top:0;height:0;left:50%;z-index:1000;font-size:13px}.postedit-container:hover{cursor:pointer}.postedit{position:relative;top:0.6em;left:-50%;padding:.6em 3.6em .6em 1.1em;line-height:1.5625em;color:#626465;background-color:#f4f4f4;border:1px solid #dcd9d9;text-shadow:0 0.0625em 0 rgba(255,255,255,0.5);border-radius:5px;box-shadow:0 2px 5px 0 #ccc;-webkit-transition:all 0.25s ease-in-out;-moz-transition:all 0.25s ease-in-out;-ms-transition:all 0.25s ease-in-out;-o-transition:all 0.25s ease-in-out;transition:all 0.25s ease-in-out}.skin-monobook .postedit{top:6em !important}.postedit-faded{opacity:0}.postedit-icon{padding-left:41px;  line-height:25px;background-repeat:no-repeat;background-position:8px 50%}.postedit-icon-checkmark{background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAABblBMVEUAAAD///////9PfTf///80aRdTgjn///9Feij///////////9Rfzf///////////9PfjZRgDh1o1xOfTb///////+bwYqLtnj///////9PfTa82K////9WhT6YxIL///9QgDdTgzr////////j7uDl7eLq8efi693k7OH///////9UhjuBr2rp9uRUhjr///9YljVKgir///9WiTlYjT3////9/v57vFlbkT5PjC9dlD/5/fhuq09stUTs9uhxuElctCpfnT1huDFloEZloUZmpENmvDZpvDxpvTxqvjxrvT5rvT9rwTxsqktswD5uwkBvuUdxw0NztFBztU9ztVBzwkp0tlJ1xkd2t1R3uVR4w1F4xk54x014yE15uVZ5v1R5xVB6v1R7yFJ8wVh9xVl9yFR9yVd9ylN+xVh+yFd/x1l/yFeAylmEx1+Ny2uY0Hqe04Wj1Ymv3Ze33qLD47TJ5L3O6cPU7Mrq9eb2+/Q4j37OAAAAQHRSTlMAAQIEBAUFBQwPFB4fJCUoKiosQEhJS01RUlZZXmdydXaChYuSlJSWmJmoq6uur8LExcvM19fg5ejt8fX2+Pr7SljgewAAAKpJREFUGBkFwQNCAwAAAMDLtl3LtrG4rWXbtvX77gAgZ6grFwC0bhwNVgKgdPZx8b0dgLi+s7Wn0VoAqpfOI9+BNADZI7fLrz2pSEwGHZuH+78lSK8ZLkLezF3ooyUG3VPXq2USei9WngeyoG195yBYWDF3E/2pAhl1e9Gr8bGT+bfOFCC2fnvh4X7rcqIAQNNu+HT6sxkAjceTL/2ZAIhv+PorBwBJxfkA//dFHSCBy/UTAAAAAElFTkSuQmCC);background-image:url(https://wiki.nesdev.com/w/resources/src/mediawiki.action/images/green-checkmark.png?2016-09-13T06:20:00Z)!ie;background-position:left}.postedit-close{position:absolute;padding:0 .8em;right:0;top:0;font-size:1.25em;font-weight:bold;line-height:2.3em;color:black;text-shadow:0 0.0625em 0 white;text-decoration:none;opacity:0.2;filter:alpha(opacity=20)}.postedit-close:hover{color:black;text-decoration:none;opacity:0.4;filter:alpha(opacity=40)}
+/* cache key: nesdev_wiki-mw1_:resourceloader:filter:minify-css:7:9c6f4a4bca56a725b2df378a6881df6b */</style><style>
+.suggestions a.mw-searchSuggest-link,.suggestions a.mw-searchSuggest-link:hover,.suggestions a.mw-searchSuggest-link:active,.suggestions a.mw-searchSuggest-link:focus{color:black;text-decoration:none}.suggestions-result-current a.mw-searchSuggest-link,.suggestions-result-current a.mw-searchSuggest-link:hover,.suggestions-result-current a.mw-searchSuggest-link:active,.suggestions-result-current a.mw-searchSuggest-link:focus{color:white}.suggestions a.mw-searchSuggest-link .special-query{ overflow:hidden;-o-text-overflow:ellipsis; text-overflow:ellipsis;white-space:nowrap}
+/* cache key: nesdev_wiki-mw1_:resourceloader:filter:minify-css:7:ae3fa4570b5ac0c6cf7b3776c8ae4d6f */</style><meta name="ResourceLoaderDynamicStyles" content="">
+<link rel="stylesheet" href="./CPU addressing modes - Nesdev wiki_files/load(1).php">
+<style>a:lang(ar),a:lang(kk-arab),a:lang(mzn),a:lang(ps),a:lang(ur){text-decoration:none}
+/* cache key: nesdev_wiki-mw1_:resourceloader:filter:minify-css:7:ba03c1c8aa3cba8f8e9fa81c9cae44f5 */</style>
+<script async="" src="./CPU addressing modes - Nesdev wiki_files/analytics.js.download"></script><script src="./CPU addressing modes - Nesdev wiki_files/load(2).php"></script><script src="./CPU addressing modes - Nesdev wiki_files/load(3).php"></script>
+<script>if(window.mw){
+mw.config.set({"wgCanonicalNamespace":"","wgCanonicalSpecialPageName":false,"wgNamespaceNumber":0,"wgPageName":"CPU_addressing_modes","wgTitle":"CPU addressing modes","wgCurRevisionId":11943,"wgRevisionId":11943,"wgArticleId":408,"wgIsArticle":true,"wgIsRedirect":false,"wgAction":"view","wgUserName":null,"wgUserGroups":["*"],"wgCategories":[],"wgBreakFrames":false,"wgPageContentLanguage":"en","wgPageContentModel":"wikitext","wgSeparatorTransformTable":["",""],"wgDigitTransformTable":["",""],"wgDefaultDateFormat":"dmy","wgMonthNames":["","January","February","March","April","May","June","July","August","September","October","November","December"],"wgMonthNamesShort":["","Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],"wgRelevantPageName":"CPU_addressing_modes","wgIsProbablyEditable":false,"wgRestrictionEdit":[],"wgRestrictionMove":[]});
+}</script><script>if(window.mw){
+mw.loader.implement("user.options",function($,jQuery){mw.user.options.set({"ccmeonemails":0,"cols":80,"date":"default","diffonly":0,"disablemail":0,"editfont":"default","editondblclick":0,"editsectiononrightclick":0,"enotifminoredits":0,"enotifrevealaddr":0,"enotifusertalkpages":1,"enotifwatchlistpages":1,"extendwatchlist":0,"fancysig":0,"forceeditsummary":0,"gender":"unknown","hideminor":0,"hidepatrolled":0,"imagesize":2,"math":1,"minordefault":0,"newpageshidepatrolled":0,"nickname":"","norollbackdiff":0,"numberheadings":0,"previewonfirst":0,"previewontop":1,"rcdays":7,"rclimit":50,"rows":25,"showhiddencats":0,"shownumberswatching":1,"showtoolbar":1,"skin":"monobook","stubthreshold":0,"thumbsize":5,"underline":2,"uselivepreview":0,"usenewrc":0,"watchcreations":1,"watchdefault":1,"watchdeletion":0,"watchlistdays":3,"watchlisthideanons":0,"watchlisthidebots":0,"watchlisthideliu":0,"watchlisthideminor":0,"watchlisthideown":0,"watchlisthidepatrolled":0,"watchmoves":0,"watchrollback":0,
+"wllimit":250,"useeditwarning":1,"prefershttps":1,"language":"en","variant-gan":"gan","variant-iu":"iu","variant-kk":"kk","variant-ku":"ku","variant-shi":"shi","variant-sr":"sr","variant-tg":"tg","variant-uz":"uz","variant-zh":"zh","searchNs0":true,"searchNs1":false,"searchNs2":false,"searchNs3":false,"searchNs4":false,"searchNs5":false,"searchNs6":false,"searchNs7":false,"searchNs8":false,"searchNs9":false,"searchNs10":false,"searchNs11":false,"searchNs12":false,"searchNs13":false,"searchNs14":false,"searchNs15":false,"variant":"en"});},{},{});mw.loader.implement("user.tokens",function($,jQuery){mw.user.tokens.set({"editToken":"+\\","patrolToken":"+\\","watchToken":"+\\"});},{},{});
+/* cache key: nesdev_wiki-mw1_:resourceloader:filter:minify-js:7:ab52f6eb1652fbc58fa39bdfdc3926f5 */
+}</script>
+<script>if(window.mw){
+mw.loader.load(["mediawiki.page.startup","mediawiki.legacy.wikibits","mediawiki.legacy.ajax"]);
+}</script><script src="./CPU addressing modes - Nesdev wiki_files/load(4).php"></script>
+</head>
+<body class="mediawiki ltr sitedir-ltr ns-0 ns-subject page-CPU_addressing_modes skin-monobook action-view">
+<div id="globalWrapper">
+		<div id="column-content">
+			<div id="content" class="mw-body" role="main">
+				<a id="top"></a>
+				
+				<h1 id="firstHeading" class="firstHeading" lang="en"><span dir="auto">CPU addressing modes</span></h1>
+
+				<div id="bodyContent" class="mw-body-content">
+					<div id="siteSub">From Nesdev wiki</div>
+					<div id="contentSub"></div>
+										<div id="jump-to-nav" class="mw-jump">Jump to: <a href="https://wiki.nesdev.com/w/index.php/CPU_addressing_modes#column-one">navigation</a>, <a href="https://wiki.nesdev.com/w/index.php/CPU_addressing_modes#searchInput">search</a></div>
+
+					<!-- start content -->
+					<div id="mw-content-text" lang="en" dir="ltr" class="mw-content-ltr"><p>The NES CPU is a second-source version of MOS Technology 6502, manufactured by Ricoh.
+Addressing modes and instruction timings are the same as those in the standard 6502.
+</p><p>This page summarizes the 6502 addressing modes and explains some cases where certain modes might be useful.
+</p>
+<h2><span class="mw-headline" id="Indexed_addressing">Indexed addressing</span></h2>
+<p>Indexed addressing modes use the X or Y register to help determine the address.
+The 6502 has six main indexed addressing modes:
+</p>
+<table border="1">
+<tbody><tr>
+<th> Abbr </th>
+<th> Name </th>
+<th> Formula </th>
+<th> Cycles
+</th></tr>
+<tr>
+<td> d,x </td>
+<td> Zero page indexed </td>
+<td> val = PEEK((arg + X)&nbsp;% 256) </td>
+<td> 4
+</td></tr>
+<tr>
+<td> d,y </td>
+<td> Zero page indexed </td>
+<td> val = PEEK((arg + Y)&nbsp;% 256) </td>
+<td> 4
+</td></tr>
+<tr>
+<td> a,x </td>
+<td> Absolute indexed </td>
+<td> val = PEEK(arg + X) </td>
+<td> 4+
+</td></tr>
+<tr>
+<td> a,y </td>
+<td> Absolute indexed </td>
+<td> val = PEEK(arg + Y) </td>
+<td> 4+
+</td></tr>
+<tr>
+<td> (d,x) </td>
+<td> Indexed indirect </td>
+<td> val = PEEK(PEEK((arg + X)&nbsp;% 256) + PEEK((arg + X + 1)&nbsp;% 256) * 256) </td>
+<td> 6
+</td></tr>
+<tr>
+<td> (d),y </td>
+<td> Indirect indexed </td>
+<td> val = PEEK(PEEK(arg) + PEEK((arg + 1)&nbsp;% 256) * 256 + Y) </td>
+<td> 5+
+</td></tr></tbody></table>
+<p>Notes:
+</p>
+<ul><li>Abbreviations for addressing modes are those used in WDC's 65C816 data sheets.</li>
+<li>+ means add a cycle for write instructions or for page wrapping on read instructions, called the "oops" cycle below.</li></ul>
+<p>The 6502 has one 8-bit ALU and one 16-bit upcounter (for PC). To calculate a,x or a,y addressing in an instruction other than sta, stx, or sty, it uses the 8-bit ALU to first calculate the low byte while it fetches the high byte. If there's a carry out, it goes "oops", applies the carry using the ALU, and repeats the read at the correct address. Store instructions always have this "oops" cycle: the CPU first reads from the partially added address and then writes to the correct address. The same thing happens on (d),y indirect addressing.
+</p><p>The (d),y mode is used far more often than (d,x).
+The latter implies a table of addresses on zero page.
+On computers like the Apple II, where the BASIC interpreter uses up most of zero page, (d,x) is rarely used.
+But the NES has far more spare room in zero page, and music engine might use X = 0, 4, 8, or 12 to match <a href="https://wiki.nesdev.com/w/index.php/APU" title="APU">APU</a> register offsets.
+</p>
+<h2><span class="mw-headline" id="Other_addressing">Other addressing</span></h2>
+<table border="1">
+<tbody><tr>
+<th> Abbr </th>
+<th> Name </th>
+<th> Notes
+</th></tr>
+<tr>
+<td>     </td>
+<td> Implicit </td>
+<td> Instructions like <i>RTS</i> or <i>CLC</i> have no address operand, the destination of results are implied.
+</td></tr>
+<tr>
+<td> A </td>
+<td> Accumulator </td>
+<td> Many instructions can operate on the accumulator, e.g. <i>LSR A</i>. Some assemblers will treat no operand as an implicit <i>A</i> where applicable.
+</td></tr>
+<tr>
+<td> #v </td>
+<td> Immediate </td>
+<td> Uses the 8-bit operand itself as the value for the operation, rather than fetching a value from a memory address.
+</td></tr>
+<tr>
+<td> d </td>
+<td> Zero page </td>
+<td> Fetches the value from an 8-bit address on the zero page.
+</td></tr>
+<tr>
+<td> a </td>
+<td> Absolute </td>
+<td> Fetches the value from a 16-bit address anywhere in memory.
+</td></tr>
+<tr>
+<td> label </td>
+<td> Relative </td>
+<td> Branch instructions (e.g. <i>BEQ</i>, <i>BCS</i>) have a relative addressing mode that specifies an 8-bit signed offset relative to the current PC.
+</td></tr>
+<tr>
+<td> (a)</td>
+<td> Indirect </td>
+<td> The <i>JMP</i> instruction has a special indirect addressing mode that can jump to the address stored in a 16-bit pointer anywhere in memory.
+</td></tr></tbody></table>
+
+<!-- 
+NewPP limit report
+CPU time usage: 0.006 seconds
+Real time usage: 0.006 seconds
+Preprocessor visited node count: 7/1000000
+Preprocessor generated node count: 12/1000000
+Post‐expand include size: 0/2097152 bytes
+Template argument size: 0/2097152 bytes
+Highest expansion depth: 2/40
+Expensive parser function count: 0/100
+-->
+
+<!-- Saved in parser cache with key nesdev_wiki-mw1_:pcache:idhash:408-0!*!0!!*!*!* and timestamp 20180302214339 and revision id 11943
+ -->
+</div><div class="printfooter">
+Retrieved from "<a dir="ltr" href="https://wiki.nesdev.com/w/index.php?title=CPU_addressing_modes&amp;oldid=11943">https://wiki.nesdev.com/w/index.php?title=CPU_addressing_modes&amp;oldid=11943</a>"</div>
+					<div id="catlinks" class="catlinks catlinks-allhidden"></div>					<!-- end content -->
+										<div class="visualClear"></div>
+				</div>
+			</div>
+		</div>
+		<div id="column-one">
+			<h2>Navigation menu</h2>
+					<div id="p-cactions" class="portlet" role="navigation">
+			<h3>Views</h3>
+
+			<div class="pBody">
+				<ul>
+				<li id="ca-nstab-main" class="selected"><a href="https://wiki.nesdev.com/w/index.php/CPU_addressing_modes" title="View the content page [alt-shift-c]" accesskey="c">Page</a></li>
+				<li id="ca-talk"><a href="https://wiki.nesdev.com/w/index.php/Talk:CPU_addressing_modes" title="Discussion about the content page [alt-shift-t]" accesskey="t">Discussion</a></li>
+				<li id="ca-viewsource"><a href="https://wiki.nesdev.com/w/index.php?title=CPU_addressing_modes&amp;action=edit" title="This page is protected.
+You can view its source [alt-shift-e]" accesskey="e">View source</a></li>
+				<li id="ca-history"><a href="https://wiki.nesdev.com/w/index.php?title=CPU_addressing_modes&amp;action=history" rel="archives" title="Past revisions of this page [alt-shift-h]" accesskey="h">History</a></li>
+				</ul>
+							</div>
+		</div>
+				<div class="portlet" id="p-personal" role="navigation">
+				<h3>Personal tools</h3>
+
+				<div class="pBody">
+					<ul>
+													<li id="pt-createaccount"><a href="https://wiki.nesdev.com/w/index.php?title=Special:UserLogin&amp;returnto=CPU+addressing+modes&amp;type=signup">Create account</a></li>
+													<li id="pt-login"><a href="https://wiki.nesdev.com/w/index.php?title=Special:UserLogin&amp;returnto=CPU+addressing+modes" title="You are encouraged to log in; however, it is not mandatory [alt-shift-o]" accesskey="o">Log in</a></li>
+											</ul>
+				</div>
+			</div>
+			<div class="portlet" id="p-logo" role="banner">
+				<a href="https://wiki.nesdev.com/w/index.php/Nesdev_Wiki" style="background-image: url(/w/resources/assets/NESdevWikiLogo7.png);" title="Visit the main page"></a>
+			</div>
+				<div class="generated-sidebar portlet" id="p-navigation" role="navigation">
+		<h3>Navigation</h3>
+		<div class="pBody">
+							<ul>
+											<li id="n-Nesdev-main-page"><a href="https://wiki.nesdev.com/w/index.php/Nesdev">Nesdev main page</a></li>
+											<li id="n-Wiki-main-page"><a href="https://wiki.nesdev.com/w/index.php/Nesdev_Wiki">Wiki main page</a></li>
+											<li id="n-NES-reference-guide"><a href="https://wiki.nesdev.com/w/index.php/NES_reference_guide">NES reference guide</a></li>
+											<li id="n-Programming-guide"><a href="https://wiki.nesdev.com/w/index.php/Programming_guide">Programming guide</a></li>
+											<li id="n-Projects"><a href="https://wiki.nesdev.com/w/index.php/Projects">Projects</a></li>
+											<li id="n-Offline-HTML-version"><a href="http://wiki.nesdev.com/w/nesdevwiki_2016-08-28.zip" rel="nofollow">Offline HTML version</a></li>
+											<li id="n-NESdev-BBS"><a href="http://forums.nesdev.com/" rel="nofollow">NESdev BBS</a></li>
+											<li id="n-.23NESdev"><a href="https://wiki.nesdev.com/w/index.php/NESdev_IRC_channel">#NESdev</a></li>
+											<li id="n-recentchanges"><a href="https://wiki.nesdev.com/w/index.php/Special:RecentChanges" title="A list of recent changes in the wiki [alt-shift-r]" accesskey="r">Recent changes</a></li>
+									</ul>
+					</div>
+		</div>
+			<div id="p-search" class="portlet" role="search">
+			<h3><label for="searchInput">Search</label></h3>
+
+			<div id="searchBody" class="pBody">
+				<form action="https://wiki.nesdev.com/w/index.php" id="searchform">
+					<input type="hidden" name="title" value="Special:Search">
+					<input type="search" name="search" placeholder="Search" title="Search Nesdev wiki [alt-shift-f]" accesskey="f" id="searchInput" autocomplete="off">
+					<input type="submit" name="go" value="Go" title="Go to a page with this exact name if exists" id="searchGoButton" class="searchButton">&nbsp;
+						<input type="submit" name="fulltext" value="Search" title="Search the pages for this text" id="mw-searchButton" class="searchButton">
+				</form>
+
+							</div>
+		</div>
+			<div class="portlet" id="p-tb" role="navigation">
+			<h3>Tools</h3>
+
+			<div class="pBody">
+				<ul>
+											<li id="t-whatlinkshere"><a href="https://wiki.nesdev.com/w/index.php/Special:WhatLinksHere/CPU_addressing_modes" title="A list of all wiki pages that link here [alt-shift-j]" accesskey="j">What links here</a></li>
+											<li id="t-recentchangeslinked"><a href="https://wiki.nesdev.com/w/index.php/Special:RecentChangesLinked/CPU_addressing_modes" title="Recent changes in pages linked from this page [alt-shift-k]" accesskey="k">Related changes</a></li>
+											<li id="t-specialpages"><a href="https://wiki.nesdev.com/w/index.php/Special:SpecialPages" title="A list of all special pages [alt-shift-q]" accesskey="q">Special pages</a></li>
+											<li id="t-print"><a href="https://wiki.nesdev.com/w/index.php?title=CPU_addressing_modes&amp;printable=yes" rel="alternate" title="Printable version of this page [alt-shift-p]" accesskey="p">Printable version</a></li>
+											<li id="t-permalink"><a href="https://wiki.nesdev.com/w/index.php?title=CPU_addressing_modes&amp;oldid=11943" title="Permanent link to this revision of the page">Permanent link</a></li>
+											<li id="t-info"><a href="https://wiki.nesdev.com/w/index.php?title=CPU_addressing_modes&amp;action=info">Page information</a></li>
+									</ul>
+							</div>
+		</div>
+			</div><!-- end of the left (by default at least) column -->
+		<div class="visualClear"></div>
+					<div id="footer" role="contentinfo">
+						<div id="f-poweredbyico">
+									<a href="https://www.mediawiki.org/"><img src="./CPU addressing modes - Nesdev wiki_files/poweredby_mediawiki_88x31.png" alt="Powered by MediaWiki" width="88" height="31"></a>
+							</div>
+					<ul id="f-list">
+									<li id="lastmod"> This page was last modified on 9 February 2016, at 15:37.</li>
+									<li id="viewcount">This page has been accessed 20,185 times.</li>
+									<li id="privacy"><a href="https://wiki.nesdev.com/w/index.php/Nesdev_wiki:Privacy_policy" title="Nesdev wiki:Privacy policy">Privacy policy</a></li>
+									<li id="about"><a href="https://wiki.nesdev.com/w/index.php/Nesdev_wiki:About" title="Nesdev wiki:About">About Nesdev wiki</a></li>
+									<li id="disclaimer"><a href="https://wiki.nesdev.com/w/index.php/Nesdev_wiki:General_disclaimer" title="Nesdev wiki:General disclaimer">Disclaimers</a></li>
+							</ul>
+		</div>
+		</div>
+		<script>/*<![CDATA[*/window.jQuery && jQuery.ready();/*]]>*/</script><script>if(window.mw){
+mw.loader.state({"site":"loading","user":"ready","user.groups":"ready"});
+}</script>
+<script>if(window.mw){
+mw.loader.load(["mediawiki.action.view.postEdit","mediawiki.user","mediawiki.hidpi","mediawiki.page.ready","mediawiki.searchSuggest"],null,true);
+}</script>
+<script>if(window.mw){
+document.write("\u003Cscript src=\"https://wiki.nesdev.com/w/load.php?debug=false\u0026amp;lang=en\u0026amp;modules=site\u0026amp;only=scripts\u0026amp;skin=monobook\u0026amp;*\"\u003E\u003C/script\u003E");
+}</script><script src="./CPU addressing modes - Nesdev wiki_files/load(5).php"></script><div class="suggestions" style="display: none; font-size: 11.4617px;"><div class="suggestions-results"></div><div class="suggestions-special"></div></div>
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-61452025-3', 'auto');
+  ga('send', 'pageview');
+
+</script>
+<script type="text/javascript" src="https://analytics.example.com/tracking.js"></script>
+<script>if(window.mw){
+mw.config.set({"wgBackendResponseTime":42});
+}</script></body></html>

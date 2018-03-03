@@ -20,8 +20,8 @@ namespace MICE.TestApp
             var cts = new CancellationTokenSource();
             var token = cts.Token;
             var nes = new NES(token);
-            //var cartridge = NESLoader.CreateCartridge(@"C:\Emulators\NES\Games\Super Mario Bros.nes");
-            var cartridge = NESLoader.CreateCartridge(@"G:\Emulators\NES\Games\Super Mario Bros.nes");
+            var cartridge = NESLoader.CreateCartridge(@"C:\Emulators\NES\Games\Super Mario Bros.nes");
+            //var cartridge = NESLoader.CreateCartridge(@"G:\Emulators\NES\Games\Super Mario Bros.nes");
 
             nes.LoadCartridge(cartridge);
             nes.PowerOn();

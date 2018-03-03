@@ -54,20 +54,31 @@ namespace MICE.CPU.MOS6502
         {
         }
 
-        [MOS6502Opcode(0xC9, "CMP", AddressingMode.Immediate, cycles: 2, pcDelta: 2)]
-        public void CMP(OpcodeContainer container)
+        private void CompareValues(byte value1, byte value2, bool S = true, bool Z = true, bool C = true)
         {
-            var nextByte = CPU.ReadNextByte();
-            sbyte result = (sbyte)(CPU.A - nextByte);
+            sbyte result = (sbyte)(value1 - value2);
 
-            if (CPU.A >= nextByte)
+            if(C && (value1 >= value2))
             {
                 CPU.IsCarry = true;
+            }
+            else
+            {
+                CPU.IsCarry = false;
             }
 
             this.HandleNegative((byte)result);
             this.HandleZero((byte)result);
         }
+
+        [MOS6502Opcode(0xC0, "CPY", AddressingMode.Immediate, cycles: 2, pcDelta: 2)]
+        public void CPY(OpcodeContainer container) => this.CompareValues(CPU.Y, CPU.ReadNextByte());
+
+        [MOS6502Opcode(0xE0, "CPX", AddressingMode.Immediate, cycles: 2, pcDelta: 2)]
+        public void CPX(OpcodeContainer container) => this.CompareValues(CPU.X, CPU.ReadNextByte());
+
+        [MOS6502Opcode(0xC9, "CMP", AddressingMode.Immediate, cycles: 2, pcDelta: 2)]
+        public void CMP(OpcodeContainer container) => this.CompareValues(CPU.A, CPU.ReadNextByte());
 
         [MOS6502Opcode(0xA2, "LDX", AddressingMode.Immediate, cycles: 2, pcDelta: 2)]
         public void LDX(OpcodeContainer container) => this.WriteNextByteToRegister(CPU.X, S: true, Z: true);
@@ -106,11 +117,18 @@ namespace MICE.CPU.MOS6502
             }
         }
 
+        #region STore
+
+        [MOS6502Opcode(0x85, "STA", AddressingMode.ZeroPage, cycles: 3, pcDelta: 2)]
         [MOS6502Opcode(0x8D, "STA", AddressingMode.Absolute, cycles: 4, pcDelta: 3)]
         public void STA(OpcodeContainer container)
         {
             switch (container.AddressingMode)
             {
+                case AddressingMode.ZeroPage:
+                    var value = CPU.ReadNextByte(incrementPC: false);
+                    CPU.WriteByteAt(value, CPU.A);
+                    break;
                 case AddressingMode.Absolute:
                     var address = CPU.ReadNextShort();
                     CPU.WriteByteAt(address, CPU.A);
@@ -119,6 +137,11 @@ namespace MICE.CPU.MOS6502
                     throw new InvalidOperationException($"Unexpected AddressingMode in STA: {container.AddressingMode}");
             }
         }
+
+        [MOS6502Opcode(0x86, "STX", AddressingMode.ZeroPage, cycles: 3, pcDelta: 2)]
+        public void STX(OpcodeContainer container) => CPU.WriteByteAt(CPU.ReadNextByte(), CPU.X, incrementPC: false);
+
+        #endregion
 
         #region Jumps
 
