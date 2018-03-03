@@ -164,12 +164,24 @@ namespace MICE.CPU.MOS6502
 
             opCode.Instruction(opCode);
 
-            if (oldPC + opCode.PCDelta != this.PC)
+            if (opCode.ShouldVerifyResults && (oldPC + opCode.PCDelta != this.PC))
             {
                 throw new InvalidOperationException($"Program Counter was not what was expected after executing instruction: {opCode.Name} (0x{opCode.Code:X}).{Environment.NewLine}Was: 0x{oldPC:X}{Environment.NewLine}Is: 0x{this.PC.Read():X}{Environment.NewLine}Expected: 0x{oldPC + opCode.PCDelta:X}");
             }
 
             return opCode.Cycles;
+        }
+
+        public ushort StackGetPointer(int steps)
+        {
+            var stackPointer = this.SP.Read() + 0x0100;
+            return (ushort)(stackPointer + steps);
+        }
+
+        public void StackMove(int steps)
+        {
+            var stackPointer = this.SP.Read();
+            this.SP.Write((byte)(stackPointer + steps));
         }
 
         public void WriteByteAt(ushort address, byte value, bool incrementPC = true)

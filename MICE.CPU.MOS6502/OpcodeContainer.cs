@@ -12,6 +12,7 @@ namespace MICE.CPU.MOS6502
         public int Code { get; private set; }
         public string Name { get; private set; }
         public string Description { get; private set; }
+        public bool ShouldVerifyResults { get; private set; }
 
         public Action<OpcodeContainer> Instruction { get; private set; }
 
@@ -23,6 +24,7 @@ namespace MICE.CPU.MOS6502
             this.Name = details.Name;
             this.Description = details.Description;
             this.PCDelta = details.PCDelta;
+            this.ShouldVerifyResults = details.ShouldVerify;
 
             this.Instruction = (Action<OpcodeContainer>)Delegate.CreateDelegate(typeof(Action<OpcodeContainer>), opcodes, methodInfo, throwOnBindFailure: true);
         }

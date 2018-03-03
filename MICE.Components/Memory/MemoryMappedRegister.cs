@@ -1,4 +1,5 @@
-﻿using MICE.Common.Interfaces;
+﻿using System;
+using MICE.Common.Interfaces;
 
 namespace MICE.Components.Memory
 {
@@ -15,6 +16,8 @@ namespace MICE.Components.Memory
         {
             this.mappedRegister = mappedRegister;
         }
+
+        public Action AfterReadAction => this.mappedRegister.AfterReadAction;
 
         public override int GetOffsetInSegment(int index) => throw new System.NotImplementedException();
 

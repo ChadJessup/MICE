@@ -17,11 +17,11 @@ namespace MICE.PPU.RicohRP2C02
 
         public PPUMemoryMap MemoryMap { get; } = new PPUMemoryMap();
 
-        // Registers for the PPU, that the CPU has memory mapped to particular locations.
+        // Registers for the PPU that the CPU has memory mapped to particular locations.
         // The memory mapping happens when the CPU is being initialized.
 
         /// <summary>
-        /// Various bits that controls how the PPU behaves. Sometimes called PPU Control Register 1.
+        /// The PPU Control register contains various bits that controls how the PPU behaves. Sometimes called PPU Control Register 1.
         /// This register is memory mapped to the CPU at $2000.
         /// </summary>
         public Register8Bit PPUCTRL = new Register8Bit("PPUCTRL");
@@ -58,7 +58,7 @@ namespace MICE.PPU.RicohRP2C02
             set => this.PPUCTRL.SetBit(6, value);
         }
 
-        public bool ShouldGenerateNMI
+        public bool WasNMIRequested
         {
             get => this.PPUCTRL.GetBit(7);
             set => this.PPUCTRL.SetBit(7, value);
@@ -108,6 +108,12 @@ namespace MICE.PPU.RicohRP2C02
         /// This register is memory mapped to the CPU at $2002.
         /// </summary>
         public Register8Bit PPUSTATUS = new Register8Bit("PPUSTATUS");
+
+        public bool IsVBlank
+        {
+            get => this.PPUSTATUS.GetBit(7);
+            set => this.PPUSTATUS.SetBit(7, value);
+        }
 
         /// <summary>
         /// The OAM read/write address.
@@ -167,6 +173,10 @@ namespace MICE.PPU.RicohRP2C02
 
         public void PowerOn(CancellationToken cancellationToken)
         {
+            this.PPUSTATUS.AfterReadAction = () =>
+            {
+                this.IsVBlank = false;
+            };
         }
 
         public int Step()
@@ -189,7 +199,36 @@ namespace MICE.PPU.RicohRP2C02
                 this.HandleVerticalBlankLines();
             }
 
+            if (this.ScanLine == 261)
+            {
+                this.HandleFinalScanline();
+            }
+
+            this.Cycle++;
+
+            if (this.OnFinalCycleOnLine())
+            {
+                this.ScanLine++;
+                this.Cycle = 0;
+            }
+
             return 0;
+        }
+
+        private bool OnFinalCycleOnLine()
+        {
+            if (this.ShowBackground && !this.IsFrameEven && this.ScanLine == -1)
+            {
+                return this.Cycle == 340;
+            }
+
+            return this.Cycle == 341;
+        }
+
+        private void HandleFinalScanline()
+        {
+            this.ScanLine = -1;
+            this.Frame++;
         }
 
         private void HandlePrerenderScanline()
@@ -240,6 +279,15 @@ namespace MICE.PPU.RicohRP2C02
 
         private void HandleVerticalBlankLines()
         {
+            if (this.ScanLine == 241 && this.Cycle == 1)
+            {
+                this.IsVBlank = true;
+
+                if (this.WasNMIRequested)
+                {
+                    // TODO: do NMI.
+                }
+            }
         }
 
         private void DrawBackgroundPixel(int x, int y)

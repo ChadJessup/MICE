@@ -68,15 +68,18 @@ namespace MICE.Nintendo
             // Cycles are based on which instructions the CPU ran.
 
             var cpuCycles = this.CPU.Step();
+            CPU.CurrentCycle += cpuCycles;
 
             for (int i = 0; i < cpuCycles * 3; i++)
             {
                 var ppuCycles = this.PPU.Step();
+                if(this.PPU.Frame == 3)
+                {
+
+                }
             }
 
             // TODO: APU Cycles
-
-            CPU.CurrentCycle += cpuCycles;
         }
 
         private void SetupOpcodes()

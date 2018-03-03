@@ -12,10 +12,10 @@ namespace MICE.Components.Memory
 
         public byte[] Data { get; set; }
 
-        public override byte ReadByte(int index) => this.Data[index];
-        public override ushort ReadShort(int index) => BitConverter.ToUInt16(this.Data, index);
+        public override byte ReadByte(int index) => this.Data[this.GetOffsetInSegment(index - 1)];
+        public override ushort ReadShort(int index) => BitConverter.ToUInt16(this.Data, this.GetOffsetInSegment(index - 1));
 
-        public override void Write(int index, byte value) => this.Data[index] = value;
+        public override void Write(int index, byte value) => this.Data[this.GetOffsetInSegment(index - 1)] = value;
         public override void Write(int index, ushort value) => throw new NotImplementedException();
     }
 }

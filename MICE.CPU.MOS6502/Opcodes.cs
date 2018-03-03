@@ -46,6 +46,7 @@ namespace MICE.CPU.MOS6502
 
         // Most of the following is from: http://www.6502.org/tutorials/6502opcodes.html
         // Also: http://www.obelisk.me.uk/6502/reference.html
+        // And: http://www.thealmightyguru.com/Games/Hacking/Wiki/index.php?title=6502_Opcodes
 
         //[MOS6502Opcode(0x24, 3, "BIT", AddressingMode.ZeroPage)]
         //[MOS6502Opcode(0x2C, 4, "BIT", AddressingMode.Absolute)]
@@ -53,14 +54,33 @@ namespace MICE.CPU.MOS6502
         {
         }
 
+        [MOS6502Opcode(0xC9, "CMP", AddressingMode.Immediate, cycles: 2, pcDelta: 2)]
+        public void CMP(OpcodeContainer container)
+        {
+            var nextByte = CPU.ReadNextByte();
+            sbyte result = (sbyte)(CPU.A - nextByte);
+
+            if (CPU.A >= nextByte)
+            {
+                CPU.IsCarry = true;
+            }
+
+            this.HandleNegative((byte)result);
+            this.HandleZero((byte)result);
+        }
+
         [MOS6502Opcode(0xA2, "LDX", AddressingMode.Immediate, cycles: 2, pcDelta: 2)]
         public void LDX(OpcodeContainer container) => this.WriteNextByteToRegister(CPU.X, S: true, Z: true);
+
+        [MOS6502Opcode(0xA0, "LDY", AddressingMode.Immediate, cycles: 2, pcDelta: 2)]
+        public void LDY(OpcodeContainer container) => this.WriteNextByteToRegister(CPU.Y, S: true, Z: true);
 
         [MOS6502Opcode(0x9A, "TXS", AddressingMode.Immediate, cycles: 2, pcDelta: 1)]
         public void TXS(OpcodeContainer container) => CPU.SP = CPU.X;
 
         [MOS6502Opcode(0xA9, "LDA", AddressingMode.Immediate, cycles: 2, pcDelta: 2)]
         [MOS6502Opcode(0xAD, "LDA", AddressingMode.Absolute, cycles: 4, pcDelta: 3)]
+        [MOS6502Opcode(0xBD, "LDA", AddressingMode.AbsoluteX, cycles: 4, pcDelta: 3)]
         public void LDA(OpcodeContainer container)
         {
             switch(container.AddressingMode)
@@ -71,6 +91,15 @@ namespace MICE.CPU.MOS6502
                 case AddressingMode.Absolute:
                     ushort address = CPU.ReadNextShort();
                     this.WriteByteAtToRegister(CPU.A, address, S: true, Z: true);
+                    break;
+                case AddressingMode.AbsoluteX:
+                    ushort partialAddress = CPU.ReadNextShort();
+                    ushort combinedwithX = (ushort)(partialAddress + CPU.X);
+                    this.WriteByteAtToRegister(CPU.A, combinedwithX, S: true, Z: true);
+                    if (!this.AreSamePage(partialAddress, combinedwithX))
+                    {
+                        container.Cycles++;
+                    }
                     break;
                 default:
                     throw this.ExceptionForUnhandledAddressingMode(container);
@@ -83,12 +112,27 @@ namespace MICE.CPU.MOS6502
             switch (container.AddressingMode)
             {
                 case AddressingMode.Absolute:
-                    CPU.WriteByteAt(CPU.ReadNextShort(), CPU.A);
+                    var address = CPU.ReadNextShort();
+                    CPU.WriteByteAt(address, CPU.A);
                     break;
                 default:
                     throw new InvalidOperationException($"Unexpected AddressingMode in STA: {container.AddressingMode}");
             }
         }
+
+        #region Jumps
+
+        [MOS6502Opcode(0x20, "JSR", AddressingMode.Absolute, cycles: 6, pcDelta: 3, verify: false)]
+        public void JSR(OpcodeContainer container)
+        {
+            // We want to push PC+1's value to S - 1...
+            var sp = CPU.StackGetPointer(-1);
+            CPU.WriteShortAt(sp, (ushort)(CPU.PC + 1), incrementPC: false);
+            CPU.StackMove(-2);
+            CPU.SetPCTo(CPU.ReadNextShort());
+        }
+
+        #endregion
 
         #region Branches
 
@@ -96,6 +140,24 @@ namespace MICE.CPU.MOS6502
         public void BPL(OpcodeContainer container)
         {
             var (cycles, pcDelta) = this.Branch(!CPU.IsNegative);
+
+            container.Cycles = cycles;
+            container.PCDelta = pcDelta;
+        }
+
+        [MOS6502Opcode(0xB0, "BCS", AddressingMode.Relative, cycles: 2, pcDelta: 2)]
+        public void BCS(OpcodeContainer container)
+        {
+            var (cycles, pcDelta) = this.Branch(CPU.IsCarry);
+
+            container.Cycles = cycles;
+            container.PCDelta = pcDelta;
+        }
+
+        [MOS6502Opcode(0xD0, "BNE", AddressingMode.Relative, cycles: 2, pcDelta: 2)]
+        public void BNE(OpcodeContainer container)
+        {
+            var (cycles, pcDelta) = this.Branch(CPU.IsZero);
 
             container.Cycles = cycles;
             container.PCDelta = pcDelta;
@@ -128,8 +190,21 @@ namespace MICE.CPU.MOS6502
 
         #endregion
 
+        #region Register Instructions
+        [MOS6502Opcode(0xCA, "DEX", AddressingMode.Implied, cycles: 2, pcDelta: 1)]
+        public void DEX(OpcodeContainer container)
+        {
+            byte x = CPU.X;
+            CPU.X.Write(--x);
+
+            this.HandleNegative(CPU.X);
+            this.HandleZero(CPU.X);
+        }
+
+        #endregion
+
         // TODO: hmmm...seems too easy, we'll see. 0x80 = 128, max of signed byte.
-        private void HandleNegative(byte nextByte) => CPU.IsNegative = nextByte >= 0x80;
+        private void HandleNegative(byte operand) => CPU.IsNegative = operand >= 0x80;
         private void HandleZero(byte operand) => CPU.IsZero = operand == 0;
 
         private (int cycles, int pcDelta) Branch(bool condition)
@@ -145,6 +220,10 @@ namespace MICE.CPU.MOS6502
                 CPU.SetPCTo(newPC);
 
                 cycles++;
+            }
+            else
+            {
+                CPU.IncrementPC(1);
             }
 
             // Adding 1 to PC delta to compensate for the original PC++ to get here.
@@ -204,6 +283,7 @@ namespace MICE.CPU.MOS6502
             }
         }
 
+        private bool AreSamePage(ushort a1, ushort a2) => ((a1 ^ a2) & 0xFF00) == 0;
         private InvalidOperationException ExceptionForUnhandledAddressingMode(OpcodeContainer container) => new InvalidOperationException($"Unhandled AddressMode ({container.AddressingMode}) for Opcode: ({container.Name})");
     }
 }

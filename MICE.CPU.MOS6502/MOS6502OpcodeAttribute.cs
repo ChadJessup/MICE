@@ -21,12 +21,15 @@ namespace MICE.CPU.MOS6502
         /// </summary>
         public int PCDelta { get; private set; }
 
-        public MOS6502OpcodeAttribute(int code, string name, AddressingMode addressingMode, int cycles, int pcDelta, string description = "")
+        public bool ShouldVerify { get; private set; }
+
+        public MOS6502OpcodeAttribute(int code, string name, AddressingMode addressingMode, int cycles, int pcDelta, string description = "", bool verify = true)
             : base(code, name, description)
         {
             this.AddressingMode = addressingMode;
             this.Cycles = cycles;
             this.PCDelta = pcDelta;
+            this.ShouldVerify = verify;
         }
     }
 }
