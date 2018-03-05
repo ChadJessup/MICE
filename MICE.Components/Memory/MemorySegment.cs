@@ -11,9 +11,9 @@ namespace MICE.Components.Memory
 
         public MemorySegment(int lowerIndex, int upperIndex, string name)
         {
-            if (lowerIndex >= upperIndex || lowerIndex == upperIndex)
+            if (lowerIndex > upperIndex)
             {
-                throw new InvalidOperationException($"{Name} The upper index ({upperIndex}) must be greater than the lower index ({lowerIndex})");
+                throw new InvalidOperationException($"{Name} The upper index (0x{upperIndex:X}) must be greater than or equal to the lower index (0x{lowerIndex:X})");
             }
 
             this.LowerIndex = lowerIndex;
@@ -24,7 +24,7 @@ namespace MICE.Components.Memory
         public virtual bool IsIndexInRange(int index) => index >= this.LowerIndex && index <= this.UpperIndex;
         public virtual (int min, int max) GetRange() => (min: this.LowerIndex, max: this.UpperIndex);
 
-        public int GetOffsetInSegment(int index) => index - this.LowerIndex;
+        public int GetOffsetInSegment(int index) => Math.Max(0, index - this.LowerIndex);
 
         public abstract byte ReadByte(int index);
         public abstract ushort ReadShort(int index);

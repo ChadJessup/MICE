@@ -38,8 +38,14 @@ namespace MICE.Nintendo
             // $2008 - I/O - Mirrors $2000-$2007 in a repeating pattern until $3FFF.
             this.Add(new MirroredMemory(0x2008, 0x3FFF, 0x2000, 0x2007, "Mirrored PPU Registers"));
 
+            // TODO: 4010 - 4013 = APU...not implemented now, but we need to map it still.
+            this.Add(new RAM(0x4011, 0x4011, "APU DMA Load Counter"));
+
             // $4014 - I/O - I/O Registers (DMA for sprites)
             this.Add(new MemoryMappedRegister<byte>(0x4014, 0x4014, ppu.OAMDMA, "Mapped PPU Sprite DMA Register"));
+
+            // TODO: 4015 APU Status...not implemented now, but we need to map it still.
+            this.Add(new RAM(0x4015, 0x4015, "APU Status Register"));
 
             // Expansion Memory - seems to be able to be used by various Mappers for various reasons
             // TODO: Route into cartridge as well?

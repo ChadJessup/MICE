@@ -16,6 +16,7 @@ namespace MICE.CPU.MOS6502
 
         private Opcodes Opcodes;
         private readonly IMemoryMap memoryMap;
+        private long ranOpcodeCount = 0;
 
         public MOS6502(IMemoryMap memoryMap)
         {
@@ -101,7 +102,7 @@ namespace MICE.CPU.MOS6502
         public bool WillBreak
         {
             get => this.P.GetBit(4);
-            set => this.P.SetBit(3, value);
+            set => this.P.SetBit(4, value);
         }
 
         /// <summary>
@@ -139,11 +140,33 @@ namespace MICE.CPU.MOS6502
         public void Reset(CancellationToken cancellationToken)
         {
             this.Opcodes = new Opcodes(this);
-            this.A.Write(1);
+            this.A.Write(0);
             this.X.Write(0);
             this.Y.Write(0);
             this.SP.Write(Constants.StackPointerStart);
             this.PC.Write(this.memoryMap.ReadShort(this.InterruptOffsets[InterruptType.Reset]));
+
+            this.Unused = true;
+            this.AreInterruptsDisabled = true;
+
+            this.IsCarry = false;
+            this.IsDecimalMode = false;
+            this.IsNegative = false;
+            this.IsOverflowed = false;
+            this.IsZero = false;
+            this.WillBreak = true;
+
+            // TODO: Move the below to NES specific reset logic...APU specifically...
+            // Frame IRQ Enabled - APU
+            // this.memoryMap.Write(0x4017, 00);
+
+            // All channels disabled.
+            // this.memoryMap.Write(0x4015, 00);
+
+            // for (ushort i = 0x4000; i <= 0x400F; i++)
+            // {
+               //  this.memoryMap.Write(i, 00);
+            //}
         }
 
         /// <summary>
@@ -155,7 +178,8 @@ namespace MICE.CPU.MOS6502
         {
             // TODO: Put behind debug flag...
             ushort oldPC = this.PC;
-
+            if (this.PC == 0x8022)
+            { }
             // Grab an Opcode from the PC register:
             var code = this.ReadNextByte();
 
@@ -169,6 +193,7 @@ namespace MICE.CPU.MOS6502
                 throw new InvalidOperationException($"Program Counter was not what was expected after executing instruction: {opCode.Name} (0x{opCode.Code:X}).{Environment.NewLine}Was: 0x{oldPC:X}{Environment.NewLine}Is: 0x{this.PC.Read():X}{Environment.NewLine}Expected: 0x{oldPC + opCode.PCDelta:X}");
             }
 
+            this.ranOpcodeCount++;
             return opCode.Cycles;
         }
 

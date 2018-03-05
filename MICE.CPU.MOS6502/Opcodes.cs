@@ -48,21 +48,45 @@ namespace MICE.CPU.MOS6502
         // Also: http://www.obelisk.me.uk/6502/reference.html
         // And: http://www.thealmightyguru.com/Games/Hacking/Wiki/index.php?title=6502_Opcodes
 
+        #region Bit Operations
+
         //[MOS6502Opcode(0x24, 3, "BIT", AddressingMode.ZeroPage)]
-        //[MOS6502Opcode(0x2C, 4, "BIT", AddressingMode.Absolute)]
+        [MOS6502Opcode(0x2C, "BIT", AddressingMode.Absolute, cycles: 4, pcDelta: 3)]
         public void BIT(OpcodeContainer container)
         {
+            var value = CPU.ReadNextShort();
+            var accumulator = CPU.A.Read();
+
+            byte result = (byte)(value & accumulator);
+
+            CPU.IncrementPC();
+
+            this.HandleNegative(result);
+            this.HandleZero(result);
+            this.HandleOverflow(result);
         }
 
-        private void CompareValues(byte value1, byte value2, bool S = true, bool Z = true, bool C = true)
+        [MOS6502Opcode(0x09, "ORA", AddressingMode.Immediate, cycles: 2, pcDelta: 2)]
+        public void ORA(OpcodeContainer container)
         {
-            sbyte result = (sbyte)(value1 - value2);
+            CPU.A.Write((byte)(CPU.A | CPU.ReadNextByte()));
 
-            CPU.IsCarry = C && (value1 >= value2);
-
-            this.HandleNegative((byte)result);
-            this.HandleZero((byte)result);
+            this.HandleNegative(CPU.A);
+            this.HandleZero(CPU.A);
         }
+
+        [MOS6502Opcode(0x29, "AND", AddressingMode.Immediate, cycles: 2, pcDelta: 2)]
+        public void AND(OpcodeContainer container)
+        {
+            CPU.A.Write((byte)(CPU.A & CPU.ReadNextByte()));
+
+            this.HandleNegative(CPU.A);
+            this.HandleZero(CPU.A);
+        }
+
+        #endregion
+
+        #region Compare Operations
 
         [MOS6502Opcode(0xC0, "CPY", AddressingMode.Immediate, cycles: 2, pcDelta: 2)]
         public void CPY(OpcodeContainer container) => this.CompareValues(CPU.Y, CPU.ReadNextByte());
@@ -73,14 +97,15 @@ namespace MICE.CPU.MOS6502
         [MOS6502Opcode(0xC9, "CMP", AddressingMode.Immediate, cycles: 2, pcDelta: 2)]
         public void CMP(OpcodeContainer container) => this.CompareValues(CPU.A, CPU.ReadNextByte());
 
+        #endregion
+
+        #region Load Operations
+
         [MOS6502Opcode(0xA2, "LDX", AddressingMode.Immediate, cycles: 2, pcDelta: 2)]
         public void LDX(OpcodeContainer container) => this.WriteNextByteToRegister(CPU.X, S: true, Z: true);
 
         [MOS6502Opcode(0xA0, "LDY", AddressingMode.Immediate, cycles: 2, pcDelta: 2)]
         public void LDY(OpcodeContainer container) => this.WriteNextByteToRegister(CPU.Y, S: true, Z: true);
-
-        [MOS6502Opcode(0x9A, "TXS", AddressingMode.Immediate, cycles: 2, pcDelta: 1)]
-        public void TXS(OpcodeContainer container) => CPU.SP = CPU.X;
 
         [MOS6502Opcode(0xA9, "LDA", AddressingMode.Immediate, cycles: 2, pcDelta: 2)]
         [MOS6502Opcode(0xAD, "LDA", AddressingMode.Absolute, cycles: 4, pcDelta: 3)]
@@ -110,11 +135,21 @@ namespace MICE.CPU.MOS6502
             }
         }
 
+        #endregion
+
+        #region Stack Instructions
+
+        [MOS6502Opcode(0x9A, "TXS", AddressingMode.Immediate, cycles: 2, pcDelta: 1)]
+        public void TXS(OpcodeContainer container) => CPU.SP.Write(CPU.X);
+
+        #endregion
+
         #region STore
 
         [MOS6502Opcode(0x91, "STA", AddressingMode.IndirectY, cycles: 6, pcDelta: 2)]
         [MOS6502Opcode(0x85, "STA", AddressingMode.ZeroPage, cycles: 3, pcDelta: 2)]
         [MOS6502Opcode(0x8D, "STA", AddressingMode.Absolute, cycles: 4, pcDelta: 3)]
+        [MOS6502Opcode(0x99, "STA", AddressingMode.AbsoluteY, cycles: 5, pcDelta: 3)]
         public void STA(OpcodeContainer container)
         {
             switch (container.AddressingMode)
@@ -128,10 +163,15 @@ namespace MICE.CPU.MOS6502
                     CPU.WriteByteAt(address, CPU.A);
                     break;
                 case AddressingMode.IndirectY:
-                    var indirectYAddress = (ushort)CPU.ReadNextByte();
-                    var indirectYValue = CPU.ReadShortAt((ushort)(indirectYAddress));// + CPU.Y;
-                    indirectYAddress += CPU.Y;
-                    CPU.WriteByteAt(indirectYAddress, CPU.A);
+                    var indirectYAddress = (ushort)CPU.ReadNextByte(incrementPC: false);
+                    ushort indirectYValue = (ushort)(CPU.ReadShortAt(indirectYAddress) + CPU.Y);
+                    CPU.WriteByteAt(indirectYValue, CPU.A, incrementPC: false);
+                    break;
+                case AddressingMode.AbsoluteY:
+                    var absoluteYAddress = CPU.ReadNextShort();
+                    absoluteYAddress += CPU.Y;
+
+                    CPU.WriteByteAt(absoluteYAddress, CPU.A);
                     break;
                 default:
                     throw new InvalidOperationException($"Unexpected AddressingMode in STA: {container.AddressingMode}");
@@ -145,6 +185,19 @@ namespace MICE.CPU.MOS6502
 
         #region Jumps
 
+        [MOS6502Opcode(0x4C, "JMP", AddressingMode.Absolute, cycles: 3, pcDelta: 3, verify: false)]
+        public void JMP(OpcodeContainer container)
+        {
+            switch (container.AddressingMode)
+            {
+                case AddressingMode.Absolute:
+                    CPU.SetPCTo(CPU.ReadNextShort());
+                    break;
+                default:
+                    throw new InvalidOperationException($"Unexpected AddressingMode in JMP: {container.AddressingMode}");
+            }
+        }
+
         [MOS6502Opcode(0x20, "JSR", AddressingMode.Absolute, cycles: 6, pcDelta: 3, verify: false)]
         public void JSR(OpcodeContainer container)
         {
@@ -153,6 +206,15 @@ namespace MICE.CPU.MOS6502
             CPU.WriteShortAt(sp, (ushort)(CPU.PC + 1), incrementPC: false);
             CPU.StackMove(-2);
             CPU.SetPCTo(CPU.ReadNextShort());
+        }
+
+        [MOS6502Opcode(0x60, "RTS", AddressingMode.Absolute, cycles: 6, pcDelta: 1, verify: false)]
+        public void RTS(OpcodeContainer container)
+        {
+            var sp = CPU.StackGetPointer(1);
+            var newAddress = CPU.ReadShortAt(sp, incrementPC: false);
+
+            CPU.SetPCTo((ushort)(newAddress + 1));
         }
 
         #endregion
@@ -180,7 +242,7 @@ namespace MICE.CPU.MOS6502
         [MOS6502Opcode(0xD0, "BNE", AddressingMode.Relative, cycles: 2, pcDelta: 2)]
         public void BNE(OpcodeContainer container)
         {
-            var (cycles, pcDelta) = this.Branch(CPU.IsZero);
+            var (cycles, pcDelta) = this.Branch(CPU.IsZero == false);
 
             container.Cycles = cycles;
             container.PCDelta = pcDelta;
@@ -214,6 +276,7 @@ namespace MICE.CPU.MOS6502
         #endregion
 
         #region Register Instructions
+
         [MOS6502Opcode(0xCA, "DEX", AddressingMode.Implied, cycles: 2, pcDelta: 1)]
         public void DEX(OpcodeContainer container)
         {
@@ -234,11 +297,47 @@ namespace MICE.CPU.MOS6502
             this.HandleZero(CPU.Y);
         }
 
+        [MOS6502Opcode(0xC8, "INY", AddressingMode.Implied, cycles: 2, pcDelta: 1)]
+        public void INY(OpcodeContainer container)
+        {
+            byte y = CPU.Y;
+            CPU.Y.Write(++y);
+
+            this.HandleNegative(CPU.Y);
+            this.HandleZero(CPU.Y);
+        }
+
+        [MOS6502Opcode(0xE8, "INX", AddressingMode.Implied, cycles: 2, pcDelta: 1)]
+        public void INX(OpcodeContainer container)
+        {
+            byte x = CPU.X;
+            CPU.X.Write(++x);
+
+            this.HandleNegative(CPU.X);
+            this.HandleZero(CPU.X);
+        }
+
+        [MOS6502Opcode(0x8A, "TXA", AddressingMode.Immediate, cycles: 2, pcDelta: 1)]
+        public void TXA(OpcodeContainer container) => CPU.A.Write(CPU.X);
+
         #endregion
 
         // TODO: hmmm...seems too easy, we'll see. 0x80 = 128, max of signed byte.
         private void HandleNegative(byte operand) => CPU.IsNegative = operand >= 0x80;
+
         private void HandleZero(byte operand) => CPU.IsZero = operand == 0;
+
+        private void HandleOverflow(byte result) => CPU.IsOverflowed = result > 127;
+
+        private void CompareValues(byte value1, byte value2, bool S = true, bool Z = true, bool C = true)
+        {
+            sbyte result = (sbyte)(value1 - value2);
+
+            CPU.IsCarry = C && (value1 >= value2);
+
+            this.HandleNegative((byte)result);
+            this.HandleZero((byte)result);
+        }
 
         private (int cycles, int pcDelta) Branch(bool condition)
         {
@@ -268,7 +367,6 @@ namespace MICE.CPU.MOS6502
         /// Optionally, it can set CPU status flags based on read byte:
         /// Z: Zero Flag
         /// S: Sign Flag
-        ///
         /// </summary>
         /// <param name="register">The register to write to.</param>
         /// <param name="S">Whether or not to set the Sign flag on the CPU's Status Register.</param>
@@ -294,7 +392,6 @@ namespace MICE.CPU.MOS6502
         /// Optionally, it can set CPU status flags based on read byte:
         /// Z: Zero Flag
         /// S: Sign Flag
-        ///
         /// </summary>
         /// <param name="register">The register to write to.</param>
         /// <param name="address">The address to read the byte from.</param>

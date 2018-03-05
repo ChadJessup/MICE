@@ -7,7 +7,10 @@ namespace MICE.Components.Memory
         public BinaryMemorySegment(int lowerIndex, int upperIndex, string name)
             : base(lowerIndex, upperIndex, name)
         {
-            this.Data = new byte[upperIndex - lowerIndex];
+            var length = Math.Max(1, upperIndex - lowerIndex);
+
+
+            this.Data = new byte[length];
         }
 
         public byte[] Data { get; set; }
