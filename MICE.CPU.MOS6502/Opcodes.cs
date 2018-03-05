@@ -58,14 +58,7 @@ namespace MICE.CPU.MOS6502
         {
             sbyte result = (sbyte)(value1 - value2);
 
-            if(C && (value1 >= value2))
-            {
-                CPU.IsCarry = true;
-            }
-            else
-            {
-                CPU.IsCarry = false;
-            }
+            CPU.IsCarry = C && (value1 >= value2);
 
             this.HandleNegative((byte)result);
             this.HandleZero((byte)result);
@@ -119,6 +112,7 @@ namespace MICE.CPU.MOS6502
 
         #region STore
 
+        [MOS6502Opcode(0x91, "STA", AddressingMode.IndirectY, cycles: 6, pcDelta: 2)]
         [MOS6502Opcode(0x85, "STA", AddressingMode.ZeroPage, cycles: 3, pcDelta: 2)]
         [MOS6502Opcode(0x8D, "STA", AddressingMode.Absolute, cycles: 4, pcDelta: 3)]
         public void STA(OpcodeContainer container)
@@ -132,6 +126,12 @@ namespace MICE.CPU.MOS6502
                 case AddressingMode.Absolute:
                     var address = CPU.ReadNextShort();
                     CPU.WriteByteAt(address, CPU.A);
+                    break;
+                case AddressingMode.IndirectY:
+                    var indirectYAddress = (ushort)CPU.ReadNextByte();
+                    var indirectYValue = CPU.ReadShortAt((ushort)(indirectYAddress));// + CPU.Y;
+                    indirectYAddress += CPU.Y;
+                    CPU.WriteByteAt(indirectYAddress, CPU.A);
                     break;
                 default:
                     throw new InvalidOperationException($"Unexpected AddressingMode in STA: {container.AddressingMode}");
@@ -222,6 +222,16 @@ namespace MICE.CPU.MOS6502
 
             this.HandleNegative(CPU.X);
             this.HandleZero(CPU.X);
+        }
+
+        [MOS6502Opcode(0x88, "DEY", AddressingMode.Implied, cycles: 2, pcDelta: 1)]
+        public void DEY(OpcodeContainer container)
+        {
+            byte y = CPU.Y;
+            CPU.Y.Write(--y);
+
+            this.HandleNegative(CPU.Y);
+            this.HandleZero(CPU.Y);
         }
 
         #endregion
