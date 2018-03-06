@@ -251,6 +251,16 @@ namespace MICE.PPU.RicohRP2C02
                 this.ppuAddress += (ushort)this.VRAMAddressIncrement;
             };
 
+            this.PPUMASK.AfterReadAction = () =>
+            {
+
+            };
+
+            this.PPUMASK.AfterWriteAction = (value) =>
+            {
+
+            };
+
             this.Restart(cancellationToken);
         }
 

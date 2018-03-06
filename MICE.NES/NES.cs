@@ -63,7 +63,7 @@ namespace MICE.Nintendo
 
         public void Step()
         {
-            // 1 Step = 1 Frame to the NES. Since we're doing frame-based timing here, which seems to be the preferred method to emulate a console.
+            // 1 Step = 1 Frame to the NES, since we're doing frame-based timing here:
             // 1 System step = 1 CPU step + (3 PPU steps * CPU Cycles in Step) + (2 Audio steps * 1 CPU cycle).
             // Cycles are based on which instructions the CPU ran.
 
