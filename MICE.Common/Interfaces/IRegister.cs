@@ -7,5 +7,6 @@ namespace MICE.Common.Interfaces
         void Write(T value);
         T Read();
         Action AfterReadAction { get; }
+        Action<T> AfterWriteAction { get; }
     }
 }

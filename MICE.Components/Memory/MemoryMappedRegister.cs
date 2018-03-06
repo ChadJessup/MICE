@@ -18,6 +18,7 @@ namespace MICE.Components.Memory
         }
 
         public Action AfterReadAction => this.mappedRegister.AfterReadAction;
+        public Action<T> AfterWriteAction => this.mappedRegister.AfterWriteAction;
 
         public override int GetOffsetInSegment(int index) => throw new System.NotImplementedException();
 

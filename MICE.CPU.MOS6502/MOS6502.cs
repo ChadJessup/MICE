@@ -178,7 +178,7 @@ namespace MICE.CPU.MOS6502
         {
             // TODO: Put behind debug flag...
             ushort oldPC = this.PC;
-            if (this.PC == 0x8022)
+            if (this.PC == 0x8eed)
             { }
             // Grab an Opcode from the PC register:
             var code = this.ReadNextByte();
