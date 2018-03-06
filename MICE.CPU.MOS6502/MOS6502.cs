@@ -3,6 +3,7 @@ using MICE.Common.Interfaces;
 using MICE.Components.CPU;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading;
 
 namespace MICE.CPU.MOS6502
@@ -14,9 +15,13 @@ namespace MICE.CPU.MOS6502
             public const int StackPointerStart = 0xFD;
         }
 
+        private string debugPath = @"c:\emulators\nes\debug-mice.txt";
+        public StreamWriter fs;
+
         private Opcodes Opcodes;
         private readonly IMemoryMap memoryMap;
         private long ranOpcodeCount = 0;
+        private long stepCount = 1;
 
         public MOS6502(IMemoryMap memoryMap)
         {
@@ -32,6 +37,11 @@ namespace MICE.CPU.MOS6502
         };
 
         public Endianness Endianness { get; } = Endianness.LittleEndian;
+
+        /// <summary>
+        /// Gets or sets a value requesting a non-maskable interrrupt.
+        /// </summary>
+        public bool WasNMIRequested { get; set; }
 
         /// <summary>
         /// Gets or sets the current cycle (or tick) or the CPU.  This increments a specific amount for each instruction that occurs.
@@ -135,6 +145,7 @@ namespace MICE.CPU.MOS6502
         public void PowerOn(CancellationToken cancellationToken)
         {
             this.Reset(cancellationToken);
+            this.fs = File.AppendText(this.debugPath);
         }
 
         public void Reset(CancellationToken cancellationToken)
@@ -173,31 +184,40 @@ namespace MICE.CPU.MOS6502
         /// Steps the CPU and returns the amount of Cycles that would have occurred if the CPU were real.
         /// The cycles can be used by other components as a timing mechanism.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>The amount of cycles that have passed in this step.</returns>
         public int Step()
         {
-            // TODO: Put behind debug flag...
             ushort oldPC = this.PC;
-            if (this.PC == 0x8eed)
-            { }
+
+            if (this.WasNMIRequested)
+            {
+                this.HandleNMIRequest();
+            }
+
             // Grab an Opcode from the PC register:
             var code = this.ReadNextByte();
 
             // Grab our version of the opcode...
             var opCode = this.Opcodes[code];
-
             opCode.Instruction(opCode);
+            this.fs.WriteLine($"{this.stepCount:D4}:0x{this.PC.Read():X}:{opCode.Name}:{opCode.Cycles}");
 
             if (opCode.ShouldVerifyResults && (oldPC + opCode.PCDelta != this.PC))
             {
                 throw new InvalidOperationException($"Program Counter was not what was expected after executing instruction: {opCode.Name} (0x{opCode.Code:X}).{Environment.NewLine}Was: 0x{oldPC:X}{Environment.NewLine}Is: 0x{this.PC.Read():X}{Environment.NewLine}Expected: 0x{oldPC + opCode.PCDelta:X}");
             }
 
+            if (this.stepCount == 311307)
+            {
+
+            }
+
+            this.stepCount++;
             this.ranOpcodeCount++;
             return opCode.Cycles;
         }
 
-        public ushort StackGetPointer(int steps)
+        public ushort StackGetPointer(int steps = 0)
         {
             var stackPointer = this.SP.Read() + 0x0100;
             return (ushort)(stackPointer + steps);
@@ -248,6 +268,7 @@ namespace MICE.CPU.MOS6502
 
             return value;
         }
+
         public ushort ReadNextShort(bool incrementPC = true) => this.ReadShortAt(this.PC, incrementPC);
         public ushort ReadShortAt(ushort address, bool incrementPC = true)
         {
@@ -260,6 +281,21 @@ namespace MICE.CPU.MOS6502
             }
 
             return value;
+        }
+
+        private void HandleNMIRequest()
+        {
+            // Push PC to stack...
+            var sp = this.StackGetPointer(1);
+            this.StackMove(2);
+            this.WriteShortAt(sp, this.PC.Read());
+
+            // Push P to stack...
+            sp = this.StackGetPointer(1);
+            this.WriteByteAt(sp, this.P.Read());
+
+            // Set PC to NMI vector.
+            this.PC.Write(this.memoryMap.ReadShort(this.InterruptOffsets[InterruptType.NMI]));
         }
     }
 }

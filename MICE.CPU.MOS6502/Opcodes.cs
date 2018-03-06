@@ -50,6 +50,19 @@ namespace MICE.CPU.MOS6502
 
         #region Bit Operations
 
+        [MOS6502Opcode(0xEE, "INC", AddressingMode.Absolute, cycles: 6, pcDelta: 3)]
+        public void INC(OpcodeContainer container)
+        {
+            var address = CPU.ReadNextShort();
+            var value = CPU.ReadByteAt(address);
+            value++;
+
+            CPU.WriteByteAt(address, value, incrementPC: false);
+
+            this.HandleNegative(value);
+            this.HandleZero(value);
+        }
+
         //[MOS6502Opcode(0x24, 3, "BIT", AddressingMode.ZeroPage)]
         [MOS6502Opcode(0x2C, "BIT", AddressingMode.Absolute, cycles: 4, pcDelta: 3)]
         public void BIT(OpcodeContainer container)
@@ -82,6 +95,19 @@ namespace MICE.CPU.MOS6502
 
             this.HandleNegative(CPU.A);
             this.HandleZero(CPU.A);
+        }
+
+      //  [MOS6502Opcode(0x4A, "LSR", AddressingMode.Accumulator, cycles: 2, pcDelta: 1)]
+        public void LSR(OpcodeContainer container)
+        {
+            switch (container.AddressingMode)
+            {
+                case AddressingMode.Accumulator:
+                    var shift = CPU.A >> 1;
+                    break;
+                default:
+                    throw new InvalidOperationException($"Unexpected AddressingMode in LSR: {container.AddressingMode}");
+            }
         }
 
         #endregion
@@ -212,9 +238,11 @@ namespace MICE.CPU.MOS6502
         public void RTS(OpcodeContainer container)
         {
             var sp = CPU.StackGetPointer(1);
+            CPU.StackMove(2);
             var newAddress = CPU.ReadShortAt(sp, incrementPC: false);
 
             CPU.SetPCTo((ushort)(newAddress + 1));
+            CPU.fs.WriteLine($"RTS-M: PC: 0x{CPU.PC.Read():X} SP: 0x{CPU.SP.Read():X4}");
         }
 
         #endregion

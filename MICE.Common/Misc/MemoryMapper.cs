@@ -83,6 +83,11 @@ namespace MICE.Common.Misc
         {
             foreach (var segment in this.memorySegments.Where(seg => seg.IsIndexInRange(index)))
             {
+                if (index == 0x1ec0)
+                {
+
+                }
+
                 segment.Write(index, value);
                 return;
             }

@@ -73,10 +73,8 @@ namespace MICE.Nintendo
             for (int i = 0; i < cpuCycles * 3; i++)
             {
                 var ppuCycles = this.PPU.Step();
-                if(this.PPU.Frame == 3)
-                {
 
-                }
+                this.CPU.WasNMIRequested = this.PPU.WasNMIRequested;
             }
 
             // TODO: APU Cycles
