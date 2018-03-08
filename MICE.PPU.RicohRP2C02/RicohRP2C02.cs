@@ -1,6 +1,4 @@
 ﻿using MICE.Common.Interfaces;
-using MICE.Components.CPU;
-using System;
 using System.Threading;
 
 namespace MICE.PPU.RicohRP2C02
@@ -17,8 +15,28 @@ namespace MICE.PPU.RicohRP2C02
             public const int NTSC_HEIGHT = 224;
         }
 
-        public byte[] OAM { get; } = new byte[1024];
-        private int spriteCount = 0;
+        public RicohRP2C02()
+        {
+            this.BackgroundHandler = new BackgroundHandler(this.Registers);
+            this.SpriteHandler = new SpriteHandler(this.Registers);
+            this.PixelMuxer = new PixelMuxer(this.Registers);
+        }
+
+        /// <summary>
+        /// Gets the Primary Object Attribute Memory (OAM) byte array.
+        /// This holds up to 64 sprites for the frame.
+        /// </summary>
+        public byte[] PrimaryOAM { get; } = new byte[256];
+
+        /// <summary>
+        /// Gets the Secondary Object Attribute Memory (OAM) byte array.
+        /// This holds up to 8 sprites for the current scanline.
+        /// </summary>
+        public byte[] SecondaryOAM { get; } = new byte[32];
+
+        public BackgroundHandler BackgroundHandler { get; private set; }
+        public SpriteHandler SpriteHandler { get; private set; }
+        public PixelMuxer PixelMuxer { get; private set; }
 
         private ushort ppuAddress = 0;
         private bool hasWrittenToggle = false;
@@ -39,24 +57,6 @@ namespace MICE.PPU.RicohRP2C02
             set => this.Registers.PPUCTRL.SetBit(2, value == VRAMAddressIncrements.Down32 ? true : false);
         }
 
-        public bool IsSpritePatternTableAddress1000
-        {
-            get => this.Registers.PPUCTRL.GetBit(3);
-            set => this.Registers.PPUCTRL.SetBit(3, value);
-        }
-
-        public bool IsBackgroundPatternTableAddress1000
-        {
-            get => this.Registers.PPUCTRL.GetBit(4);
-            set => this.Registers.PPUCTRL.SetBit(4, value);
-        }
-
-        public bool IsSmallSprites
-        {
-            get => this.Registers.PPUCTRL.GetBit(5);
-            set => this.Registers.PPUCTRL.SetBit(5, value);
-        }
-
         public bool IsPPUMaster
         {
             get => this.Registers.PPUCTRL.GetBit(6);
@@ -67,76 +67,6 @@ namespace MICE.PPU.RicohRP2C02
         {
             get => this.Registers.PPUCTRL.GetBit(7);
             set => this.Registers.PPUCTRL.SetBit(7, value);
-        }
-
-        /// <summary>
-        /// Gets or sets a value indicating whether or not to output gray scale.
-        /// </summary>
-        public bool IsGrayScale
-        {
-            get => this.Registers.PPUMASK.GetBit(0);
-            set => this.Registers.PPUMASK.SetBit(0, value);
-        }
-
-        public bool DrawLeft8BackgroundPixels
-        {
-            get => this.Registers.PPUMASK.GetBit(1);
-            set => this.Registers.PPUMASK.SetBit(1, value);
-        }
-
-        public bool DrawLeft8SpritePixels
-        {
-            get => this.Registers.PPUMASK.GetBit(2);
-            set => this.Registers.PPUMASK.SetBit(2, value);
-        }
-
-        public bool ShowBackground
-        {
-            get => this.Registers.PPUMASK.GetBit(3);
-            set => this.Registers.PPUMASK.SetBit(3, value);
-        }
-
-        public bool ShowSprites
-        {
-            get => this.Registers.PPUMASK.GetBit(4);
-            set => this.Registers.PPUMASK.SetBit(4, value);
-        }
-
-        public bool EmphasizeRed
-        {
-            get => this.Registers.PPUMASK.GetBit(5);
-            set => this.Registers.PPUMASK.SetBit(5, value);
-        }
-
-        public bool EmphasizeGreen
-        {
-            get => this.Registers.PPUMASK.GetBit(6);
-            set => this.Registers.PPUMASK.SetBit(6, value);
-        }
-
-        public bool EmphasizeBlue
-        {
-            get => this.Registers.PPUMASK.GetBit(7);
-            set => this.Registers.PPUMASK.SetBit(7, value);
-        }
-
-        /// <summary>
-        /// Gets or sets a value indicating if there was sprite over (more than 8 sprites on scanline).
-        /// Note, there was a hardware bug on this, so behavior might be difficult to understand once fully implemented.
-        /// </summary>
-        public bool WasSpriteOverflow
-        {
-            get => this.Registers.PPUSTATUS.GetBit(5);
-            set => this.Registers.PPUSTATUS.SetBit(5, value);
-        }
-
-        /// <summary>
-        /// Gets or sets a value when Sprite 0 was hit.
-        /// </summary>
-        public bool WasSprite0Hit
-        {
-            get => this.Registers.PPUSTATUS.GetBit(6);
-            set => this.Registers.PPUSTATUS.SetBit(6, value);
         }
 
         /// <summary>
@@ -192,16 +122,6 @@ namespace MICE.PPU.RicohRP2C02
             this.Registers.PPUDATA.AfterWriteAction = (value) =>
             {
                 this.ppuAddress += (ushort)this.VRAMAddressIncrement;
-            };
-
-            this.Registers.PPUMASK.AfterReadAction = () =>
-            {
-
-            };
-
-            this.Registers.PPUMASK.AfterWriteAction = (value) =>
-            {
-
             };
 
             this.Registers.PPUCTRL.AfterWriteAction = (value) =>
@@ -271,7 +191,7 @@ namespace MICE.PPU.RicohRP2C02
 
         private bool OnFinalCycleOnLine()
         {
-            if (this.ShowBackground && !this.IsFrameEven && this.ScanLine == -1)
+            if (this.BackgroundHandler.ShowBackground && !this.IsFrameEven && this.ScanLine == -1)
             {
                 return this.Cycle == 340;
             }
@@ -296,12 +216,11 @@ namespace MICE.PPU.RicohRP2C02
                 if (this.Cycle == 1)
                 {
                     this.IsVBlank = false;
-                    this.WasSprite0Hit = false;
-                    this.WasSpriteOverflow = false;
+                    this.SpriteHandler.WasSprite0Hit = false;
+                    this.SpriteHandler.WasSpriteOverflow = false;
                 }
 
                 // Current scanline data fetch cycles
-                this.SetPixel(this.Cycle, this.ScanLine);
             }
             else if (this.Cycle >= 257 && this.Cycle <= 320)
             {
@@ -320,20 +239,24 @@ namespace MICE.PPU.RicohRP2C02
 
         private void SetPixel(int x, int y)
         {
-            if (this.ShowBackground)
+            if (this.BackgroundHandler.ShowBackground)
             {
-                this.DrawBackgroundPixel(x, y);
+                this.BackgroundHandler.DrawBackgroundPixel(x, y);
             }
 
-            if (this.ShowSprites)
+            if (this.SpriteHandler.ShowSprites)
             {
-                this.DrawSpritePixel(x, y);
+                this.SpriteHandler.DrawSpritePixel(x, y);
             }
         }
 
         private void HandleVisibleScanlines()
         {
-            if (this.Cycle >= 257 && this.Cycle <= 320)
+            if (this.Cycle > 0 && this.Cycle <= 256)
+            {
+                this.SetPixel(this.Cycle, this.ScanLine);
+            }
+            else if (this.Cycle >= 257 && this.Cycle <= 320)
             {
                 this.Registers.OAMADDR.Write(00);
                 this.FetchSpriteTileData(this.ScanLine + 1);
@@ -344,14 +267,11 @@ namespace MICE.PPU.RicohRP2C02
             }
         }
 
+        byte[] oam_temp = new byte[8];
+
         private void FetchSpriteTileData(int scanline)
         {
-            this.spriteCount = 0;
-
-            for (byte oam_index = 0; oam_index < 64 && this.spriteCount < 8; ++oam_index)
-            {
-            //    byte sprite_y = (byte)this.MemoryMap.ReadByte()
-            }
+            this.SpriteHandler.CurrentScanlineSpriteCount = 0;
         }
 
         private void HandlePostRenderScanline()
@@ -369,26 +289,6 @@ namespace MICE.PPU.RicohRP2C02
                     // TODO: do NMI.
                 }
             }
-        }
-
-        private void DrawBackgroundPixel(int x, int y)
-        {
-            if (x <= 8 && !this.DrawLeft8BackgroundPixels)
-            {
-                return;
-            }
-
-            if (x <= 8 && !this.DrawLeft8SpritePixels)
-            {
-                return;
-            }
-
-
-        }
-
-        private void DrawSpritePixel(int x, int y)
-        {
-
         }
     }
 }

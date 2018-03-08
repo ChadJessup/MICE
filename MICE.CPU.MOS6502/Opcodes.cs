@@ -282,23 +282,8 @@ namespace MICE.CPU.MOS6502
         [MOS6502Opcode(0x45, "EOR", AddressingModes.ZeroPage, cycles: 3, pcDelta: 2)]
         public void EOR(OpcodeContainer container)
         {
-            switch (container.AddressingMode)
-            {
-                case AddressingModes.Immediate:
-                    var immediateValue = CPU.ReadNextByte();
-                    CPU.Registers.A.Write((byte)(CPU.Registers.A ^ immediateValue));
-                    break;
-                case AddressingModes.ZeroPage:
-                    var zeroPageAddress = CPU.ReadNextByte(incrementPC: false);
-                    var zeroPageValue = CPU.ReadByteAt(zeroPageAddress);
-                    CPU.Registers.A.Write((byte)(CPU.Registers.A ^ zeroPageValue));
-                    break;
-                default:
-                    throw this.ExceptionForUnhandledAddressingMode(container);
-            }
-
-            this.HandleNegative(CPU.Registers.A);
-            this.HandleZero(CPU.Registers.A);
+            var (value, address, isSamePage) = AddressingMode.GetAddressedValue(CPU, container);
+            this.WriteByteToRegister(CPU.Registers.A, (byte)(CPU.Registers.A ^ value), S: true, Z: true);
         }
 
         #endregion
@@ -324,26 +309,8 @@ namespace MICE.CPU.MOS6502
         [MOS6502Opcode(0xA2, "LDX", AddressingModes.Immediate, cycles: 2, pcDelta: 2)]
         public void LDX(OpcodeContainer container)
         {
-            switch (container.AddressingMode)
-            {
-                case AddressingModes.ZeroPage:
-                    var zeroPageAddress = CPU.ReadNextByte(incrementPC: false);
-                    this.WriteByteAtToRegister(CPU.Registers.X, zeroPageAddress, S: true, Z: true);
-                    break;
-                case AddressingModes.Absolute:
-                    ushort address = CPU.ReadNextShort();
-                    this.WriteByteAtToRegister(CPU.Registers.X, address, S: true, Z: true);
-                    break;
-                case AddressingModes.AbsoluteY:
-                    ushort addressWithY = (ushort)(CPU.ReadNextShort() + CPU.Registers.Y);
-                    this.WriteByteAtToRegister(CPU.Registers.X, addressWithY, S: true, Z: true);
-                    break;
-                case AddressingModes.Immediate:
-                    this.WriteNextByteToRegister(CPU.Registers.X, S: true, Z: true);
-                    break;
-                default:
-                    throw this.ExceptionForUnhandledAddressingMode(container);
-            }
+            var (value, address, isSamePage) = AddressingMode.GetAddressedValue(CPU, container);
+            this.WriteByteToRegister(CPU.Registers.X, value, S: true, Z: true);
         }
 
         [MOS6502Opcode(0xA4, "LDY", AddressingModes.ZeroPage, cycles: 3, pcDelta: 2)]
@@ -354,28 +321,6 @@ namespace MICE.CPU.MOS6502
         {
             var (value, address, isSamePage) = AddressingMode.GetAddressedValue(CPU, container);
             CPU.Registers.Y.Write(value);
-
-            /*
-            switch (container.AddressingMode)
-            {
-                case AddressingModes.ZeroPage:
-                    CPU.Registers.Y.Write(value);
-                    break;
-                case AddressingModes.ZeroPageX:
-                    var zeroPageXAddress = (byte)(CPU.ReadNextByte(incrementPC: false) + CPU.Registers.X);
-                    this.WriteByteAtToRegister(CPU.Registers.Y, zeroPageXAddress, S: true, Z: true);
-                    break;
-                case AddressingModes.Absolute:
-                    ushort absoluteAddress = CPU.ReadNextShort();
-                    this.WriteByteAtToRegister(CPU.Registers.Y, absoluteAddress, S: true, Z: true);
-                    break;
-                case AddressingModes.Immediate:
-                    this.WriteNextByteToRegister(CPU.Registers.Y, S: true, Z: true);
-                    break;
-                default:
-                    throw this.ExceptionForUnhandledAddressingMode(container);
-            }
-            */
         }
 
         [MOS6502Opcode(0xB9, "LDA", AddressingModes.AbsoluteY, cycles: 4, pcDelta: 3)]
@@ -464,7 +409,6 @@ namespace MICE.CPU.MOS6502
         {
             var address = CPU.Stack.PopShort();
             CPU.SetPCTo((ushort)(address + 1));
-            //CPU.fs.WriteLine($"RTS-M: PC: 0x{CPU.Registers.PC.Read():X} SP: 0x{CPU.Registers.SP.Read():X4}");
         }
 
         #endregion

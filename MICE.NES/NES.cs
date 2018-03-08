@@ -108,7 +108,7 @@ namespace MICE.Nintendo
             // TODO: This is terrible, and a double copy...convert to stream later through a bus or something.
             // Especially since this is normally DRAM and refreshed all the time from what I can tell?
             var copiedBytes = this.MemoryMap.BulkTransfer(readAddress, 255);
-            Array.Copy(copiedBytes, 0, this.PPU.OAM, this.PPU.Registers.OAMADDR, 255);
+            Array.Copy(copiedBytes, 0, this.PPU.PrimaryOAM, this.PPU.Registers.OAMADDR, 255);
         }
 
         public Task Run() => Task.Factory.StartNew(() =>
