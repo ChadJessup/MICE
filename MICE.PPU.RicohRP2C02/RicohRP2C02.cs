@@ -1,5 +1,6 @@
 ﻿using MICE.Common.Interfaces;
 using MICE.Components.CPU;
+using System;
 using System.Threading;
 
 namespace MICE.PPU.RicohRP2C02
@@ -16,20 +17,16 @@ namespace MICE.PPU.RicohRP2C02
             public const int NTSC_HEIGHT = 224;
         }
 
+        public byte[] OAM { get; } = new byte[1024];
+        private int spriteCount = 0;
+
+        private ushort ppuAddress = 0;
+        private bool hasWrittenToggle = false;
+
         public PPUMemoryMap MemoryMap { get; } = new PPUMemoryMap();
+        public Registers Registers { get; } = new Registers();
 
-        // Registers for the PPU that the CPU has memory mapped to particular locations.
-        // The memory mapping happens when the CPU is being initialized.
-
-        #region Registers
-
-        /// <summary>
-        /// The PPU Control register contains various bits that controls how the PPU behaves. Sometimes called PPU Control Register 1.
-        /// This register is memory mapped to the CPU at $2000.
-        /// </summary>
-        public Register8Bit PPUCTRL = new Register8Bit("PPUCTRL");
-
-        public int BaseNametableAddress => (this.PPUCTRL.GetBit(0) ? 1 : 0) | (this.PPUCTRL.GetBit(1) ? 1 : 0) << 2;
+        public int BaseNametableAddress => (this.Registers.PPUCTRL.GetBit(0) ? 1 : 0) | (this.Registers.PPUCTRL.GetBit(1) ? 1 : 0) << 2;
 
         /// <summary>
         /// Gets or sets the VRAM Address Increment.
@@ -38,102 +35,90 @@ namespace MICE.PPU.RicohRP2C02
         /// </summary>
         public VRAMAddressIncrements VRAMAddressIncrement
         {
-            get => this.PPUCTRL.GetBit(2) ? VRAMAddressIncrements.Down32 : VRAMAddressIncrements.Across1;
-            set => this.PPUCTRL.SetBit(2, value == VRAMAddressIncrements.Down32 ? true : false);
+            get => this.Registers.PPUCTRL.GetBit(2) ? VRAMAddressIncrements.Down32 : VRAMAddressIncrements.Across1;
+            set => this.Registers.PPUCTRL.SetBit(2, value == VRAMAddressIncrements.Down32 ? true : false);
         }
 
         public bool IsSpritePatternTableAddress1000
         {
-            get => this.PPUCTRL.GetBit(3);
-            set => this.PPUCTRL.SetBit(3, value);
+            get => this.Registers.PPUCTRL.GetBit(3);
+            set => this.Registers.PPUCTRL.SetBit(3, value);
         }
 
         public bool IsBackgroundPatternTableAddress1000
         {
-            get => this.PPUCTRL.GetBit(4);
-            set => this.PPUCTRL.SetBit(4, value);
+            get => this.Registers.PPUCTRL.GetBit(4);
+            set => this.Registers.PPUCTRL.SetBit(4, value);
         }
 
         public bool IsSmallSprites
         {
-            get => this.PPUCTRL.GetBit(5);
-            set => this.PPUCTRL.SetBit(5, value);
+            get => this.Registers.PPUCTRL.GetBit(5);
+            set => this.Registers.PPUCTRL.SetBit(5, value);
         }
 
         public bool IsPPUMaster
         {
-            get => this.PPUCTRL.GetBit(6);
-            set => this.PPUCTRL.SetBit(6, value);
+            get => this.Registers.PPUCTRL.GetBit(6);
+            set => this.Registers.PPUCTRL.SetBit(6, value);
         }
 
         public bool WasNMIRequested
         {
-            get => this.PPUCTRL.GetBit(7);
-            set => this.PPUCTRL.SetBit(7, value);
+            get => this.Registers.PPUCTRL.GetBit(7);
+            set => this.Registers.PPUCTRL.SetBit(7, value);
         }
-
-        /// <summary>
-        /// Various bits that enables masking of certain features of the PPU. Sometimes called PPU Control Register 2.
-        /// This register is memory mapped to the CPU at $2001.
-        /// </summary>
-        public Register8Bit PPUMASK = new Register8Bit("PPUMASK");
 
         /// <summary>
         /// Gets or sets a value indicating whether or not to output gray scale.
         /// </summary>
         public bool IsGrayScale
         {
-            get => this.PPUMASK.GetBit(0);
-            set => this.PPUMASK.SetBit(0, value);
+            get => this.Registers.PPUMASK.GetBit(0);
+            set => this.Registers.PPUMASK.SetBit(0, value);
         }
 
         public bool DrawLeft8BackgroundPixels
         {
-            get => this.PPUMASK.GetBit(1);
-            set => this.PPUMASK.SetBit(1, value);
+            get => this.Registers.PPUMASK.GetBit(1);
+            set => this.Registers.PPUMASK.SetBit(1, value);
         }
 
         public bool DrawLeft8SpritePixels
         {
-            get => this.PPUMASK.GetBit(2);
-            set => this.PPUMASK.SetBit(2, value);
+            get => this.Registers.PPUMASK.GetBit(2);
+            set => this.Registers.PPUMASK.SetBit(2, value);
         }
 
         public bool ShowBackground
         {
-            get => this.PPUMASK.GetBit(3);
-            set => this.PPUMASK.SetBit(3, value);
+            get => this.Registers.PPUMASK.GetBit(3);
+            set => this.Registers.PPUMASK.SetBit(3, value);
         }
 
         public bool ShowSprites
         {
-            get => this.PPUMASK.GetBit(4);
-            set => this.PPUMASK.SetBit(4, value);
+            get => this.Registers.PPUMASK.GetBit(4);
+            set => this.Registers.PPUMASK.SetBit(4, value);
         }
 
         public bool EmphasizeRed
         {
-            get => this.PPUMASK.GetBit(5);
-            set => this.PPUMASK.SetBit(5, value);
+            get => this.Registers.PPUMASK.GetBit(5);
+            set => this.Registers.PPUMASK.SetBit(5, value);
         }
 
         public bool EmphasizeGreen
         {
-            get => this.PPUMASK.GetBit(6);
-            set => this.PPUMASK.SetBit(6, value);
+            get => this.Registers.PPUMASK.GetBit(6);
+            set => this.Registers.PPUMASK.SetBit(6, value);
         }
 
         public bool EmphasizeBlue
         {
-            get => this.PPUMASK.GetBit(7);
-            set => this.PPUMASK.SetBit(7, value);
+            get => this.Registers.PPUMASK.GetBit(7);
+            set => this.Registers.PPUMASK.SetBit(7, value);
         }
-
-        /// <summary>
-        /// Status bits of the current state of the PPU.
-        /// This register is memory mapped to the CPU at $2002.
-        /// </summary>
-        public Register8Bit PPUSTATUS = new Register8Bit("PPUSTATUS");
 
         /// <summary>
         /// Gets or sets a value indicating if there was sprite over (more than 8 sprites on scanline).
@@ -141,8 +126,8 @@ namespace MICE.PPU.RicohRP2C02
         /// </summary>
         public bool WasSpriteOverflow
         {
-            get => this.PPUSTATUS.GetBit(5);
-            set => this.PPUSTATUS.SetBit(5, value);
+            get => this.Registers.PPUSTATUS.GetBit(5);
+            set => this.Registers.PPUSTATUS.SetBit(5, value);
         }
 
         /// <summary>
@@ -150,8 +135,8 @@ namespace MICE.PPU.RicohRP2C02
         /// </summary>
         public bool WasSprite0Hit
         {
-            get => this.PPUSTATUS.GetBit(6);
-            set => this.PPUSTATUS.SetBit(6, value);
+            get => this.Registers.PPUSTATUS.GetBit(6);
+            set => this.Registers.PPUSTATUS.SetBit(6, value);
         }
 
         /// <summary>
@@ -159,51 +144,9 @@ namespace MICE.PPU.RicohRP2C02
         /// </summary>
         public bool IsVBlank
         {
-            get => this.PPUSTATUS.GetBit(7);
-            set => this.PPUSTATUS.SetBit(7, value);
+            get => this.Registers.PPUSTATUS.GetBit(7);
+            set => this.Registers.PPUSTATUS.SetBit(7, value);
         }
-
-        /// <summary>
-        /// The OAM read/write address.
-        /// This register is memory mapped to the CPU at $2003.
-        /// </summary>
-        public Register8Bit OAMADDR = new Register8Bit("OAMADDR");
-
-        /// <summary>
-        /// The OAM data read/write.
-        /// This register is memory mapped to the CPU at $2004.
-        /// </summary>
-        public Register8Bit OAMDATA = new Register8Bit("OAMDATA");
-
-        /// <summary>
-        /// Fine control of the PPU's scroll position (X, Y).
-        /// This register is memory mapped to the CPU at $2005.
-        /// </summary>
-        public Register8Bit PPUSCROLL = new Register8Bit("PPUSCROLL");
-
-        /// <summary>
-        /// PPU read/write address.
-        /// This register is memory mapped to the CPU at $2006.
-        /// While this is an 8bit register, the CPU double writes to it for 16-bit addressing.
-        /// </summary>
-        public Register8Bit PPUADDR = new Register8Bit("PPUADDR");
-
-        private ushort ppuAddress = 0;
-        private bool hasWrittenToggle = false;
-
-        /// <summary>
-        /// PPU data read/write.
-        /// This register is memory mapped to the CPU at $2007.
-        /// </summary>
-        public Register8Bit PPUDATA = new Register8Bit("PPUDATA");
-
-        /// <summary>
-        /// The OAM DMA high address.
-        /// This register is memory mapped to the CPU at $4014.
-        /// </summary>
-        public Register8Bit OAMDMA = new Register8Bit("OAMDMA");
-
-        #endregion
 
         /// <summary>
         /// Gets the current scan line that the PPU is working on.
@@ -227,7 +170,7 @@ namespace MICE.PPU.RicohRP2C02
 
         public void PowerOn(CancellationToken cancellationToken)
         {
-            this.PPUADDR.AfterWriteAction = (value) =>
+            this.Registers.PPUADDR.AfterWriteAction = (value) =>
             {
                 if (!this.hasWrittenToggle)
                 {
@@ -241,29 +184,29 @@ namespace MICE.PPU.RicohRP2C02
                 this.hasWrittenToggle = !this.hasWrittenToggle;
             };
 
-            this.PPUDATA.AfterReadAction = () =>
+            this.Registers.PPUDATA.AfterReadAction = () =>
             {
                 this.ppuAddress += (ushort)this.VRAMAddressIncrement;
             };
 
-            this.PPUDATA.AfterWriteAction = (value) =>
+            this.Registers.PPUDATA.AfterWriteAction = (value) =>
             {
                 this.ppuAddress += (ushort)this.VRAMAddressIncrement;
             };
 
-            this.PPUMASK.AfterReadAction = () =>
+            this.Registers.PPUMASK.AfterReadAction = () =>
             {
 
             };
 
-            this.PPUMASK.AfterWriteAction = (value) =>
+            this.Registers.PPUMASK.AfterWriteAction = (value) =>
             {
 
             };
 
-            this.PPUCTRL.AfterWriteAction = (value) =>
+            this.Registers.PPUCTRL.AfterWriteAction = (value) =>
             {
-                if(this.WasNMIRequested)
+                if (this.WasNMIRequested)
                 {
 
                 }
@@ -274,13 +217,13 @@ namespace MICE.PPU.RicohRP2C02
 
         public void Restart(CancellationToken cancellationToken)
         {
-            this.PPUCTRL.Write(0);
-            this.PPUMASK.Write(0);
-            this.PPUSTATUS.Write(0);
+            this.Registers.PPUCTRL.Write(0);
+            this.Registers.PPUMASK.Write(0);
+            this.Registers.PPUSTATUS.Write(0);
 
-            this.OAMADDR.Write(0);
-            this.PPUSCROLL.Write(0);
-            this.PPUDATA.Write(0);
+            this.Registers.OAMADDR.Write(0);
+            this.Registers.PPUSCROLL.Write(0);
+            this.Registers.PPUDATA.Write(0);
 
             this.hasWrittenToggle = false;
             this.ppuAddress = 0;
@@ -362,7 +305,7 @@ namespace MICE.PPU.RicohRP2C02
             }
             else if (this.Cycle >= 257 && this.Cycle <= 320)
             {
-                this.OAMADDR.Write(00);
+                this.Registers.OAMADDR.Write(00);
                 // Tile Data fetch for next scanline
             }
             else if (this.Cycle >= 321 && this.Cycle <= 336)
@@ -392,7 +335,22 @@ namespace MICE.PPU.RicohRP2C02
         {
             if (this.Cycle >= 257 && this.Cycle <= 320)
             {
-                this.OAMADDR.Write(00);
+                this.Registers.OAMADDR.Write(00);
+                this.FetchSpriteTileData(this.ScanLine + 1);
+            }
+            else if (this.Cycle >= 321 && this.Cycle <= 336)
+            {
+
+            }
+        }
+
+        private void FetchSpriteTileData(int scanline)
+        {
+            this.spriteCount = 0;
+
+            for (byte oam_index = 0; oam_index < 64 && this.spriteCount < 8; ++oam_index)
+            {
+            //    byte sprite_y = (byte)this.MemoryMap.ReadByte()
             }
         }
 

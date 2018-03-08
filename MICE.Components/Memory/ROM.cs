@@ -14,6 +14,11 @@ namespace MICE.Components.Memory
             throw new System.NotImplementedException();
         }
 
+        public override byte[] ReadBytes(ushort startAddress, int size)
+        {
+            throw new System.NotImplementedException();
+        }
+
         public override ushort ReadShort(int index)
         {
             throw new System.NotImplementedException();

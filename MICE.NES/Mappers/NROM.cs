@@ -79,5 +79,10 @@ namespace MICE.Nintendo.Mappers
         {
             throw new NotImplementedException();
         }
+
+        public override byte[] ReadBytes(ushort startAddress, int size)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

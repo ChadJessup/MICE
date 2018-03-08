@@ -89,5 +89,17 @@ namespace MICE.Common.Misc
 
             throw new InvalidOperationException($"Address was requested that hasn't been mapped (0x{index:X})");
         }
+
+        public byte[] BulkTransfer(ushort startAddress, int size)
+        {
+            var segments = this.GetSegmentsInRange(startAddress, startAddress + size);
+
+            if (segments.Count() > 1)
+            {
+                throw new NotImplementedException("Sorry, don't handle bulk transfer across multiple segments...hope it's not actually needed...");
+            }
+
+            return segments.First().ReadBytes(startAddress, size);
+        }
     }
 }

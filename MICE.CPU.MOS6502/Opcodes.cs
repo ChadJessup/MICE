@@ -418,41 +418,8 @@ namespace MICE.CPU.MOS6502
         [MOS6502Opcode(0x9D, "STA", AddressingModes.AbsoluteX, cycles: 5, pcDelta: 3)]
         public void STA(OpcodeContainer container)
         {
-            switch (container.AddressingMode)
-            {
-                case AddressingModes.ZeroPageX:
-                    var zeroPageXAddress = (byte)(CPU.ReadNextByte(incrementPC: false) + CPU.Registers.X);
-                    CPU.WriteByteAt(zeroPageXAddress, CPU.Registers.A);
-                    break;
-                case AddressingModes.ZeroPage:
-                    var value = CPU.ReadNextByte(incrementPC: false);
-                    CPU.WriteByteAt(value, CPU.Registers.A);
-                    break;
-                case AddressingModes.Absolute:
-                    var address = CPU.ReadNextShort();
-                    CPU.WriteByteAt(address, CPU.Registers.A);
-                    break;
-                case AddressingModes.AbsoluteY:
-                    var absoluteYAddress = CPU.ReadNextShort();
-                    absoluteYAddress += CPU.Registers.Y;
-
-                    CPU.WriteByteAt(absoluteYAddress, CPU.Registers.A);
-                    break;
-                case AddressingModes.AbsoluteX:
-                    var absoluteXAddress = CPU.ReadNextShort();
-                    absoluteXAddress += CPU.Registers.X;
-
-                    CPU.WriteByteAt(absoluteXAddress, CPU.Registers.A);
-                    break;
-                case AddressingModes.IndirectY:
-                    var indirectYAddress = (ushort)CPU.ReadNextByte(incrementPC: false);
-                    ushort completeYAddress = (ushort)(CPU.ReadShortAt(indirectYAddress) + CPU.Registers.Y);
-                    CPU.WriteByteAt(completeYAddress, CPU.Registers.A, incrementPC: false);
-                    break;
-
-                default:
-                    throw new InvalidOperationException($"Unexpected AddressingMode in STA: {container.AddressingMode}");
-            }
+            var (value, address, isSamePage) = AddressingMode.GetAddressedValue(CPU, container, getValue: false);
+            CPU.WriteByteAt(address, CPU.Registers.A);
         }
 
         [MOS6502Opcode(0x86, "STX", AddressingModes.ZeroPage, cycles: 3, pcDelta: 2)]
@@ -470,7 +437,6 @@ namespace MICE.CPU.MOS6502
         public void STY(OpcodeContainer container)
         {
             var (value, address, isSamePage) = AddressingMode.GetAddressedValue(CPU, container, getValue: false);
-
             CPU.WriteByteAt(address, CPU.Registers.Y);
         }
 
@@ -482,19 +448,8 @@ namespace MICE.CPU.MOS6502
         [MOS6502Opcode(0x4C, "JMP", AddressingModes.Absolute, cycles: 3, pcDelta: 3, verify: false)]
         public void JMP(OpcodeContainer container)
         {
-            switch (container.AddressingMode)
-            {
-                case AddressingModes.Indirect:
-                    var indirectAddress = CPU.ReadNextShort();
-                    var newPCAddress = CPU.ReadShortAt(indirectAddress);
-                    CPU.SetPCTo(newPCAddress);
-                    break;
-                case AddressingModes.Absolute:
-                    CPU.SetPCTo(CPU.ReadNextShort());
-                    break;
-                default:
-                    throw this.ExceptionForUnhandledAddressingMode(container);
-            }
+            var (value, address, isSamePage) = AddressingMode.GetAddressedValue(CPU, container, getValue: false);
+            CPU.SetPCTo(address);
         }
 
         [MOS6502Opcode(0x20, "JSR", AddressingModes.Absolute, cycles: 6, pcDelta: 3, verify: false)]
@@ -672,6 +627,7 @@ namespace MICE.CPU.MOS6502
             this.HandleOverflow(CPU.Registers.A);
         }
 
+        [MOS6502Opcode(0xE9, "SBC", AddressingModes.Immediate, cycles: 2, pcDelta: 2)]
         [MOS6502Opcode(0xE5, "SBC", AddressingModes.ZeroPage, cycles: 3, pcDelta: 2)]
         [MOS6502Opcode(0xF9, "SBC", AddressingModes.AbsoluteY, cycles: 4, pcDelta: 3)]
         public void SBC(OpcodeContainer container)
@@ -776,7 +732,7 @@ namespace MICE.CPU.MOS6502
                 this.HandleZero(nextByte);
             }
         }
-        
+
         /// <summary>
         /// Write byte to an 8bit register.
         /// Optionally, it can set CPU status flags based on read byte:

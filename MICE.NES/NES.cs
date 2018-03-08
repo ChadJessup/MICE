@@ -42,7 +42,9 @@ namespace MICE.Nintendo
             }
 
             this.PPU = new RicohRP2C02();
-            this.MemoryMap = new CPUMemoryMap(this.PPU);
+            this.MemoryMap = new CPUMemoryMap(this.PPU.Registers);
+
+            this.PPU.Registers.OAMDMA.AfterWriteAction = this.DMATransfer;
 
             this.MapToCartridge();
 
@@ -97,6 +99,16 @@ namespace MICE.Nintendo
         public async Task Reset()
         {
             await Task.CompletedTask;
+        }
+
+        public void DMATransfer(byte value)
+        {
+            ushort readAddress = (ushort)(value << 8);
+
+            // TODO: This is terrible, and a double copy...convert to stream later through a bus or something.
+            // Especially since this is normally DRAM and refreshed all the time from what I can tell?
+            var copiedBytes = this.MemoryMap.BulkTransfer(readAddress, 255);
+            Array.Copy(copiedBytes, 0, this.PPU.OAM, this.PPU.Registers.OAMADDR, 255);
         }
 
         public Task Run() => Task.Factory.StartNew(() =>

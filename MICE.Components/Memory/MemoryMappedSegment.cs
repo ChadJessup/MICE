@@ -31,5 +31,10 @@ namespace MICE.Components.Memory
 
         public abstract void Write(int index, byte value);
         public abstract void Write(int index, ushort value);
+
+        public byte[] ReadBytes(ushort startAddress, int size)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

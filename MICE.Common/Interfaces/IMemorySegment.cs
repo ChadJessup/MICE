@@ -20,5 +20,6 @@ namespace MICE.Common.Interfaces
 
         void Write(int index, byte value);
         void Write(int index, ushort value);
+        byte[] ReadBytes(ushort startAddress, int size);
     }
 }

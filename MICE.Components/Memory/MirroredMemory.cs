@@ -24,7 +24,12 @@ namespace MICE.Components.Memory
         public override byte ReadByte(int index)
         {
             var newIndex = index % this.moduloValue;
-            return this.memoryMapper.ReadByte(newIndex);
+            return this.memoryMapper.ReadByte(newIndex + this.mirroredLowerIndex);
+        }
+
+        public override byte[] ReadBytes(ushort startAddress, int size)
+        {
+            throw new System.NotImplementedException();
         }
 
         public override ushort ReadShort(int index)
@@ -34,7 +39,8 @@ namespace MICE.Components.Memory
 
         public override void Write(int index, byte value)
         {
-            throw new System.NotImplementedException();
+            var newIndex = index % this.moduloValue;
+            this.memoryMapper.Write(newIndex + this.mirroredLowerIndex, value);
         }
 
         public override void Write(int index, ushort value)

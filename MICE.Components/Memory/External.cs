@@ -18,6 +18,12 @@ namespace MICE.Components.Memory
         }
 
         public override byte ReadByte(int index) => this.mapper.ReadByte(index);
+
+        public override byte[] ReadBytes(ushort startAddress, int size)
+        {
+            throw new System.NotImplementedException();
+        }
+
         public override ushort ReadShort(int index) => this.mapper.ReadShort(index);
 
         public override void Write(int index, byte value) => this.mapper.Write(index, value);

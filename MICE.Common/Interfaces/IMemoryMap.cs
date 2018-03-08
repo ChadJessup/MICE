@@ -9,5 +9,6 @@
         byte ReadByte(int index);
         void Write(int index, byte value);
         T GetMemorySegment<T>(string segmentName) where T : IMemorySegment;
+        byte[] BulkTransfer(ushort readAddress, int size);
     }
 }
