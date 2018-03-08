@@ -12,3 +12,4 @@ http://nesdev.com/2A03%20technical%20reference.txt
 Other C# NES Emulators - while I tried to implement everything without being swayed by how others did it, digging into how other C# devs do their thang was helpful in design:
 https://github.com/Xyene/Emulator.NES
 https://github.com/brandonpelfrey/dotnes
+https://github.com/GunshipPenguin/nescafe

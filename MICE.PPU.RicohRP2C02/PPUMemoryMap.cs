@@ -26,16 +26,16 @@ namespace MICE.PPU.RicohRP2C02
             this.Add(new VRAM(0x2C00, 0x2FBF, "Name Table 3"));
             this.Add(new VRAM(0x2FC0, 0x2FFF, "Attribute Table 3"));
 
-            this.Add(new MirroredMemory(0X3000, 0x3EFF, 0x2000, 0x2FFF, "Mirrored Name Tables"));
+            this.Add(new MirroredMemory(0X3000, 0x3EFF, 0x2000, 0x2FFF, this, "Mirrored Name Tables"));
 
             // Palettes
             this.Add(new VRAM(0x3F00, 0x3F0F, "Image Palette"));
             this.Add(new VRAM(0x3F10, 0x3F1F, "Sprite Palette"));
 
-            this.Add(new MirroredMemory(0x3F20, 0x3FFF, 0x3F00, 0x3FFF, "Mirrored Palettes"));
+            this.Add(new MirroredMemory(0x3F20, 0x3FFF, 0x3F00, 0x3FFF, this, "Mirrored Palettes"));
 
             // Mirrors
-            this.Add(new MirroredMemory(0x4000, 0xFFFF, 0x0000, 0x3FFF, "Mirrored PPU"));
+            this.Add(new MirroredMemory(0x4000, 0xFFFF, 0x0000, 0x3FFF, this, "Mirrored PPU"));
         }
     }
 }

@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace MICE.Common.Interfaces
+﻿namespace MICE.Common.Interfaces
 {
     /// <summary>
     /// Interface that represents memory that is mapped to various memory segments.
@@ -10,5 +8,6 @@ namespace MICE.Common.Interfaces
         ushort ReadShort(int index);
         byte ReadByte(int index);
         void Write(int index, byte value);
+        T GetMemorySegment<T>(string segmentName) where T : IMemorySegment;
     }
 }

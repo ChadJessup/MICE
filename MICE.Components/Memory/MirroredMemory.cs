@@ -1,20 +1,30 @@
-﻿namespace MICE.Components.Memory
+﻿using MICE.Common.Interfaces;
+using MICE.Common.Misc;
+
+namespace MICE.Components.Memory
 {
     public class MirroredMemory : MemorySegment
     {
-        private int mirroredLowerIndex = 0;
-        private int mirroredUpperIndex = 0;
+        private readonly int mirroredLowerIndex;
+        private readonly int mirroredUpperIndex;
+        private readonly MemoryMapper memoryMapper;
+        private readonly int moduloValue;
 
-        public MirroredMemory(int lowerIndex, int upperIndex, int mirroredLowerIndex, int mirroredUpperIndex, string name)
+        public MirroredMemory(int lowerIndex, int upperIndex, int mirroredLowerIndex, int mirroredUpperIndex, MemoryMapper memoryMapper, string name)
             : base(lowerIndex, upperIndex, name)
         {
             this.mirroredLowerIndex = mirroredLowerIndex;
             this.mirroredUpperIndex = mirroredUpperIndex;
+
+            this.moduloValue = this.mirroredUpperIndex - this.mirroredLowerIndex;
+
+            this.memoryMapper = memoryMapper;
         }
 
         public override byte ReadByte(int index)
         {
-            throw new System.NotImplementedException();
+            var newIndex = index % this.moduloValue;
+            return this.memoryMapper.ReadByte(newIndex);
         }
 
         public override ushort ReadShort(int index)

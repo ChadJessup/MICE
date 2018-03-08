@@ -74,7 +74,11 @@ namespace MICE.Nintendo
             {
                 var ppuCycles = this.PPU.Step();
 
-                this.CPU.WasNMIRequested = this.PPU.WasNMIRequested;
+                if (this.PPU.WasNMIRequested)
+                {
+                    this.CPU.WasNMIRequested = true;
+                    this.PPU.WasNMIRequested = false;
+                }
             }
 
             // TODO: APU Cycles

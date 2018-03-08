@@ -1,6 +1,5 @@
 ﻿using MICE.Common;
 using MICE.Common.Interfaces;
-using MICE.Components.CPU;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -10,11 +9,6 @@ namespace MICE.CPU.MOS6502
 {
     public class MOS6502 : ICPU
     {
-        private static class Constants
-        {
-            public const int StackPointerStart = 0xFD;
-        }
-
         private string debugPath = @"c:\emulators\nes\debug-mice.txt";
         public StreamWriter fs;
 
@@ -48,35 +42,24 @@ namespace MICE.CPU.MOS6502
         /// </summary>
         public long CurrentCycle = 0;
 
-        // The MOS 6502 has six registers, 3 for general processing, and 3 for program use:
+        /// <summary>
+        /// Gets the Stack for the MOS6502.
+        /// This is actually a memory segment that is wrapped in stack-like helpers.
+        /// </summary>
+        public Stack Stack { get; private set; }
 
-        // Main registers:
-        // Stores intermediate results for arithmetic and logic.
-        public Register8Bit A = new Register8Bit("Accumulator");
-
-        // Index registers:
-        // General Purpose (Can also set/get the SP register)
-        public Register8Bit X = new Register8Bit("X");
-
-        // General Purpose register
-        public Register8Bit Y = new Register8Bit("Y");
-
-        // Points to location on stack
-        public Register8Bit SP = new Register8Bit("Stack Pointer");
-
-        // Indicates where program is in its program sequence.
-        public Register16Bit PC = new Register16Bit("Program Counter");
-
-        // Flags representing state of processor
-        public Register8Bit P = new Register8Bit("Processor Status");
+        /// <summary>
+        /// Gets the MOS6502 Registers.
+        /// </summary>
+        public Registers Registers { get; private set; } = new Registers();
 
         /// <summary>
         /// Gets a value indicating if the result of the last calculation needs to be carried over to allow for larger calculations.
         /// </summary>
         public bool IsCarry
         {
-            get => this.P.GetBit(0);
-            set => this.P.SetBit(0, value);
+            get => this.Registers.P.GetBit(0);
+            set => this.Registers.P.SetBit(0, value);
         }
 
         /// <summary>
@@ -84,8 +67,8 @@ namespace MICE.CPU.MOS6502
         /// </summary>
         public bool IsZero
         {
-            get => this.P.GetBit(1);
-            set => this.P.SetBit(1, value);
+            get => this.Registers.P.GetBit(1);
+            set => this.Registers.P.SetBit(1, value);
         }
 
         /// <summary>
@@ -93,8 +76,8 @@ namespace MICE.CPU.MOS6502
         /// </summary>
         public bool AreInterruptsDisabled
         {
-            get => this.P.GetBit(2);
-            set => this.P.SetBit(2, value);
+            get => this.Registers.P.GetBit(2);
+            set => this.Registers.P.SetBit(2, value);
         }
 
         /// <summary>
@@ -102,8 +85,8 @@ namespace MICE.CPU.MOS6502
         /// </summary>
         public bool IsDecimalMode
         {
-            get => this.P.GetBit(3);
-            set => this.P.SetBit(3, value);
+            get => this.Registers.P.GetBit(3);
+            set => this.Registers.P.SetBit(3, value);
         }
 
         /// <summary>
@@ -111,8 +94,8 @@ namespace MICE.CPU.MOS6502
         /// </summary>
         public bool WillBreak
         {
-            get => this.P.GetBit(4);
-            set => this.P.SetBit(4, value);
+            get => this.Registers.P.GetBit(4);
+            set => this.Registers.P.SetBit(4, value);
         }
 
         /// <summary>
@@ -120,8 +103,8 @@ namespace MICE.CPU.MOS6502
         /// </summary>
         public bool Unused
         {
-            get => this.P.GetBit(5);
-            set => this.P.SetBit(5, value);
+            get => this.Registers.P.GetBit(5);
+            set => this.Registers.P.SetBit(5, value);
         }
 
         /// <summary>
@@ -129,8 +112,8 @@ namespace MICE.CPU.MOS6502
         /// </summary>
         public bool IsOverflowed
         {
-            get => this.P.GetBit(6);
-            set => this.P.SetBit(6, value);
+            get => this.Registers.P.GetBit(6);
+            set => this.Registers.P.SetBit(6, value);
         }
 
         /// <summary>
@@ -138,24 +121,35 @@ namespace MICE.CPU.MOS6502
         /// </summary>
         public bool IsNegative
         {
-            get => this.P.GetBit(7);
-            set => this.P.SetBit(7, value);
+            get => this.Registers.P.GetBit(7);
+            set => this.Registers.P.SetBit(7, value);
         }
 
         public void PowerOn(CancellationToken cancellationToken)
         {
             this.Reset(cancellationToken);
+
+            if (File.Exists(this.debugPath))
+            {
+                File.Delete(this.debugPath);
+            }
+
             this.fs = File.AppendText(this.debugPath);
         }
 
         public void Reset(CancellationToken cancellationToken)
         {
             this.Opcodes = new Opcodes(this);
-            this.A.Write(0);
-            this.X.Write(0);
-            this.Y.Write(0);
-            this.SP.Write(Constants.StackPointerStart);
-            this.PC.Write(this.memoryMap.ReadShort(this.InterruptOffsets[InterruptType.Reset]));
+            this.Registers = new Registers();
+            this.Registers.PC.Write(this.memoryMap.ReadShort(this.InterruptOffsets[InterruptType.Reset]));
+
+            this.Stack = this.memoryMap.GetMemorySegment<Stack>("Stack");
+            this.Stack.SetStackPointer(this.Registers.SP);
+
+            this.Registers.SP.AfterWriteAction = (value) =>
+            {
+
+            };
 
             this.Unused = true;
             this.AreInterruptsDisabled = true;
@@ -180,6 +174,8 @@ namespace MICE.CPU.MOS6502
             //}
         }
 
+        private long nmiCycleStart = 0;
+
         /// <summary>
         /// Steps the CPU and returns the amount of Cycles that would have occurred if the CPU were real.
         /// The cycles can be used by other components as a timing mechanism.
@@ -187,11 +183,28 @@ namespace MICE.CPU.MOS6502
         /// <returns>The amount of cycles that have passed in this step.</returns>
         public int Step()
         {
-            ushort oldPC = this.PC;
+            ushort oldPC = this.Registers.PC;
 
             if (this.WasNMIRequested)
             {
-                this.HandleNMIRequest();
+                if (this.nmiCycleStart == 0)
+                {
+                    this.nmiCycleStart = this.CurrentCycle;
+                }
+                else if (this.CurrentCycle - this.nmiCycleStart >= 7)
+                {
+                    this.HandleNMIRequest();
+                    this.AreInterruptsDisabled = true;
+                    this.WasNMIRequested = false;
+                    this.nmiCycleStart = 0;
+
+                    return 1;
+                }
+            }
+
+            if (this.Registers.PC == 0x8054)
+            {
+
             }
 
             // Grab an Opcode from the PC register:
@@ -200,84 +213,69 @@ namespace MICE.CPU.MOS6502
             // Grab our version of the opcode...
             var opCode = this.Opcodes[code];
             opCode.Instruction(opCode);
-            this.fs.WriteLine($"{this.stepCount:D4}:0x{this.PC.Read():X}:{opCode.Name}:{opCode.Cycles}");
+            this.fs.WriteLine($"{this.stepCount:D4}:0x{code:X}:0x{this.Registers.PC.Read():X}:{opCode.Name}:{opCode.Cycles}");
 
-            if (opCode.ShouldVerifyResults && (oldPC + opCode.PCDelta != this.PC))
+            if (opCode.ShouldVerifyResults && (oldPC + opCode.PCDelta != this.Registers.PC))
             {
-                throw new InvalidOperationException($"Program Counter was not what was expected after executing instruction: {opCode.Name} (0x{opCode.Code:X}).{Environment.NewLine}Was: 0x{oldPC:X}{Environment.NewLine}Is: 0x{this.PC.Read():X}{Environment.NewLine}Expected: 0x{oldPC + opCode.PCDelta:X}");
-            }
-
-            if (this.stepCount == 311307)
-            {
-
+                this.fs.Flush();
+                throw new InvalidOperationException($"Program Counter was not what was expected after executing instruction: {opCode.Name} (0x{opCode.Code:X}).{Environment.NewLine}Was: 0x{oldPC:X}{Environment.NewLine}Is: 0x{this.Registers.PC.Read():X}{Environment.NewLine}Expected: 0x{oldPC + opCode.PCDelta:X}");
             }
 
             this.stepCount++;
             this.ranOpcodeCount++;
+
             return opCode.Cycles;
-        }
-
-        public ushort StackGetPointer(int steps = 0)
-        {
-            var stackPointer = this.SP.Read() + 0x0100;
-            return (ushort)(stackPointer + steps);
-        }
-
-        public void StackMove(int steps)
-        {
-            var stackPointer = this.SP.Read();
-            this.SP.Write((byte)(stackPointer + steps));
         }
 
         public void WriteByteAt(ushort address, byte value, bool incrementPC = true)
         {
-            ushort pc = this.PC;
+            ushort pc = this.Registers.PC;
             this.memoryMap.Write(address, value);
 
             if (incrementPC)
             {
-                this.PC.Write(++pc);
+                this.Registers.PC.Write(++pc);
             }
         }
 
         public void WriteShortAt(ushort address, ushort value, bool incrementPC = true)
         {
-            ushort pc = this.PC;
+            ushort pc = this.Registers.PC;
             var bytes = BitConverter.GetBytes(value);
             this.memoryMap.Write(address, bytes[0]);
             this.memoryMap.Write(address + 1, bytes[1]);
 
             if (incrementPC)
             {
-                this.PC.Write(++pc);
+                this.Registers.PC.Write(++pc);
             }
         }
 
-        public void IncrementPC(ushort count = 1) => this.PC.Write((ushort)(this.PC + count));
-        public void SetPCTo(ushort address) => this.PC.Write(address);
-        public byte ReadNextByte(bool incrementPC = true) => this.ReadByteAt(this.PC, incrementPC);
+        public void IncrementPC(ushort count = 1) => this.Registers.PC.Write((ushort)(this.Registers.PC + count));
+        public void SetPCTo(ushort address) => this.Registers.PC.Write(address);
+        public byte ReadNextByte(bool incrementPC = true) => this.ReadByteAt(this.Registers.PC, incrementPC);
         public byte ReadByteAt(ushort address, bool incrementPC = true)
         {
-            ushort pc = this.PC;
+            ushort pc = this.Registers.PC;
             var value = this.memoryMap.ReadByte(address);
 
             if (incrementPC)
             {
-                this.PC.Write(++pc);
+                this.Registers.PC.Write(++pc);
             }
 
             return value;
         }
 
-        public ushort ReadNextShort(bool incrementPC = true) => this.ReadShortAt(this.PC, incrementPC);
+        public ushort ReadNextShort(bool incrementPC = true) => this.ReadShortAt(this.Registers.PC, incrementPC);
         public ushort ReadShortAt(ushort address, bool incrementPC = true)
         {
-            ushort pc = this.PC;
+            ushort pc = this.Registers.PC;
             var value = this.memoryMap.ReadShort(address);
 
             if (incrementPC)
             {
-                this.PC.Write(++pc);
+                this.Registers.PC.Write(++pc);
             }
 
             return value;
@@ -286,16 +284,13 @@ namespace MICE.CPU.MOS6502
         private void HandleNMIRequest()
         {
             // Push PC to stack...
-            var sp = this.StackGetPointer(1);
-            this.StackMove(2);
-            this.WriteShortAt(sp, this.PC.Read());
+            this.Stack.Push(this.Registers.PC);
 
             // Push P to stack...
-            sp = this.StackGetPointer(1);
-            this.WriteByteAt(sp, this.P.Read());
+            this.Stack.Push(this.Registers.P);
 
             // Set PC to NMI vector.
-            this.PC.Write(this.memoryMap.ReadShort(this.InterruptOffsets[InterruptType.NMI]));
+            this.Registers.PC.Write(this.memoryMap.ReadShort(this.InterruptOffsets[InterruptType.NMI]));
         }
     }
 }

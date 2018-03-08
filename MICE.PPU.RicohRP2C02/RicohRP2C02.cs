@@ -4,6 +4,8 @@ using System.Threading;
 
 namespace MICE.PPU.RicohRP2C02
 {
+    // Some notes: http://problemkaputt.de/everynes.htm#pictureprocessingunitppu
+
     public class RicohRP2C02 : IMicroprocessor
     {
         private static class Constants
@@ -225,7 +227,6 @@ namespace MICE.PPU.RicohRP2C02
 
         public void PowerOn(CancellationToken cancellationToken)
         {
-            this.PPUSTATUS.AfterReadAction = () => this.IsVBlank = false;
             this.PPUADDR.AfterWriteAction = (value) =>
             {
                 if (!this.hasWrittenToggle)
@@ -262,7 +263,10 @@ namespace MICE.PPU.RicohRP2C02
 
             this.PPUCTRL.AfterWriteAction = (value) =>
             {
+                if(this.WasNMIRequested)
+                {
 
+                }
             };
 
             this.Restart(cancellationToken);

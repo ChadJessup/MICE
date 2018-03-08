@@ -1,5 +1,6 @@
 ﻿using MICE.Common.Misc;
 using MICE.Components.Memory;
+using MICE.CPU.MOS6502;
 using MICE.PPU.RicohRP2C02;
 
 namespace MICE.Nintendo
@@ -16,13 +17,13 @@ namespace MICE.Nintendo
             // http://nesdev.com/NESDoc.pdf - Figure 2-3 CPU memory map
             // RAM - $0000-$1FFF (including mirrored data)
             this.Add(new RAM(0x0000, 0x00ff, "Zero Page"));
-            this.Add(new RAM(0x0100, 0x01ff, "Stack"));
+            this.Add(new Stack(0x0100, 0x01ff, "Stack"));
             this.Add(new RAM(0x0200, 0x07ff, "RAM"));
 
             // $0800 - RAM - Mirrors $0000-$07FF three times.
-            this.Add(new MirroredMemory(0x0800, 0x0fff, 0x0000, 0x07ff, "Mirrored Ram #1"));
-            this.Add(new MirroredMemory(0x1000, 0x17FF, 0x0000, 0x07ff, "Mirrored Ram #2"));
-            this.Add(new MirroredMemory(0x1800, 0x1fff, 0x0000, 0x07ff, "Mirrored Ram #3"));
+            this.Add(new MirroredMemory(0x0800, 0x0fff, 0x0000, 0x07ff, this, "Mirrored Ram #1"));
+            this.Add(new MirroredMemory(0x1000, 0x17FF, 0x0000, 0x07ff, this, "Mirrored Ram #2"));
+            this.Add(new MirroredMemory(0x1800, 0x1fff, 0x0000, 0x07ff, this, "Mirrored Ram #3"));
 
             // I/O Registers - $2000-$401F
             // These memory locations are mapped to the PPU's registers.
@@ -36,7 +37,7 @@ namespace MICE.Nintendo
             this.Add(new MemoryMappedRegister<byte>(0x2007, 0x2007, ppu.PPUDATA, "Mapped PPU Read/Write Data Register"));
 
             // $2008 - I/O - Mirrors $2000-$2007 in a repeating pattern until $3FFF.
-            this.Add(new MirroredMemory(0x2008, 0x3FFF, 0x2000, 0x2007, "Mirrored PPU Registers"));
+            this.Add(new MirroredMemory(0x2008, 0x3FFF, 0x2000, 0x2007, this, "Mirrored PPU Registers"));
 
             // TODO: 4010 - 4013 = APU...not implemented now, but we need to map it still.
             this.Add(new RAM(0x4011, 0x4011, "APU DMA Load Counter"));
@@ -46,6 +47,12 @@ namespace MICE.Nintendo
 
             // TODO: 4015 APU Status...not implemented now, but we need to map it still.
             this.Add(new RAM(0x4015, 0x4015, "APU Status Register"));
+
+            // TODO: 4016 Input...not implemented now, but we need to map it still.
+            this.Add(new RAM(0x4016, 0x4016, "Control Input 1"));
+
+            // TODO: 4017 Input...not implemented now, but we need to map it still.
+            this.Add(new RAM(0x4017, 0x4017, "Control Input 2"));
 
             // Expansion Memory - seems to be able to be used by various Mappers for various reasons
             // TODO: Route into cartridge as well?

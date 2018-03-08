@@ -9,7 +9,7 @@ namespace MICE.CPU.MOS6502
         /// <summary>
         /// The Addressing mode of this instruction.
         /// </summary>
-        public AddressingMode AddressingMode { get; private set; } = AddressingMode.None;
+        public AddressingModes AddressingMode { get; private set; } = AddressingModes.None;
 
         /// <summary>
         /// The amount of cycles this instruction takes.
@@ -23,7 +23,7 @@ namespace MICE.CPU.MOS6502
 
         public bool ShouldVerify { get; private set; }
 
-        public MOS6502OpcodeAttribute(int code, string name, AddressingMode addressingMode, int cycles, int pcDelta, string description = "", bool verify = true)
+        public MOS6502OpcodeAttribute(int code, string name, AddressingModes addressingMode, int cycles, int pcDelta, string description = "", bool verify = true)
             : base(code, name, description)
         {
             this.AddressingMode = addressingMode;
