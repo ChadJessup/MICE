@@ -390,52 +390,7 @@ namespace MICE.CPU.MOS6502
             var (value, address, samePage) = AddressingMode.GetAddressedValue(CPU, container);
             this.WriteByteToRegister(CPU.Registers.A, value, S: true, Z: true);
 
-            switch (container.AddressingMode)
-            {
-                case AddressingModes.AbsoluteX:
-                case AddressingModes.AbsoluteY:
-                case AddressingModes.IndirectY:
-                    if (!samePage.Value)
-                    {
-                        container.Cycles++;
-                    }
-                    break;
-                default:
-                    break;
-            }
-            /*
-            switch (container.AddressingMode)
-            {
-                case AddressingModes.ZeroPage:
-                case AddressingModes.ZeroPageX:
-                case AddressingModes.Absolute:
-                case AddressingModes.AbsoluteY:
-                case AddressingModes.Immediate:
-                case AddressingModes.AbsoluteX:
-                case AddressingModes.IndirectY:
-                    this.WriteByteToRegister(CPU.Registers.A, value, S: true, Z: true);
-                    break;
-                    ushort partialAddress = CPU.ReadNextShort();
-                    ushort combinedwithX = (ushort)(partialAddress + CPU.Registers.X);
-                    this.WriteByteAtToRegister(CPU.Registers.A, combinedwithX, S: true, Z: true);
-                    if (!this.AreSamePage(partialAddress, combinedwithX))
-                    {
-                        container.Cycles++;
-                    }
-                    break;
-                    var indirectYAddress = (ushort)CPU.ReadNextByte(incrementPC: false);
-                    ushort indirectYValue = (ushort)(CPU.ReadShortAt(indirectYAddress, incrementPC: false) + CPU.Registers.Y);
-
-                    this.WriteByteAtToRegister(CPU.Registers.A, indirectYValue, S: true, Z: true);
-                    if (!this.AreSamePage(indirectYAddress, indirectYValue))
-                    {
-                        container.Cycles++;
-                    }
-                    break;
-                default:
-                    throw this.ExceptionForUnhandledAddressingMode(container);
-            }
-            */
+            this.HandlePageBoundaryCrossed(container, samePage);
         }
 
         #endregion
@@ -500,30 +455,24 @@ namespace MICE.CPU.MOS6502
             }
         }
 
-        [MOS6502Opcode(0x8E, "STX", AddressingModes.Absolute, cycles: 4, pcDelta: 3)]
         [MOS6502Opcode(0x86, "STX", AddressingModes.ZeroPage, cycles: 3, pcDelta: 2)]
+        [MOS6502Opcode(0x96, "STX", AddressingModes.ZeroPageY, cycles:4, pcDelta: 2)]
+        [MOS6502Opcode(0x8E, "STX", AddressingModes.Absolute, cycles: 4, pcDelta: 3)]
         public void STX(OpcodeContainer container)
         {
             var (value, address, isSamePage) = AddressingMode.GetAddressedValue(CPU, container, getValue: false);
             CPU.WriteByteAt(address, CPU.Registers.X);
-
-            /*
-            switch (container.AddressingMode)
-            {
-                case AddressingModes.Absolute:
-                    CPU.WriteByteAt(address, CPU.Registers.X);
-                    break;
-                case AddressingModes.ZeroPage:
-                    CPU.WriteByteAt(CPU.ReadNextByte(), CPU.Registers.X, incrementPC: false);
-                    break;
-                default:
-                    throw this.ExceptionForUnhandledAddressingMode(container);
-            }
-            */
         }
 
         [MOS6502Opcode(0x84, "STY", AddressingModes.ZeroPage, cycles: 3, pcDelta: 2)]
-        public void STY(OpcodeContainer container) => CPU.WriteByteAt(CPU.ReadNextByte(), CPU.Registers.Y, incrementPC: false);
+        [MOS6502Opcode(0x94, "STY", AddressingModes.ZeroPageX, cycles: 4, pcDelta: 2)]
+        [MOS6502Opcode(0x8C, "STY", AddressingModes.Absolute, cycles: 4, pcDelta: 3)]
+        public void STY(OpcodeContainer container)
+        {
+            var (value, address, isSamePage) = AddressingMode.GetAddressedValue(CPU, container, getValue: false);
+
+            CPU.WriteByteAt(address, CPU.Registers.Y);
+        }
 
         #endregion
 
@@ -706,7 +655,7 @@ namespace MICE.CPU.MOS6502
 
         #region Math Instructions
 
-        [MOS6502Opcode(0x6D, "ADC", AddressingModes.Absolute, cycles: 3, pcDelta: 4)]
+        [MOS6502Opcode(0x6D, "ADC", AddressingModes.Absolute, cycles: 4, pcDelta: 3)]
         [MOS6502Opcode(0x69, "ADC", AddressingModes.Immediate, cycles: 2, pcDelta: 2)]
         [MOS6502Opcode(0x65, "ADC", AddressingModes.ZeroPage, cycles: 3, pcDelta: 2)]
         public void ADC(OpcodeContainer container)
@@ -716,28 +665,7 @@ namespace MICE.CPU.MOS6502
             var result = (byte)(CPU.Registers.A + value);
             CPU.IsCarry = result >= 0x80;
 
-            /*
-            switch (container.AddressingMode)
-            {
-                case AddressingModes.Immediate:
-                    var immediateValue = CPU.ReadNextByte();
-                    byte immediateResult = (byte)(CPU.Registers.A + immediateValue);
-                    CPU.Registers.A.Write(immediateResult);
-                    CPU.IsCarry = immediateResult >= 0x80;
-                    break;
-                case AddressingModes.ZeroPage:
-                    var zeroPageAddress = CPU.ReadNextByte(incrementPC: false);
-                    var value = CPU.ReadByteAt(zeroPageAddress);
-                    byte carry = (byte)(CPU.IsCarry ? 1 : 0);
-
-                    byte result = (byte)(CPU.Registers.A + value);
-                    CPU.Registers.A.Write(result);
-                    CPU.IsCarry = result >= 0x80;
-                    break;
-                default:
-                    throw this.ExceptionForUnhandledAddressingMode(container);
-            }
-            */
+            this.HandlePageBoundaryCrossed(container, isSamePage);
 
             this.HandleNegative(CPU.Registers.A);
             this.HandleZero(CPU.Registers.A);
@@ -752,31 +680,7 @@ namespace MICE.CPU.MOS6502
             var (value, address, isSamePage) = AddressingMode.GetAddressedValue(CPU, container);
             this.WriteByteToRegister(CPU.Registers.A, (byte)(CPU.Registers.A - value), S: true, Z: true);
 
-            /*
-            switch (container.AddressingMode)
-            {
-                case AddressingModes.ZeroPage:
-                    var (value, address) = AddressingMode.GetZeroPage(CPU);
-                    CPU.Registers.A.Write((byte)(sbyte)(CPU.Registers.A - value));
-
-                    break;
-                case AddressingModes.AbsoluteY:
-                    var absoluteYAddress = (ushort)(CPU.ReadNextShort() + CPU.Registers.Y);
-                    var absoluteYValue = CPU.ReadByteAt(absoluteYAddress);
-
-                    sbyte result = (sbyte)(CPU.Registers.A - absoluteYValue);
-                    CPU.Registers.A.Write((byte)result);
-
-                    if (this.AreSamePage(absoluteYAddress, absoluteYValue))
-                    {
-                        container.Cycles++;
-                    }
-                    break;
-                default:
-                    throw this.ExceptionForUnhandledAddressingMode(container);
-            }
-            */
-
+            this.HandlePageBoundaryCrossed(container, isSamePage);
             this.HandleOverflow(CPU.Registers.A);
         }
 
@@ -899,6 +803,28 @@ namespace MICE.CPU.MOS6502
         }
 
         private bool AreSamePage(ushort a1, ushort a2) => ((a1 ^ a2) & 0xFF00) == 0;
+        private void HandlePageBoundaryCrossed(OpcodeContainer container, bool? samePage)
+        {
+            if (samePage == null)
+            {
+                return;
+            }
+
+            switch (container.AddressingMode)
+            {
+                case AddressingModes.AbsoluteX:
+                case AddressingModes.AbsoluteY:
+                case AddressingModes.IndirectY:
+                    if (!samePage.Value)
+                    {
+                        container.Cycles++;
+                    }
+                    break;
+                default:
+                    break;
+            }
+        }
+
         private InvalidOperationException ExceptionForUnhandledAddressingMode(OpcodeContainer container) => new InvalidOperationException($"Unhandled AddressMode ({container.AddressingMode}) for Opcode: ({container.Name})");
     }
 }

@@ -39,6 +39,9 @@ namespace MICE.Nintendo
             // $2008 - I/O - Mirrors $2000-$2007 in a repeating pattern until $3FFF.
             this.Add(new MirroredMemory(0x2008, 0x3FFF, 0x2000, 0x2007, this, "Mirrored PPU Registers"));
 
+            // TODO: 4000 - 4007 = APU...not implement now, but we need to map it still.
+            this.Add(new RAM(0x4000, 0x4007, "APU Pulse Channel"));
+
             // TODO: 4010 - 4013 = APU...not implemented now, but we need to map it still.
             this.Add(new RAM(0x4011, 0x4011, "APU DMA Load Counter"));
 
