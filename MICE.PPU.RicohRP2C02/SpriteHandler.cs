@@ -3,6 +3,7 @@
     public class SpriteHandler
     {
         private readonly Registers registers;
+        private byte[] spriteIndices = new byte[8];
 
         public SpriteHandler(Registers registers)
         {
@@ -13,8 +14,8 @@
 
         public bool IsSmallSprites
         {
-            get => this.registers.PPUCTRL.GetBit(5);
-            set => this.registers.PPUCTRL.SetBit(5, value);
+            get => !this.registers.PPUCTRL.GetBit(5);
+            set => this.registers.PPUCTRL.SetBit(5, !value);
         }
 
         public bool DrawLeft8SpritePixels
@@ -54,9 +55,27 @@
             set => this.registers.PPUSTATUS.SetBit(6, value);
         }
 
-        public void DrawSpritePixel(int x, int y)
+        public void EvaluateSpritesOnScanline(byte[] oam, int scanline)
         {
+            this.CurrentScanlineSpriteCount = 0;
 
+            int offset = this.IsSmallSprites ? 8 : 16;
+
+            for (byte index = 0; index < 64 && this.CurrentScanlineSpriteCount < 8; index++)
+            {
+                byte spriteY = (byte)(oam[index * 4 + 0] + 1);
+
+                if (scanline >= spriteY && (scanline < spriteY + offset))
+                {
+                    this.spriteIndices[this.CurrentScanlineSpriteCount] = index;
+                    this.CurrentScanlineSpriteCount++;
+                }
+            }
+        }
+
+        public uint DrawSpritePixel(int x, int y)
+        {
+            return 0;
         }
     }
 }

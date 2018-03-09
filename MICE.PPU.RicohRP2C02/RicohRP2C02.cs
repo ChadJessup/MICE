@@ -7,7 +7,7 @@ namespace MICE.PPU.RicohRP2C02
 
     public class RicohRP2C02 : IMicroprocessor
     {
-        private static class Constants
+        public static class Constants
         {
             public const int ScanlinesPerFrame = 262;
             public const int CyclesPerScanline = 341;
@@ -254,12 +254,16 @@ namespace MICE.PPU.RicohRP2C02
         {
             if (this.Cycle > 0 && this.Cycle <= 256)
             {
-                this.SetPixel(this.Cycle, this.ScanLine);
+                // this.SetPixel(this.Cycle, this.ScanLine);
+                uint backgroundPixel = BackgroundHandler.DrawBackgroundPixel(this.Cycle, this.ScanLine);
+                uint spritePixel = SpriteHandler.DrawSpritePixel(this.Cycle, this.ScanLine);
+
+                uint muxedPixel = PixelMuxer.MuxPixel(spritePixel, backgroundPixel);
             }
             else if (this.Cycle >= 257 && this.Cycle <= 320)
             {
                 this.Registers.OAMADDR.Write(00);
-                this.FetchSpriteTileData(this.ScanLine + 1);
+                SpriteHandler.EvaluateSpritesOnScanline(this.PrimaryOAM, this.ScanLine + 1);
             }
             else if (this.Cycle >= 321 && this.Cycle <= 336)
             {
@@ -268,11 +272,6 @@ namespace MICE.PPU.RicohRP2C02
         }
 
         byte[] oam_temp = new byte[8];
-
-        private void FetchSpriteTileData(int scanline)
-        {
-            this.SpriteHandler.CurrentScanlineSpriteCount = 0;
-        }
 
         private void HandlePostRenderScanline()
         {

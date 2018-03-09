@@ -1,4 +1,6 @@
-﻿namespace MICE.PPU.RicohRP2C02
+﻿using System;
+
+namespace MICE.PPU.RicohRP2C02
 {
     public class PixelMuxer
     {
@@ -34,6 +36,11 @@
         {
             get => this.registers.PPUMASK.GetBit(7);
             set => this.registers.PPUMASK.SetBit(7, value);
+        }
+
+        public uint MuxPixel(uint spritePixel, uint backgroundPixel)
+        {
+            return 0;
         }
     }
 }
