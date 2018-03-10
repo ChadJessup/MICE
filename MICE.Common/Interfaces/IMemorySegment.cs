@@ -12,6 +12,7 @@ namespace MICE.Common.Interfaces
         string Name { get; }
 
         bool IsIndexInRange(int index);
+        bool ContainsIndex(int index);
         int GetOffsetInSegment(int index);
 
         (int min, int max) GetRange();

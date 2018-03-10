@@ -5,7 +5,7 @@ using System.Text;
 
 namespace MICE.PPU.RicohRP2C02
 {
-    public class Registers
+    public class PPURegisters
     {
         /// <summary>
         /// The PPU Control register contains various bits that controls how the PPU behaves. Sometimes called PPU Control Register 1.

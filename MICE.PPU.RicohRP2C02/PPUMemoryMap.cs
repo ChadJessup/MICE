@@ -1,5 +1,6 @@
 ﻿using MICE.Common.Misc;
 using MICE.Components.Memory;
+using System.IO;
 
 namespace MICE.PPU.RicohRP2C02
 {
@@ -8,7 +9,7 @@ namespace MICE.PPU.RicohRP2C02
     /// </summary>
     public class PPUMemoryMap : MemoryMapper
     {
-        public PPUMemoryMap()
+        public PPUMemoryMap(StreamWriter sw) : base(sw)
         {
             // http://nesdev.com/NESDoc.pdf - Figure 3-1 PPU memory map
 
@@ -32,7 +33,7 @@ namespace MICE.PPU.RicohRP2C02
             this.Add(new VRAM(0x3F00, 0x3F0F, "Image Palette"));
             this.Add(new VRAM(0x3F10, 0x3F1F, "Sprite Palette"));
 
-            this.Add(new MirroredMemory(0x3F20, 0x3FFF, 0x3F00, 0x3FFF, this, "Mirrored Palettes"));
+            this.Add(new MirroredMemory(0x3F20, 0x3FFF, 0x3F00, 0x3F1F, this, "Mirrored Palettes"));
 
             // Mirrors
             this.Add(new MirroredMemory(0x4000, 0xFFFF, 0x0000, 0x3FFF, this, "Mirrored PPU"));

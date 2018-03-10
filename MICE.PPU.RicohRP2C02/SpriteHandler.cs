@@ -1,13 +1,19 @@
-﻿namespace MICE.PPU.RicohRP2C02
+﻿using MICE.Common.Interfaces;
+
+namespace MICE.PPU.RicohRP2C02
 {
     public class SpriteHandler
     {
-        private readonly Registers registers;
+        private readonly IMemoryMap ppuMemoryMap;
+        private readonly IMemoryMap cpuMemoryMap;
+        private readonly PPURegisters registers;
         private byte[] spriteIndices = new byte[8];
 
-        public SpriteHandler(Registers registers)
+        public SpriteHandler(IMemoryMap ppuMemoryMap, PPURegisters registers, IMemoryMap cpuMemoryMap)
         {
+            this.ppuMemoryMap = ppuMemoryMap;
             this.registers = registers;
+            this.cpuMemoryMap = cpuMemoryMap;
         }
 
         public int CurrentScanlineSpriteCount { get; set; }
@@ -75,6 +81,11 @@
 
         public uint DrawSpritePixel(int x, int y)
         {
+            if (!this.ShowSprites)
+            {
+                return 0;
+            }
+
             return 0;
         }
     }

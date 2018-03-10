@@ -9,22 +9,22 @@ namespace MICE.Nintendo.Loaders
     /// </summary>
     public class NESLoader : ILoader
     {
-        public static NESCartridge CreateCartridge(string filePath)
+        public static NESCartridge CreateCartridge(string filePath, StreamWriter sw)
         {
             if (!File.Exists(filePath))
             {
                 throw new FileNotFoundException($"Unable to find file at: {filePath}");
             }
 
-            return NESLoader.CreateCartridge(File.ReadAllBytes(filePath));
+            return NESLoader.CreateCartridge(File.ReadAllBytes(filePath), sw);
         }
 
-        public static NESCartridge CreateCartridge(byte[] bytes)
+        public static NESCartridge CreateCartridge(byte[] bytes, StreamWriter sw)
         {
             // We only suppport iNES format for now...eventually parse and handle unf and other iNES versions;
             INESFile file = new INESFile().Parse(bytes);
 
-            var cartridge = file.LoadCartridge();
+            var cartridge = file.LoadCartridge(sw);
 
             return cartridge;
         }

@@ -3,6 +3,7 @@ using MICE.Common.Interfaces;
 using MICE.Components.Memory;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
 namespace MICE.Nintendo.Loaders
@@ -137,7 +138,7 @@ namespace MICE.Nintendo.Loaders
             return this;
         }
 
-        public NESCartridge LoadCartridge()
+        public NESCartridge LoadCartridge(StreamWriter sw)
         {
             var cartridge = new NESCartridge
             {
@@ -147,7 +148,7 @@ namespace MICE.Nintendo.Loaders
                 ROMBanks = this.ROMBanks,
             };
 
-            cartridge.InitializeMapper(this.MemoryMapperId);
+            cartridge.InitializeMapper(this.MemoryMapperId, sw);
 
             return cartridge;
         }

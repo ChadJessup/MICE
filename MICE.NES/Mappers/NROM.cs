@@ -2,6 +2,7 @@
 using MICE.Nintendo.Loaders;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
 namespace MICE.Nintendo.Mappers
@@ -11,8 +12,8 @@ namespace MICE.Nintendo.Mappers
     {
         private List<(IMemorySegment segment, byte[] bytes)> bankLinkage = new List<(IMemorySegment segment, byte[] bytes)>();
 
-        public NROM(NESCartridge cartridge)
-            : base(MemoryMapperIds.NROM.ToString(), cartridge)
+        public NROM(NESCartridge cartridge, StreamWriter sw)
+            : base(MemoryMapperIds.NROM.ToString(), cartridge, sw)
         {
         }
 
@@ -44,6 +45,9 @@ namespace MICE.Nintendo.Mappers
         /// <returns>The data that was read.</returns>
         public override ushort ReadShort(int index)
         {
+            this.sw.WriteLine($"Read: 0x{index + 1:X}");
+            this.sw.WriteLine($"Read: 0x{index:X}");
+
             foreach (var (segment, bytes) in this.bankLinkage.Where(linkage => linkage.segment.IsIndexInRange(index)))
             {
                 var arrayOffset = segment.GetOffsetInSegment(index);
@@ -64,7 +68,10 @@ namespace MICE.Nintendo.Mappers
             foreach (var (segment, bytes) in this.bankLinkage.Where(linkage => linkage.segment.IsIndexInRange(index)))
             {
                 var arrayOffset = segment.GetOffsetInSegment(index);
-                return bytes[arrayOffset];
+
+                var value = bytes[arrayOffset];
+                this.sw.WriteLine($"Read: 0x{index:X}-0x{value:X}");
+                return value;
             }
 
             throw new InvalidOperationException($"Invalid memory range and/or size (byte) was requested to be read from in NROM Mapper: {index}");

@@ -4,9 +4,9 @@ namespace MICE.PPU.RicohRP2C02
 {
     public class PixelMuxer
     {
-        private readonly Registers registers;
+        private readonly PPURegisters registers;
 
-        public PixelMuxer(Registers registers)
+        public PixelMuxer(PPURegisters registers)
         {
             this.registers = registers;
         }

@@ -9,7 +9,6 @@ namespace MICE.CPU.MOS6502
 {
     public class MOS6502 : ICPU
     {
-        private string debugPath = @"c:\emulators\nes\debug-mice.txt";
         public StreamWriter fs;
 
         private Opcodes Opcodes;
@@ -17,8 +16,9 @@ namespace MICE.CPU.MOS6502
         private long ranOpcodeCount = 0;
         private long stepCount = 1;
 
-        public MOS6502(IMemoryMap memoryMap)
+        public MOS6502(IMemoryMap memoryMap, StreamWriter sw)
         {
+            this.fs = sw;
             this.memoryMap = memoryMap;
         }
 
@@ -128,13 +128,6 @@ namespace MICE.CPU.MOS6502
         public void PowerOn(CancellationToken cancellationToken)
         {
             this.Reset(cancellationToken);
-
-            if (File.Exists(this.debugPath))
-            {
-                File.Delete(this.debugPath);
-            }
-
-            this.fs = File.AppendText(this.debugPath);
         }
 
         public void Reset(CancellationToken cancellationToken)
@@ -163,10 +156,10 @@ namespace MICE.CPU.MOS6502
 
             // TODO: Move the below to NES specific reset logic...APU specifically...
             // Frame IRQ Enabled - APU
-            // this.memoryMap.Write(0x4017, 00);
+            this.memoryMap.Write(0x4017, 0x00);
 
             // All channels disabled.
-            // this.memoryMap.Write(0x4015, 00);
+            this.memoryMap.Write(0x4015, 0x00);
 
             // for (ushort i = 0x4000; i <= 0x400F; i++)
             // {
@@ -202,18 +195,13 @@ namespace MICE.CPU.MOS6502
                 }
             }
 
-            if (this.Registers.PC == 0x8054)
-            {
-
-            }
-
             // Grab an Opcode from the PC register:
             var code = this.ReadNextByte();
 
             // Grab our version of the opcode...
             var opCode = this.Opcodes[code];
             opCode.Instruction(opCode);
-            this.fs.WriteLine($"{this.stepCount:D4}:0x{code:X}:0x{this.Registers.PC.Read():X}:{opCode.Name}:{opCode.Cycles}");
+            this.fs.WriteLine($"{this.stepCount:D4}:0x{code:X}:0x{this.Registers.PC.Read():X}:{opCode.Name}:{opCode.Cycles}-PC:{Registers.PC.Read()}:A:{Registers.A.Read()}:X:{Registers.X.Read()}:Y:{Registers.Y.Read()}:SP:{Registers.SP.Read()}:P:{Registers.P.Read()}");
 
             if (opCode.ShouldVerifyResults && (oldPC + opCode.PCDelta != this.Registers.PC))
             {

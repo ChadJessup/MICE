@@ -13,9 +13,12 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MICE.Components", "MICE.Com
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MICE.CPU.MOS6502", "MICE.CPU.MOS6502\MICE.CPU.MOS6502.csproj", "{099A3D39-9B43-412B-8B04-BCACA2C281F1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MICE.PPU.RicohRP2C02", "MICE.PPU.RicohRP2C02\MICE.PPU.RicohRP2C02.csproj", "{1C6429E4-5DF1-4789-948C-8F076E3ABA4E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MICE.PPU.RicohRP2C02", "MICE.PPU.RicohRP2C02\MICE.PPU.RicohRP2C02.csproj", "{1C6429E4-5DF1-4789-948C-8F076E3ABA4E}"
 EndProject
 Global
+	GlobalSection(Performance) = preSolution
+		HasPerformanceSessions = true
+	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU

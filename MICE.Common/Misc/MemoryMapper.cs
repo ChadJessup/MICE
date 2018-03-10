@@ -2,12 +2,21 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
 namespace MICE.Common.Misc
 {
     public class MemoryMapper : ICollection<IMemorySegment>, IMemoryMap
     {
+        private StreamWriter sw;
+        public MemoryMapper(StreamWriter sw)
+        {
+            this.sw = sw;
+        }
+
+        private Dictionary<int, IMemorySegment> memorySegmentCache = new Dictionary<int, IMemorySegment>();
+
         private List<IMemorySegment> memorySegments = new List<IMemorySegment>();
         private int minimumRange = 0;
         private int maximumRange = 0;
@@ -61,8 +70,16 @@ namespace MICE.Common.Misc
 
         public ushort ReadShort(int index)
         {
+            return (ushort)(this.ReadByte(index + 1) << 8 | this.ReadByte(index));
+
+            if (this.memorySegmentCache.TryGetValue(index, out IMemorySegment cachedSegment))
+            {
+                return cachedSegment.ReadShort(index);
+            }
+
             foreach (var segment in this.memorySegments.Where(seg => seg.IsIndexInRange(index)))
             {
+                this.memorySegmentCache.Add(index, segment);
                 return segment.ReadShort(index);
             }
 
@@ -71,18 +88,50 @@ namespace MICE.Common.Misc
 
         public byte ReadByte(int index)
         {
-            foreach (var segment in this.memorySegments.Where(seg => seg.IsIndexInRange(index)))
+            byte value = 0x00;
+
+            if (this.memorySegmentCache.TryGetValue(index, out IMemorySegment cachedSegment))
             {
-                return segment.ReadByte(index);
+                value = cachedSegment.ReadByte(index);
             }
+            else
+            {
+                foreach (var segment in this.memorySegments.Where(seg => seg.IsIndexInRange(index)))
+                {
+                    this.memorySegmentCache.Add(index, segment);
+                    value = segment.ReadByte(index);
+                }
+            }
+
+            this.sw.WriteLine($"Read: 0x{index:X}-0x{value:X}");
+            if (index == 0x2002)
+            {
+                // Want it to match the other log...
+                this.sw.WriteLine($"Read: 0x{index:X}-0x{value:X}");
+            }
+
+            return value;
 
             throw new InvalidOperationException($"Address was requested that hasn't been mapped (0x{index:X})");
         }
 
         public void Write(int index, byte value)
         {
+            this.sw.WriteLine($"Write: 0x{index:X}-0x{value:X}");
+            if (index == 0x2000 || index == 0x2005 || index == 0x2001 || index == 0x2007)
+            {
+                this.sw.WriteLine($"Write: 0x{index:X}-0x{value:X}");
+            }
+
+            if (this.memorySegmentCache.TryGetValue(index, out IMemorySegment cachedSegment))
+            {
+                cachedSegment.Write(index, value);
+                return;
+            }
+
             foreach (var segment in this.memorySegments.Where(seg => seg.IsIndexInRange(index)))
             {
+                this.memorySegmentCache.Add(index, segment);
                 segment.Write(index, value);
                 return;
             }

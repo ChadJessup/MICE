@@ -21,10 +21,14 @@ namespace MICE.Components.Memory
             this.Name = name;
         }
 
+        public virtual bool ContainsIndex(int index) => IsIndexInRange(index) || (index <= this.LowerIndex && index >= this.UpperIndex);
         public virtual bool IsIndexInRange(int index) => index >= this.LowerIndex && index <= this.UpperIndex;
         public virtual (int min, int max) GetRange() => (min: this.LowerIndex, max: this.UpperIndex);
 
-        public int GetOffsetInSegment(int index) => Math.Max(0, index - this.LowerIndex);
+        public int GetOffsetInSegment(int index)
+        {
+            return Math.Max(0, index - this.LowerIndex);
+        }
 
         public abstract byte ReadByte(int index);
         public abstract ushort ReadShort(int index);

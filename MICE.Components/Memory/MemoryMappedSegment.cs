@@ -21,6 +21,7 @@ namespace MICE.Components.Memory
             this.Name = name;
         }
 
+        public bool ContainsIndex(int index) => index >= this.LowerIndex || index <= this.UpperIndex;
         public virtual bool IsIndexInRange(int index) => index >= this.LowerIndex && index <= this.UpperIndex;
         public virtual (int min, int max) GetRange() => (min: this.LowerIndex, max: this.UpperIndex);
 

@@ -2,6 +2,7 @@
 using MICE.Nintendo.Mappers;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 
@@ -30,7 +31,7 @@ namespace MICE.Nintendo.Loaders
         public MemoryMapperIds MapperId { get; private set; }
         public IMemoryManagementController Mapper { get; set; }
 
-        public void InitializeMapper(MemoryMapperIds memoryMapperId)
+        public void InitializeMapper(MemoryMapperIds memoryMapperId, StreamWriter sw)
         {
             if (this.WasMapperInitialized)
             {
@@ -39,7 +40,7 @@ namespace MICE.Nintendo.Loaders
 
             if (Constants.Mappers.TryGetValue(memoryMapperId, out var mappedTuple))
             {
-                this.Mapper = (IMemoryManagementController)Activator.CreateInstance(mappedTuple.Mapper, this);
+                this.Mapper = (IMemoryManagementController)Activator.CreateInstance(mappedTuple.Mapper, this, sw);
                 this.WasMapperInitialized = true;
                 // TODO: Logging, log what mapper, the name, etc, was used...
             }

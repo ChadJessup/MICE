@@ -1,4 +1,5 @@
 ﻿using MICE.Common.Interfaces;
+using System.Diagnostics;
 using System.Threading;
 
 namespace MICE.PPU.RicohRP2C02
@@ -11,14 +12,38 @@ namespace MICE.PPU.RicohRP2C02
         {
             public const int ScanlinesPerFrame = 262;
             public const int CyclesPerScanline = 341;
-            public const int NTSC_WIDTH = 256;
-            public const int NTSC_HEIGHT = 224;
+            public const int NTSCWidth = 256;
+            public const int NTSCHeight = 224;
+
+            public static uint[] RGBAPalette = {
+                0x7C7C7CFF,0x0000FCFF,0x0000BCFF,0x4428BCFF,
+                0x940084FF,0xA80020FF,0xA81000FF,0x881400FF,
+                0x503000FF,0x007800FF,0x006800FF,0x005800FF,
+                0x004058FF,0x000000FF,0x000000FF,0x000000FF,
+                0xBCBCBCFF,0x0078F8FF,0x0058F8FF,0x6844FCFF,
+                0xD800CCFF,0xE40058FF,0xF83800FF,0xE45C10FF,
+                0xAC7C00FF,0x00B800FF,0x00A800FF,0x00A844FF,
+                0x008888FF,0x000000FF,0x000000FF,0x000000FF,
+                0xF8F8F8FF,0x3CBCFCFF,0x6888FCFF,0x9878F8FF,
+                0xF878F8FF,0xF85898FF,0xF87858FF,0xFCA044FF,
+                0xF8B800FF,0xB8F818FF,0x58D854FF,0x58F898FF,
+                0x00E8D8FF,0x787878FF,0x000000FF,0x000000FF,
+                0xFCFCFCFF,0xA4E4FCFF,0xB8B8F8FF,0xD8B8F8FF,
+                0xF8B8F8FF,0xF8A4C0FF,0xF0D0B0FF,0xFCE0A8FF,
+                0xF8D878FF,0xD8F878FF,0xB8F8B8FF,0xB8F8D8FF,
+                0x00FCFCFF,0xF8D8F8FF,0x000000FF,0x000000FF
+            };
         }
 
-        public RicohRP2C02()
+        private Stopwatch stepSW;
+        private Stopwatch frameSW;
+
+        public RicohRP2C02(PPUMemoryMap memoryMap, PPURegisters registers, IMemoryMap cpuMemoryMap)
         {
-            this.BackgroundHandler = new BackgroundHandler(this.Registers);
-            this.SpriteHandler = new SpriteHandler(this.Registers);
+            this.Registers = registers;
+            this.MemoryMap = memoryMap;
+            this.BackgroundHandler = new BackgroundHandler(this.MemoryMap, this.Registers, cpuMemoryMap);
+            this.SpriteHandler = new SpriteHandler(this.MemoryMap, this.Registers, cpuMemoryMap);
             this.PixelMuxer = new PixelMuxer(this.Registers);
         }
 
@@ -41,8 +66,8 @@ namespace MICE.PPU.RicohRP2C02
         private ushort ppuAddress = 0;
         private bool hasWrittenToggle = false;
 
-        public PPUMemoryMap MemoryMap { get; } = new PPUMemoryMap();
-        public Registers Registers { get; } = new Registers();
+        public PPUMemoryMap MemoryMap { get; private set; }
+        public PPURegisters Registers { get; private set; }
 
         public int BaseNametableAddress => (this.Registers.PPUCTRL.GetBit(0) ? 1 : 0) | (this.Registers.PPUCTRL.GetBit(1) ? 1 : 0) << 2;
 
@@ -100,6 +125,9 @@ namespace MICE.PPU.RicohRP2C02
 
         public void PowerOn(CancellationToken cancellationToken)
         {
+            this.stepSW = new Stopwatch();
+            this.frameSW = new Stopwatch();
+
             this.Registers.PPUADDR.AfterWriteAction = (value) =>
             {
                 if (!this.hasWrittenToggle)
@@ -121,7 +149,18 @@ namespace MICE.PPU.RicohRP2C02
 
             this.Registers.PPUDATA.AfterWriteAction = (value) =>
             {
+                this.MemoryMap.Write(this.ppuAddress % 0x3FFF, value);
                 this.ppuAddress += (ushort)this.VRAMAddressIncrement;
+            };
+
+            this.Registers.PPUSTATUS.AfterReadAction = () =>
+            {
+                this.Registers.PPUSCROLL.Write(0);
+                this.Registers.PPUADDR.Write(0);
+                this.ppuAddress = 0;
+                this.hasWrittenToggle = false;
+
+                this.IsVBlank = false;
             };
 
             this.Registers.PPUCTRL.AfterWriteAction = (value) =>
@@ -155,6 +194,7 @@ namespace MICE.PPU.RicohRP2C02
 
         public int Step()
         {
+            stepSW.Start();
             // Prerender scanline
             if (this.ScanLine == -1)
             {
@@ -186,6 +226,8 @@ namespace MICE.PPU.RicohRP2C02
                 this.Cycle = 0;
             }
 
+            stepSW.Stop();
+
             return 0;
         }
 
@@ -203,6 +245,9 @@ namespace MICE.PPU.RicohRP2C02
         {
             this.ScanLine = -1;
             this.Frame++;
+
+            this.frameSW.Stop();
+            this.frameSW.Start();
         }
 
         private void HandlePrerenderScanline()

@@ -5,6 +5,8 @@ using MICE.CPU.MOS6502;
 using MICE.Nintendo.Loaders;
 using MICE.PPU.RicohRP2C02;
 using System;
+using System.Diagnostics;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -13,13 +15,24 @@ namespace MICE.Nintendo
     public class NES : ISystem
     {
         private CancellationToken cancellationToken;
+        private long currentFrame = 0;
 
         public NES(CancellationToken cancellationToken)
         {
+            if (File.Exists(this.debugPath))
+            {
+                File.Delete(this.debugPath);
+            }
+
+            this.sw = File.AppendText(this.debugPath);
+
             this.cancellationToken = cancellationToken;
         }
 
         public string Name { get; } = "Nintendo Entertainment System";
+        private string debugPath = @"c:\emulators\nes\debug-mice.txt";
+
+        public StreamWriter sw;
 
         // Create components...
         public DataBus DataBus { get; } = new DataBus();
@@ -41,14 +54,15 @@ namespace MICE.Nintendo
                 throw new InvalidOperationException("Cartridge must be loaded first, unable to power on.");
             }
 
-            this.PPU = new RicohRP2C02();
-            this.MemoryMap = new CPUMemoryMap(this.PPU.Registers);
+            var ppuRegisters = new PPURegisters();
+            this.MemoryMap = new CPUMemoryMap(ppuRegisters, this.sw);
+            this.PPU = new RicohRP2C02(new PPUMemoryMap(this.sw), ppuRegisters, this.MemoryMap);
 
             this.PPU.Registers.OAMDMA.AfterWriteAction = this.DMATransfer;
 
             this.MapToCartridge();
 
-            this.CPU = new Ricoh2A03(this.MemoryMap);
+            this.CPU = new Ricoh2A03(this.MemoryMap, this.sw);
 
             this.CPU.PowerOn(this.cancellationToken);
             this.PPU.PowerOn(this.cancellationToken);
@@ -69,8 +83,11 @@ namespace MICE.Nintendo
             // 1 System step = 1 CPU step + (3 PPU steps * CPU Cycles in Step) + (2 Audio steps * 1 CPU cycle).
             // Cycles are based on which instructions the CPU ran.
 
+            Stopwatch cpuSW = new Stopwatch();
+            cpuSW.Start();
             var cpuCycles = this.CPU.Step();
             CPU.CurrentCycle += cpuCycles;
+            cpuSW.Stop();
 
             for (int i = 0; i < cpuCycles * 3; i++)
             {
@@ -83,6 +100,7 @@ namespace MICE.Nintendo
                 }
             }
 
+            this.currentFrame = this.PPU.Frame;
             // TODO: APU Cycles
         }
 
