@@ -1,4 +1,5 @@
 ﻿using MICE.Common.Interfaces;
+using MICE.PPU.RicohRP2C02.Components;
 using System.Diagnostics;
 using System.Threading;
 
@@ -47,17 +48,19 @@ namespace MICE.PPU.RicohRP2C02
             this.PixelMuxer = new PixelMuxer(this.Registers);
         }
 
-        /// <summary>
-        /// Gets the Primary Object Attribute Memory (OAM) byte array.
-        /// This holds up to 64 sprites for the frame.
-        /// </summary>
-        public byte[] PrimaryOAM { get; } = new byte[256];
+        public byte[] ScreenData { get; private set; } = new byte[256 * 240];
 
         /// <summary>
-        /// Gets the Secondary Object Attribute Memory (OAM) byte array.
+        /// Gets the Primary Object Attribute Memory (OAM) memory.
+        /// This holds up to 64 sprites for the frame.
+        /// </summary>
+        public OAM PrimaryOAM { get; } = new OAM(256);
+
+        /// <summary>
+        /// Gets the Secondary Object Attribute Memory (OAM) memory.
         /// This holds up to 8 sprites for the current scanline.
         /// </summary>
-        public byte[] SecondaryOAM { get; } = new byte[32];
+        public OAM SecondaryOAM { get; } = new OAM(32);
 
         public BackgroundHandler BackgroundHandler { get; private set; }
         public SpriteHandler SpriteHandler { get; private set; }
@@ -117,11 +120,11 @@ namespace MICE.PPU.RicohRP2C02
         public int Cycle { get; private set; }
 
         /// <summary>
-        /// Current frame being rendered.
+        /// Current frame number being rendered.
         /// </summary>
-        public long Frame { get; private set; }
+        public long FrameNumber { get; private set; }
 
-        public bool IsFrameEven => this.Frame % 2 == 0;
+        public bool IsFrameEven => this.FrameNumber % 2 == 0;
 
         public void PowerOn(CancellationToken cancellationToken)
         {
@@ -130,14 +133,9 @@ namespace MICE.PPU.RicohRP2C02
 
             this.Registers.PPUADDR.AfterWriteAction = (value) =>
             {
-                if (!this.hasWrittenToggle)
-                {
-                    this.ppuAddress = (ushort)(value << 8);
-                }
-                else
-                {
-                    this.ppuAddress = (ushort)(this.ppuAddress | value);
-                }
+                this.ppuAddress = this.hasWrittenToggle
+                ? (ushort)(this.ppuAddress | value)
+                : (ushort)(value << 8);
 
                 this.hasWrittenToggle = !this.hasWrittenToggle;
             };
@@ -145,6 +143,11 @@ namespace MICE.PPU.RicohRP2C02
             this.Registers.PPUDATA.AfterReadAction = () =>
             {
                 this.ppuAddress += (ushort)this.VRAMAddressIncrement;
+            };
+
+            this.Registers.PPUDATA.AfterReadAction = () =>
+            {
+
             };
 
             this.Registers.PPUDATA.AfterWriteAction = (value) =>
@@ -167,7 +170,6 @@ namespace MICE.PPU.RicohRP2C02
             {
                 if (this.WasNMIRequested)
                 {
-
                 }
             };
 
@@ -187,7 +189,7 @@ namespace MICE.PPU.RicohRP2C02
             this.hasWrittenToggle = false;
             this.ppuAddress = 0;
 
-            this.Frame = 0;
+            this.FrameNumber = 0;
             this.ScanLine = 0;
             this.Cycle = 0;
         }
@@ -195,6 +197,7 @@ namespace MICE.PPU.RicohRP2C02
         public int Step()
         {
             stepSW.Start();
+
             // Prerender scanline
             if (this.ScanLine == -1)
             {
@@ -231,20 +234,15 @@ namespace MICE.PPU.RicohRP2C02
             return 0;
         }
 
-        private bool OnFinalCycleOnLine()
-        {
-            if (this.BackgroundHandler.ShowBackground && !this.IsFrameEven && this.ScanLine == -1)
-            {
-                return this.Cycle == 340;
-            }
-
-            return this.Cycle == 341;
-        }
+        private bool OnFinalCycleOnLine() =>
+            this.BackgroundHandler.ShowBackground && !this.IsFrameEven && this.ScanLine == -1
+                ? this.Cycle == 340
+                : this.Cycle == 341;
 
         private void HandleFinalScanline()
         {
             this.ScanLine = -1;
-            this.Frame++;
+            this.FrameNumber++;
 
             this.frameSW.Stop();
             this.frameSW.Start();
@@ -299,11 +297,14 @@ namespace MICE.PPU.RicohRP2C02
         {
             if (this.Cycle > 0 && this.Cycle <= 256)
             {
-                // this.SetPixel(this.Cycle, this.ScanLine);
-                uint backgroundPixel = BackgroundHandler.DrawBackgroundPixel(this.Cycle, this.ScanLine);
-                uint spritePixel = SpriteHandler.DrawSpritePixel(this.Cycle, this.ScanLine);
+                if (BackgroundHandler.ShowBackground && SpriteHandler.ShowSprites)
+                {
+                    byte backgroundPixel = BackgroundHandler.DrawBackgroundPixel(this.Cycle, this.ScanLine);
+                    byte spritePixel = SpriteHandler.DrawSpritePixel(this.Cycle, this.ScanLine);
 
-                uint muxedPixel = PixelMuxer.MuxPixel(spritePixel, backgroundPixel);
+                    byte muxedPixel = PixelMuxer.MuxPixel(spritePixel, backgroundPixel);
+                    this.ScreenData[256 * this.ScanLine + this.Cycle] = muxedPixel;
+                }
             }
             else if (this.Cycle >= 257 && this.Cycle <= 320)
             {
@@ -312,7 +313,6 @@ namespace MICE.PPU.RicohRP2C02
             }
             else if (this.Cycle >= 321 && this.Cycle <= 336)
             {
-
             }
         }
 

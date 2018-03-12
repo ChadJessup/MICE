@@ -1,6 +1,5 @@
 ﻿using MICE.Common.Interfaces;
-using MICE.Components.Memory;
-using System;
+using MICE.PPU.RicohRP2C02.Components;
 
 namespace MICE.PPU.RicohRP2C02
 {
@@ -10,20 +9,14 @@ namespace MICE.PPU.RicohRP2C02
         private readonly IMemoryMap ppuMemoryMap;
         private readonly IMemoryMap cpuMemoryMap;
 
-        private IMemorySegment attributeTable0;
-        private IMemorySegment attributeTable1;
-        private IMemorySegment attributeTable2;
-        private IMemorySegment attributeTable3;
+        private Nametable nameTable0;
+        private Nametable nameTable1;
+        private Nametable nameTable2;
+        private Nametable nameTable3;
 
-        private IMemorySegment nameTable0;
-        private IMemorySegment nameTable1;
-        private IMemorySegment nameTable2;
-        private IMemorySegment nameTable3;
+        private Nametable currentNameTable;
 
-        private IMemorySegment currentAttributeTable;
-        private IMemorySegment currentNameTable;
-
-        private IMemorySegment imagePalette;
+        private Palette imagePalette;
 
         public BackgroundHandler(IMemoryMap ppuMemoryMap, PPURegisters registers, IMemoryMap cpuMemoryMap)
         {
@@ -38,17 +31,12 @@ namespace MICE.PPU.RicohRP2C02
         // TODO: Find a better way, this sucks.
         private void CacheMemorySegments(IMemoryMap ppuMemoryMap)
         {
-            this.attributeTable0 = ppuMemoryMap.GetMemorySegment<VRAM>("Attribute Table 0");
-            this.attributeTable1 = ppuMemoryMap.GetMemorySegment<VRAM>("Attribute Table 1");
-            this.attributeTable2 = ppuMemoryMap.GetMemorySegment<VRAM>("Attribute Table 2");
-            this.attributeTable3 = ppuMemoryMap.GetMemorySegment<VRAM>("Attribute Table 3");
+            this.nameTable0 = ppuMemoryMap.GetMemorySegment<Nametable>("Name Table 0");
+            this.nameTable1 = ppuMemoryMap.GetMemorySegment<Nametable>("Name Table 1");
+            this.nameTable2 = ppuMemoryMap.GetMemorySegment<Nametable>("Name Table 2");
+            this.nameTable3 = ppuMemoryMap.GetMemorySegment<Nametable>("Name Table 3");
 
-            this.nameTable0 = ppuMemoryMap.GetMemorySegment<VRAM>("Name Table 0");
-            this.nameTable1 = ppuMemoryMap.GetMemorySegment<VRAM>("Name Table 1");
-            this.nameTable2 = ppuMemoryMap.GetMemorySegment<VRAM>("Name Table 2");
-            this.nameTable3 = ppuMemoryMap.GetMemorySegment<VRAM>("Name Table 3");
-
-            this.imagePalette = ppuMemoryMap.GetMemorySegment<VRAM>("Image Palette");
+            this.imagePalette = ppuMemoryMap.GetMemorySegment<Palette>("Image Palette");
         }
 
         public bool DrawLeft8BackgroundPixels
@@ -69,13 +57,8 @@ namespace MICE.PPU.RicohRP2C02
             set => this.registers.PPUCTRL.SetBit(4, value);
         }
 
-        public uint DrawBackgroundPixel(int x, int y)
+        public byte DrawBackgroundPixel(int x, int y)
         {
-            if (!this.ShowBackground)
-            {
-                return 0;
-            }
-
             if (x <= 8 && !this.DrawLeft8BackgroundPixels)
             {
                 return 0;
@@ -119,7 +102,7 @@ namespace MICE.PPU.RicohRP2C02
 
             int attribute_table_base = nametable_start + 0x3C0;
             int attributeTableIndex = attribute_y * 8 + attribute_x;
-            byte attributeTableEntry = this.currentAttributeTable.ReadByte(((ushort)(attribute_table_base + attributeTableIndex)));
+            byte attributeTableEntry = this.currentNameTable.ReadByte(((ushort)(attribute_table_base + attributeTableIndex)));
 
             // which pallete to derive the color from
             int which_palette = 0;
@@ -137,22 +120,26 @@ namespace MICE.PPU.RicohRP2C02
             int tile_x = nametable_x % 8;
             int tile_y = nametable_y % 8;
 
-            byte lowBits = this.cpuMemoryMap.ReadByte((ushort)(bg_pattern_base + pt_index * 16 + tile_y));
-            byte highBits = this.cpuMemoryMap.ReadByte((ushort)(bg_pattern_base + pt_index * 16 + tile_y + 8));
+            byte lowBits = this.ppuMemoryMap.ReadByte((ushort)(bg_pattern_base + pt_index * 16 + tile_y));
+            byte highBits = this.ppuMemoryMap.ReadByte((ushort)(bg_pattern_base + pt_index * 16 + tile_y + 8));
 
             byte lowBit = (byte)((lowBits >> (7 - tile_x)) & 1);
             byte highBit = (byte)((highBits >> (7 - tile_x)) & 1);
             byte color_index = (byte)(lowBit + highBit * 2);
 
             // If it's the background color, look at palette 0 (Universally-shared BG color)
-            if (color_index == 0) palette_num = 0;
+            if (color_index == 0)
+            {
+                palette_num = 0;
+            }
 
             //backgroundCHRValues[256 * y + x] = color_index;
 
             byte RGB_index = this.imagePalette.ReadByte((ushort)(0x3F00 + 4 * palette_num + color_index));
-            uint pixelColor = RicohRP2C02.Constants.RGBAPalette[RGB_index & 0x3F];
+            return RGB_index;
+//            uint pixelColor = RicohRP2C02.Constants.RGBAPalette[RGB_index & 0x3F];
 
-            return pixelColor;
+//            return pixelColor;
         }
 
         private void SetTables(int nametableId)
@@ -161,19 +148,15 @@ namespace MICE.PPU.RicohRP2C02
             {
                 case 0:
                     this.currentNameTable = this.nameTable0;
-                    this.currentAttributeTable = this.attributeTable0;
                     break;
                 case 1:
                     this.currentNameTable = this.nameTable1;
-                    this.currentAttributeTable = this.attributeTable1;
                     break;
                 case 2:
                     this.currentNameTable = this.nameTable2;
-                    this.currentAttributeTable = this.attributeTable2;
                     break;
                 case 3:
                     this.currentNameTable = this.nameTable3;
-                    this.currentAttributeTable = this.attributeTable3;
                     break;
             }
         }

@@ -15,7 +15,7 @@ namespace MICE.Nintendo
     public class NES : ISystem
     {
         private CancellationToken cancellationToken;
-        private long currentFrame = 0;
+        public long CurrentFrame { get; private set; } = 0;
 
         public NES(CancellationToken cancellationToken)
         {
@@ -40,10 +40,11 @@ namespace MICE.Nintendo
         public ControlBus ControlBus { get; } = new ControlBus();
 
         public RicohRP2C02 PPU { get; private set; }
-        public CPUMemoryMap MemoryMap { get; private set; }
+        public CPUMemoryMap CPUMemoryMap { get; private set; }
 
         public NESCartridge Cartridge { get; private set; }
         public Ricoh2A03 CPU { get; private set; }
+        public byte[] Screen { get; private set; } = new byte[256 * 240];
 
         // Hook them up...
 
@@ -55,14 +56,14 @@ namespace MICE.Nintendo
             }
 
             var ppuRegisters = new PPURegisters();
-            this.MemoryMap = new CPUMemoryMap(ppuRegisters, this.sw);
-            this.PPU = new RicohRP2C02(new PPUMemoryMap(this.sw), ppuRegisters, this.MemoryMap);
+            this.CPUMemoryMap = new CPUMemoryMap(ppuRegisters, this.sw);
+            this.PPU = new RicohRP2C02(new PPUMemoryMap(this.sw), ppuRegisters, this.CPUMemoryMap);
 
             this.PPU.Registers.OAMDMA.AfterWriteAction = this.DMATransfer;
 
             this.MapToCartridge();
 
-            this.CPU = new Ricoh2A03(this.MemoryMap, this.sw);
+            this.CPU = new Ricoh2A03(this.CPUMemoryMap, this.sw);
 
             this.CPU.PowerOn(this.cancellationToken);
             this.PPU.PowerOn(this.cancellationToken);
@@ -71,10 +72,10 @@ namespace MICE.Nintendo
         private void MapToCartridge()
         {
             // Various parts of a cartridge are mapped into the NES's memory map.
-            this.MemoryMap.GetMemorySegment<SRAM>("SRAM").Data = this.Cartridge.SRAM;
+            this.CPUMemoryMap.GetMemorySegment<SRAM>("SRAM").Data = this.Cartridge.SRAM;
 
-            this.MemoryMap.GetMemorySegment<External>("PRG-ROM Lower Bank").AttachHandler(this.Cartridge.Mapper);
-            this.MemoryMap.GetMemorySegment<External>("PRG-ROM Upper Bank").AttachHandler(this.Cartridge.Mapper);
+            this.CPUMemoryMap.GetMemorySegment<External>("PRG-ROM Lower Bank").AttachHandler(this.Cartridge.Mapper);
+            this.CPUMemoryMap.GetMemorySegment<External>("PRG-ROM Upper Bank").AttachHandler(this.Cartridge.Mapper);
         }
 
         public void Step()
@@ -100,7 +101,8 @@ namespace MICE.Nintendo
                 }
             }
 
-            this.currentFrame = this.PPU.Frame;
+            this.CurrentFrame = this.PPU.FrameNumber;
+            Array.Copy(this.PPU.ScreenData, this.Screen, this.PPU.ScreenData.Length);
             // TODO: APU Cycles
         }
 
@@ -125,8 +127,8 @@ namespace MICE.Nintendo
 
             // TODO: This is terrible, and a double copy...convert to stream later through a bus or something.
             // Especially since this is normally DRAM and refreshed all the time from what I can tell?
-            var copiedBytes = this.MemoryMap.BulkTransfer(readAddress, 255);
-            Array.Copy(copiedBytes, 0, this.PPU.PrimaryOAM, this.PPU.Registers.OAMADDR, 255);
+            var copiedBytes = this.CPUMemoryMap.BulkTransfer(readAddress, 255);
+            Array.Copy(copiedBytes, 0, this.PPU.PrimaryOAM.Data, this.PPU.Registers.OAMADDR, 255);
         }
 
         public Task Run() => Task.Factory.StartNew(() =>

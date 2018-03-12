@@ -100,6 +100,7 @@ namespace MICE.Common.Misc
                 {
                     this.memorySegmentCache.Add(index, segment);
                     value = segment.ReadByte(index);
+                    break;
                 }
             }
 

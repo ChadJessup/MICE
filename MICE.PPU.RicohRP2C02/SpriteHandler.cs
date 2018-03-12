@@ -1,4 +1,5 @@
 ﻿using MICE.Common.Interfaces;
+using MICE.PPU.RicohRP2C02.Components;
 
 namespace MICE.PPU.RicohRP2C02
 {
@@ -61,7 +62,7 @@ namespace MICE.PPU.RicohRP2C02
             set => this.registers.PPUSTATUS.SetBit(6, value);
         }
 
-        public void EvaluateSpritesOnScanline(byte[] oam, int scanline)
+        public void EvaluateSpritesOnScanline(OAM oam, int scanline)
         {
             this.CurrentScanlineSpriteCount = 0;
 
@@ -69,7 +70,7 @@ namespace MICE.PPU.RicohRP2C02
 
             for (byte index = 0; index < 64 && this.CurrentScanlineSpriteCount < 8; index++)
             {
-                byte spriteY = (byte)(oam[index * 4 + 0] + 1);
+                byte spriteY = (byte)(oam.Data[index * 4 + 0] + 1);
 
                 if (scanline >= spriteY && (scanline < spriteY + offset))
                 {
@@ -79,13 +80,8 @@ namespace MICE.PPU.RicohRP2C02
             }
         }
 
-        public uint DrawSpritePixel(int x, int y)
+        public byte DrawSpritePixel(int x, int y)
         {
-            if (!this.ShowSprites)
-            {
-                return 0;
-            }
-
             return 0;
         }
     }

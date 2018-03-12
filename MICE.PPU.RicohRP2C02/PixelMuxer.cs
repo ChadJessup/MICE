@@ -38,9 +38,9 @@ namespace MICE.PPU.RicohRP2C02
             set => this.registers.PPUMASK.SetBit(7, value);
         }
 
-        public uint MuxPixel(uint spritePixel, uint backgroundPixel)
+        public byte MuxPixel(byte spritePixel, byte backgroundPixel)
         {
-            return 0;
+            return backgroundPixel;
         }
     }
 }
