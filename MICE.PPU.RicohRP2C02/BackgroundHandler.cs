@@ -1,5 +1,6 @@
 ﻿using MICE.Common.Interfaces;
 using MICE.PPU.RicohRP2C02.Components;
+using System;
 using System.Collections.Generic;
 
 namespace MICE.PPU.RicohRP2C02
@@ -9,6 +10,7 @@ namespace MICE.PPU.RicohRP2C02
         private readonly PPURegisters registers;
         private readonly IMemoryMap ppuMemoryMap;
         private readonly IMemoryMap cpuMemoryMap;
+        private readonly ScrollHandler scrollHandler;
 
         private Nametable nameTable0;
         private Nametable nameTable1;
@@ -26,6 +28,8 @@ namespace MICE.PPU.RicohRP2C02
             this.ppuMemoryMap = ppuMemoryMap;
             this.registers = registers;
             this.cpuMemoryMap = cpuMemoryMap;
+
+            this.scrollHandler = new ScrollHandler(registers);
 
             this.CacheMemorySegments(ppuMemoryMap);
         }
@@ -67,34 +71,19 @@ namespace MICE.PPU.RicohRP2C02
                 return 0;
             }
 
-            int ppu_scroll_x = (this.registers.PPUSCROLL >> 8) & 0xFF;
-            int ppu_scroll_y = this.registers.PPUSCROLL & 0xFF;
-
-            ppu_scroll_x += ((this.registers.PPUCTRL >> 0) & 1) * 256;
-            ppu_scroll_y += ((this.registers.PPUCTRL >> 1) & 1) * 240;
-
             ushort bg_pattern_base = this.IsBackgroundPatternTableAddress1000
                 ? (ushort)0x1000
                 : (ushort)0x0000;
 
-            int which_nametable = 0;
-            int nametable_x = (ppu_scroll_x + x) % 512;
+            Nametable nameTable = this.SelectNametable(x, y);
 
-            if (nametable_x >= 256)
-            {
-                which_nametable += 1;
-               nametable_x -= 256;
-            }
+            var paternTableIndex = nameTable.GetPatternTableOffset(x, y);
+            nameTable.GetPalette(x, y);
+           // byte lowBits = this.chrBanks[0][(ushort)(bg_pattern_base + paternTableIndex * 16 + tile_y)];//this.ppuMemoryMap.ReadByte((ushort)(bg_pattern_base + pt_index * 16 + tile_y));
+           // byte highBits = this.chrBanks[0][(ushort)(bg_pattern_base + paternTableIndex * 16 + tile_y + 8)];//this.ppuMemoryMap.ReadByte((ushort)(bg_pattern_base + pt_index * 16 + tile_y + 8));
 
-            int nametable_y = (ppu_scroll_y + y) % 480;
-            if (nametable_y >= 240)
-            {
-                which_nametable += 2;
-                nametable_y -= 240;
-            }
-
-            this.SetTables(which_nametable);
-
+            return paternTableIndex;
+            /*
             int nametable_tile_x = nametable_x / 8;
             int nametable_tile_y = nametable_y / 8;
 
@@ -137,30 +126,52 @@ namespace MICE.PPU.RicohRP2C02
             }
 
             //backgroundCHRValues[256 * y + x] = color_index;
-
-            byte RGB_index = this.ppuMemoryMap.ReadByte((ushort)(0x3F00 + 4 * palette_num + color_index));
+            byte RGB_index = this.imagePalette.ReadByte((ushort)(0x3F00 + 4 * palette_num + color_index));
             return RGB_index;
+            */
+            return 0;
 //            uint pixelColor = RicohRP2C02.Constants.RGBAPalette[RGB_index & 0x3F];
 
 //            return pixelColor;
         }
 
-        private void SetTables(int nametableId)
+        private Nametable SelectNametable(int x, int y)
+        {
+            var (scrollX, scrollY) = this.scrollHandler.GetScrollValues();
+
+            int which_nametable = 0;
+            int nametable_x = (scrollY + x) % 512;
+
+            if (nametable_x >= 256)
+            {
+                which_nametable += 1;
+                nametable_x -= 256;
+            }
+
+            int nametable_y = (scrollY + y) % 480;
+            if (nametable_y >= 240)
+            {
+                which_nametable += 2;
+                nametable_y -= 240;
+            }
+
+            return this.GetTable(which_nametable);
+        }
+
+        private Nametable GetTable(int nametableId)
         {
             switch (nametableId)
             {
                 case 0:
-                    this.currentNameTable = this.nameTable0;
-                    break;
+                    return this.nameTable0;
                 case 1:
-                    this.currentNameTable = this.nameTable1;
-                    break;
+                    return this.nameTable1;
                 case 2:
-                    this.currentNameTable = this.nameTable2;
-                    break;
+                    return this.nameTable2;
                 case 3:
-                    this.currentNameTable = this.nameTable3;
-                    break;
+                    return this.nameTable3;
+                default:
+                    throw new InvalidOperationException($"Unexpected Nametable Id requested: {nametableId}");
             }
         }
     }
