@@ -38,9 +38,9 @@ namespace MICE.PPU.RicohRP2C02
 
         public override byte ReadByte(int index)
         {
-            if (index >= 0x3f00 & index <= 0x3f1f)
+            if (index >= 0x2000 & index <= 0x2fff)
             {
-
+                //return base.ReadByte(index & 0xFBff);
             }
 
             return base.ReadByte(index);
@@ -48,11 +48,6 @@ namespace MICE.PPU.RicohRP2C02
 
         public override void Write(int index, byte value)
         {
-            if (index >= 0x3f00 & index <= 0x3f1f)
-            {
-
-            }
-
             base.Write(index, value);
         }
     }

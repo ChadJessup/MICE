@@ -180,20 +180,20 @@ namespace MICE.CPU.MOS6502
 
             if (this.WasNMIRequested)
             {
+
+
+                if (this.nmiCycleStart == 0)
+                {
+                    this.nmiCycleStart = this.CurrentCycle;
+                }
+                else if (this.CurrentCycle - this.nmiCycleStart >= 7)
+                {
                 this.HandleNMIRequest();
                 this.AreInterruptsDisabled = true;
                 this.WasNMIRequested = false;
                 this.nmiCycleStart = 0;
 
                 return 1;
-
-                if (this.nmiCycleStart == 0)
-                {
-                    this.nmiCycleStart = this.CurrentCycle;
-                }
-                else if (this.CurrentCycle - this.nmiCycleStart >= 0)
-                {
-
                 }
             }
 

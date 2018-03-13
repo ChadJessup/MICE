@@ -105,7 +105,7 @@ namespace MICE.PPU.RicohRP2C02
 
             int attribute_table_base = nametable_start + 0x3C0;
             int attributeTableIndex = attribute_y * 8 + attribute_x;
-            byte attributeTableEntry = this.currentNameTable.ReadByte(((ushort)(attribute_table_base + attributeTableIndex)));
+            byte attributeTableEntry = this.ppuMemoryMap.ReadByte(((ushort)(attribute_table_base + attributeTableIndex)));
 
             // which pallete to derive the color from
             int which_palette = 0;
@@ -118,7 +118,7 @@ namespace MICE.PPU.RicohRP2C02
             // Compute color index
 
             int nt_index = nametable_tile_y * 32 + nametable_tile_x;
-            ushort pt_index = this.currentNameTable.ReadByte((ushort)(nametable_start + nt_index));
+            ushort pt_index = this.ppuMemoryMap.ReadByte((ushort)(nametable_start + nt_index));
 
             int tile_x = nametable_x % 8;
             int tile_y = nametable_y % 8;
@@ -138,7 +138,7 @@ namespace MICE.PPU.RicohRP2C02
 
             //backgroundCHRValues[256 * y + x] = color_index;
 
-            byte RGB_index = this.imagePalette.ReadByte((ushort)(0x3F00 + 4 * palette_num + color_index));
+            byte RGB_index = this.ppuMemoryMap.ReadByte((ushort)(0x3F00 + 4 * palette_num + color_index));
             return RGB_index;
 //            uint pixelColor = RicohRP2C02.Constants.RGBAPalette[RGB_index & 0x3F];
 
