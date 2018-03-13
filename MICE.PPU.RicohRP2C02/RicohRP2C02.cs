@@ -1,5 +1,7 @@
 ﻿using MICE.Common.Interfaces;
 using MICE.PPU.RicohRP2C02.Components;
+using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
 
@@ -39,11 +41,11 @@ namespace MICE.PPU.RicohRP2C02
         private Stopwatch stepSW;
         private Stopwatch frameSW;
 
-        public RicohRP2C02(PPUMemoryMap memoryMap, PPURegisters registers, IMemoryMap cpuMemoryMap)
+        public RicohRP2C02(PPUMemoryMap memoryMap, PPURegisters registers, IMemoryMap cpuMemoryMap, IList<byte[]> chrBanks)
         {
             this.Registers = registers;
             this.MemoryMap = memoryMap;
-            this.BackgroundHandler = new BackgroundHandler(this.MemoryMap, this.Registers, cpuMemoryMap);
+            this.BackgroundHandler = new BackgroundHandler(this.MemoryMap, this.Registers, cpuMemoryMap, chrBanks);
             this.SpriteHandler = new SpriteHandler(this.MemoryMap, this.Registers, cpuMemoryMap);
             this.PixelMuxer = new PixelMuxer(this.Registers);
         }
@@ -69,7 +71,10 @@ namespace MICE.PPU.RicohRP2C02
         private ushort ppuAddress = 0;
         private bool hasWrittenToggle = false;
 
+        public bool ShouldNMInterrupt { get; set; }
+
         public PPUMemoryMap MemoryMap { get; private set; }
+
         public PPURegisters Registers { get; private set; }
 
         public int BaseNametableAddress => (this.Registers.PPUCTRL.GetBit(0) ? 1 : 0) | (this.Registers.PPUCTRL.GetBit(1) ? 1 : 0) << 2;
@@ -131,6 +136,11 @@ namespace MICE.PPU.RicohRP2C02
             this.stepSW = new Stopwatch();
             this.frameSW = new Stopwatch();
 
+            this.Registers.PPUMASK.AfterWriteAction = (value) =>
+             {
+
+             };
+
             this.Registers.PPUADDR.AfterWriteAction = (value) =>
             {
                 this.ppuAddress = this.hasWrittenToggle
@@ -152,7 +162,7 @@ namespace MICE.PPU.RicohRP2C02
 
             this.Registers.PPUDATA.AfterWriteAction = (value) =>
             {
-                this.MemoryMap.Write(this.ppuAddress % 0x3FFF, value);
+                this.MemoryMap.Write(this.ppuAddress, value);
                 this.ppuAddress += (ushort)this.VRAMAddressIncrement;
             };
 
@@ -168,9 +178,7 @@ namespace MICE.PPU.RicohRP2C02
 
             this.Registers.PPUCTRL.AfterWriteAction = (value) =>
             {
-                if (this.WasNMIRequested)
-                {
-                }
+                this.ShouldNMInterrupt = false;
             };
 
             this.Restart(cancellationToken);
@@ -303,7 +311,7 @@ namespace MICE.PPU.RicohRP2C02
                     byte spritePixel = SpriteHandler.DrawSpritePixel(this.Cycle, this.ScanLine);
 
                     byte muxedPixel = PixelMuxer.MuxPixel(spritePixel, backgroundPixel);
-                    this.ScreenData[256 * this.ScanLine + this.Cycle] = muxedPixel;
+                    this.ScreenData[256 * this.ScanLine + (this.Cycle - 1)] = muxedPixel;
                 }
             }
             else if (this.Cycle >= 257 && this.Cycle <= 320)
@@ -331,6 +339,7 @@ namespace MICE.PPU.RicohRP2C02
                 if (this.WasNMIRequested)
                 {
                     // TODO: do NMI.
+                    this.ShouldNMInterrupt = true;
                 }
             }
         }

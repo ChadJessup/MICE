@@ -4,6 +4,7 @@ using MICE.Components.Memory;
 using MICE.CPU.MOS6502;
 using MICE.Nintendo.Loaders;
 using MICE.PPU.RicohRP2C02;
+using MICE.PPU.RicohRP2C02.Components;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -57,7 +58,7 @@ namespace MICE.Nintendo
 
             var ppuRegisters = new PPURegisters();
             this.CPUMemoryMap = new CPUMemoryMap(ppuRegisters, this.sw);
-            this.PPU = new RicohRP2C02(new PPUMemoryMap(this.sw), ppuRegisters, this.CPUMemoryMap);
+            this.PPU = new RicohRP2C02(new PPUMemoryMap(this.sw), ppuRegisters, this.CPUMemoryMap, this.Cartridge.CharacterRomBanks);
 
             this.PPU.Registers.OAMDMA.AfterWriteAction = this.DMATransfer;
 
@@ -90,14 +91,21 @@ namespace MICE.Nintendo
             CPU.CurrentCycle += cpuCycles;
             cpuSW.Stop();
 
+            var bytes = this.PPU.MemoryMap.GetMemorySegment<Palette>("Image Palette").Data;
+            if (bytes[0] != 0x0f && bytes[0] != 0xc7)
+            {
+
+            }
+
             for (int i = 0; i < cpuCycles * 3; i++)
             {
                 var ppuCycles = this.PPU.Step();
 
-                if (this.PPU.WasNMIRequested)
+                if (this.PPU.ShouldNMInterrupt)
                 {
                     this.CPU.WasNMIRequested = true;
                     this.PPU.WasNMIRequested = false;
+                    this.PPU.ShouldNMInterrupt = false;
                 }
             }
 
@@ -124,6 +132,7 @@ namespace MICE.Nintendo
         public void DMATransfer(byte value)
         {
             ushort readAddress = (ushort)(value << 8);
+            this.sw.WriteLine("DMA Just Happened!");
 
             // TODO: This is terrible, and a double copy...convert to stream later through a bus or something.
             // Especially since this is normally DRAM and refreshed all the time from what I can tell?

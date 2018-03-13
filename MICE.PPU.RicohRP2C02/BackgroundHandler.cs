@@ -1,5 +1,6 @@
 ﻿using MICE.Common.Interfaces;
 using MICE.PPU.RicohRP2C02.Components;
+using System.Collections.Generic;
 
 namespace MICE.PPU.RicohRP2C02
 {
@@ -17,9 +18,11 @@ namespace MICE.PPU.RicohRP2C02
         private Nametable currentNameTable;
 
         private Palette imagePalette;
+        private readonly IList<byte[]> chrBanks;
 
-        public BackgroundHandler(IMemoryMap ppuMemoryMap, PPURegisters registers, IMemoryMap cpuMemoryMap)
+        public BackgroundHandler(IMemoryMap ppuMemoryMap, PPURegisters registers, IMemoryMap cpuMemoryMap, IList<byte[]>chrBanks)
         {
+            this.chrBanks = chrBanks;
             this.ppuMemoryMap = ppuMemoryMap;
             this.registers = registers;
             this.cpuMemoryMap = cpuMemoryMap;
@@ -80,7 +83,7 @@ namespace MICE.PPU.RicohRP2C02
             if (nametable_x >= 256)
             {
                 which_nametable += 1;
-                nametable_x -= 256;
+               nametable_x -= 256;
             }
 
             int nametable_y = (ppu_scroll_y + y) % 480;
@@ -120,8 +123,8 @@ namespace MICE.PPU.RicohRP2C02
             int tile_x = nametable_x % 8;
             int tile_y = nametable_y % 8;
 
-            byte lowBits = this.ppuMemoryMap.ReadByte((ushort)(bg_pattern_base + pt_index * 16 + tile_y));
-            byte highBits = this.ppuMemoryMap.ReadByte((ushort)(bg_pattern_base + pt_index * 16 + tile_y + 8));
+            byte lowBits = this.chrBanks[0][(ushort)(bg_pattern_base + pt_index * 16 + tile_y)];//this.ppuMemoryMap.ReadByte((ushort)(bg_pattern_base + pt_index * 16 + tile_y));
+            byte highBits = this.chrBanks[0][(ushort)(bg_pattern_base + pt_index * 16 + tile_y + 8)];//this.ppuMemoryMap.ReadByte((ushort)(bg_pattern_base + pt_index * 16 + tile_y + 8));
 
             byte lowBit = (byte)((lowBits >> (7 - tile_x)) & 1);
             byte highBit = (byte)((highBits >> (7 - tile_x)) & 1);

@@ -35,5 +35,25 @@ namespace MICE.PPU.RicohRP2C02
             // Mirrors
             this.Add(new MirroredMemory(0x4000, 0xFFFF, 0x0000, 0x3FFF, this, "Mirrored PPU"));
         }
+
+        public override byte ReadByte(int index)
+        {
+            if (index >= 0x3f00 & index <= 0x3f1f)
+            {
+
+            }
+
+            return base.ReadByte(index);
+        }
+
+        public override void Write(int index, byte value)
+        {
+            if (index >= 0x3f00 & index <= 0x3f1f)
+            {
+
+            }
+
+            base.Write(index, value);
+        }
     }
 }

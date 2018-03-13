@@ -5,8 +5,9 @@ namespace MICE.CPU.MOS6502
 {
     public class OpcodeContainer
     {
-        public int Cycles { get; set; }
+        public int Cycles { get; private set; }
         public int PCDelta { get; set; }
+        public int AddedCycles { get; set; }
 
         public AddressingModes AddressingMode { get; private set; } = AddressingModes.None;
         public int Code { get; private set; }
@@ -14,7 +15,17 @@ namespace MICE.CPU.MOS6502
         public string Description { get; private set; }
         public bool ShouldVerifyResults { get; private set; }
 
-        public Action<OpcodeContainer> Instruction { get; private set; }
+        private Action<OpcodeContainer> instruction;
+        public Action<OpcodeContainer> Instruction
+        {
+            get
+            {
+                this.AddedCycles = 0;
+                return this.instruction;
+            }
+
+            private set => this.instruction = value;
+        }
 
         public OpcodeContainer(MOS6502OpcodeAttribute details, Opcodes opcodes, MethodInfo methodInfo)
         {

@@ -180,18 +180,20 @@ namespace MICE.CPU.MOS6502
 
             if (this.WasNMIRequested)
             {
+                this.HandleNMIRequest();
+                this.AreInterruptsDisabled = true;
+                this.WasNMIRequested = false;
+                this.nmiCycleStart = 0;
+
+                return 1;
+
                 if (this.nmiCycleStart == 0)
                 {
                     this.nmiCycleStart = this.CurrentCycle;
                 }
-                else if (this.CurrentCycle - this.nmiCycleStart >= 7)
+                else if (this.CurrentCycle - this.nmiCycleStart >= 0)
                 {
-                    this.HandleNMIRequest();
-                    this.AreInterruptsDisabled = true;
-                    this.WasNMIRequested = false;
-                    this.nmiCycleStart = 0;
 
-                    return 1;
                 }
             }
 
@@ -200,8 +202,15 @@ namespace MICE.CPU.MOS6502
 
             // Grab our version of the opcode...
             var opCode = this.Opcodes[code];
+
             opCode.Instruction(opCode);
-            this.fs.WriteLine($"{this.stepCount:D4}:0x{code:X}:0x{this.Registers.PC.Read():X}:{opCode.Name}:{opCode.Cycles}-PC:{Registers.PC.Read()}:A:{Registers.A.Read()}:X:{Registers.X.Read()}:Y:{Registers.Y.Read()}:SP:{Registers.SP.Read()}:P:{Registers.P.Read()}");
+
+            if (opCode.Name == "JSR")
+            {
+                this.fs.WriteLine($"Jumped - NewPC: 0x{this.Registers.PC.Read():X4} OldPC: 0x{oldPC:X4}");
+            }
+
+            this.fs.WriteLine($"{this.stepCount:D4}:0x{code:X}:0x{this.Registers.PC.Read():X}:{opCode.Name}:{opCode.Cycles + opCode.AddedCycles}-PC:{Registers.PC.Read()}:A:{Registers.A.Read()}:X:{Registers.X.Read()}:Y:{Registers.Y.Read()}:SP:{Registers.SP.Read()}:P:{Convert.ToString(Registers.P.Read(), 2).PadLeft(8, '0')}");
 
             if (opCode.ShouldVerifyResults && (oldPC + opCode.PCDelta != this.Registers.PC))
             {
@@ -212,7 +221,7 @@ namespace MICE.CPU.MOS6502
             this.stepCount++;
             this.ranOpcodeCount++;
 
-            return opCode.Cycles;
+            return opCode.Cycles + opCode.AddedCycles;
         }
 
         public void WriteByteAt(ushort address, byte value, bool incrementPC = true)
@@ -271,6 +280,7 @@ namespace MICE.CPU.MOS6502
 
         private void HandleNMIRequest()
         {
+            this.fs.WriteLine($"Handling NMI!");
             // Push PC to stack...
             this.Stack.Push(this.Registers.PC);
 

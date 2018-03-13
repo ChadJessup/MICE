@@ -124,16 +124,23 @@ namespace MICE.Nintendo.Loaders
                 this.SRAM = new ArraySegment<byte>(bytes, Constants.LocationOfSRAM, Constants.SizeOfSRAM).ToArray();
             }
 
+            int romBankOffset = this.HasTrainer
+                ? Constants.SizeOfHeader + Constants.SizeOfTrainer
+                : Constants.SizeOfHeader;
+
             for (int i = 0; i < this.ProgramROMBankCount; i++)
             {
-                int romBankOffset = this.HasTrainer
-                    ? Constants.SizeOfHeader + Constants.SizeOfTrainer
-                    : Constants.SizeOfHeader;
-
                 this.ROMBanks.Add(new ArraySegment<byte>(bytes, romBankOffset + (i * Constants.ROMBankSize), Constants.ROMBankSize).ToArray());
             }
 
             var romBytes = this.ROMBanks[0].ToList();
+
+            int chrBankOffset = romBankOffset + this.ROMBanks.Sum(bank => bank.Length);
+
+            for (int i = 0; i < this.CharacterROMBankCount; i++)
+            {
+                this.CharacterBanks.Add(new ArraySegment<byte>(bytes, chrBankOffset + (i * Constants.ChrBankSize), Constants.ChrBankSize).ToArray());
+            }
 
             return this;
         }

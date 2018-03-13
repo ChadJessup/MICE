@@ -40,6 +40,6 @@ namespace MICE.Components.CPU
             return value;
         }
 
-        public override string ToString() => $"0x{this.Value:X} - {this.Name}";
+        public override string ToString() => $"0x{this.Value:X4} - 0b{Convert.ToString(this.Value, 2).PadLeft(8, '0')} - {this.Name}";
     }
 }

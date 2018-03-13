@@ -52,12 +52,12 @@ namespace MICE.CPU.MOS6502
         public static (byte value, ushort address, bool? samePage) GetIndirectY(MOS6502 CPU, bool getValue = true)
         {
             var incompleteYAddress = CPU.ReadNextByte(incrementPC: false);
-            var indirectYAddress = CPU.ReadShortAt(incompleteYAddress, incrementPC: false);
-            indirectYAddress += CPU.Registers.Y;
+            var baseAddress = CPU.ReadShortAt(incompleteYAddress, incrementPC: false);
+            var addressWithY = (ushort)(baseAddress + CPU.Registers.Y);
 
             return getValue
-                ? (CPU.ReadByteAt(indirectYAddress), indirectYAddress, AreSamePage(incompleteYAddress, indirectYAddress))
-                : ((byte)0x00, indirectYAddress, AreSamePage(incompleteYAddress, indirectYAddress));
+                ? (CPU.ReadByteAt(addressWithY), addressWithY, AreSamePage(addressWithY, baseAddress))
+                : ((byte)0x00, addressWithY, AreSamePage(addressWithY, baseAddress));
         }
 
 

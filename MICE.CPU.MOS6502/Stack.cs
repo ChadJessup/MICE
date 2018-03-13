@@ -3,6 +3,7 @@ using MICE.Components.CPU;
 using MICE.Components.Memory;
 using System;
 using System.Collections.Generic;
+using System.IO;
 
 namespace MICE.CPU.MOS6502
 {
@@ -19,10 +20,11 @@ namespace MICE.CPU.MOS6502
         }
 
         private Stack<byte> stack;
-
-        public Stack(int lowerIndex, int upperIndex, string name)
+        private StreamWriter fs;
+        public Stack(int lowerIndex, int upperIndex, string name, StreamWriter fs)
             : base(lowerIndex, upperIndex, name)
         {
+            this.fs = fs;
             // Set the capactiy to the size of the memory segment as setup in the CPU Memory Map.
             this.stack = new Stack<byte>(upperIndex - lowerIndex);
         }
@@ -39,6 +41,7 @@ namespace MICE.CPU.MOS6502
         {
             this.stack.Push(value);
             this.Pointer.Write((byte)(this.Pointer.Read() - 1));
+//           this.fs.WriteLine($"Write: 0x1{this.Pointer.Read():X}-0x{value:X}");
         }
 
         public void Push(ushort value)
@@ -52,7 +55,10 @@ namespace MICE.CPU.MOS6502
         public byte PopByte()
         {
             this.Pointer.Write((byte)(this.Pointer.Read() + 1));
-            return this.stack.Pop();
+            var value = this.stack.Pop();
+
+//            this.fs.WriteLine($"Read: 0x1{this.Pointer.Read():X}-0x{value:X}");
+            return value;
         }
 
         public ushort PopShort()

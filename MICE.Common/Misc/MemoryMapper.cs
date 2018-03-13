@@ -68,7 +68,7 @@ namespace MICE.Common.Misc
         public IEnumerator<IMemorySegment> GetEnumerator() => this.memorySegments.GetEnumerator();
         public void CopyTo(IMemorySegment[] array, int arrayIndex) => this.memorySegments.CopyTo(array, arrayIndex);
 
-        public ushort ReadShort(int index)
+        public virtual ushort ReadShort(int index)
         {
             return (ushort)(this.ReadByte(index + 1) << 8 | this.ReadByte(index));
 
@@ -86,7 +86,7 @@ namespace MICE.Common.Misc
             throw new InvalidOperationException($"Address was requested that hasn't been mapped (0x{index:X})");
         }
 
-        public byte ReadByte(int index)
+        public virtual byte ReadByte(int index)
         {
             byte value = 0x00;
 
@@ -104,11 +104,11 @@ namespace MICE.Common.Misc
                 }
             }
 
-            this.sw.WriteLine($"Read: 0x{index:X}-0x{value:X}");
+ //           this.sw.WriteLine($"Read: 0x{index:X}-0x{value:X}");
             if (index == 0x2002)
             {
                 // Want it to match the other log...
-                this.sw.WriteLine($"Read: 0x{index:X}-0x{value:X}");
+//                this.sw.WriteLine($"Read: 0x{index:X}-0x{value:X}");
             }
 
             return value;
@@ -116,12 +116,12 @@ namespace MICE.Common.Misc
             throw new InvalidOperationException($"Address was requested that hasn't been mapped (0x{index:X})");
         }
 
-        public void Write(int index, byte value)
+        public virtual void Write(int index, byte value)
         {
-            this.sw.WriteLine($"Write: 0x{index:X}-0x{value:X}");
-            if (index == 0x2000 || index == 0x2005 || index == 0x2001 || index == 0x2007)
+//            this.sw.WriteLine($"Write: 0x{index:X}-0x{value:X}");
+            if (index == 0x3f00)
             {
-                this.sw.WriteLine($"Write: 0x{index:X}-0x{value:X}");
+                //this.sw.WriteLine($"Write: 0x{index:X}-0x{value:X}");
             }
 
             if (this.memorySegmentCache.TryGetValue(index, out IMemorySegment cachedSegment))
@@ -140,7 +140,7 @@ namespace MICE.Common.Misc
             throw new InvalidOperationException($"Address was requested that hasn't been mapped (0x{index:X})");
         }
 
-        public byte[] BulkTransfer(ushort startAddress, int size)
+        public virtual byte[] BulkTransfer(ushort startAddress, int size)
         {
             var segments = this.GetSegmentsInRange(startAddress, startAddress + size);
 

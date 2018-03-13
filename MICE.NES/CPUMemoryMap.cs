@@ -18,7 +18,7 @@ namespace MICE.Nintendo
             // http://nesdev.com/NESDoc.pdf - Figure 2-3 CPU memory map
             // RAM - $0000-$1FFF (including mirrored data)
             this.Add(new RAM(0x0000, 0x00ff, "Zero Page"));
-            this.Add(new Stack(0x0100, 0x01ff, "Stack"));
+            this.Add(new Stack(0x0100, 0x01ff, "Stack", sw));
             this.Add(new RAM(0x0200, 0x07ff, "RAM"));
 
             // $0800 - RAM - Mirrors $0000-$07FF three times.
