@@ -4,13 +4,22 @@ namespace MICE.PPU.RicohRP2C02.Components
 {
     public struct AttributeTable
     {
-        private readonly ArraySegment<byte> data;
-        public AttributeTable(ArraySegment<byte> bytes)
+        private static class Constants
         {
-            this.data = bytes;
+            public const int AttributeTableWrap = 8;
         }
 
-        // TODO: this is broke - I know, not sure how I want to do this right now.
-        public byte GetAttribute(int x, int y) => this.data.Array[this.data.Offset + x + y];
+        public AttributeTable(ArraySegment<byte> bytes)
+        {
+            this.Data = bytes;
+        }
+
+        public ArraySegment<byte> Data { get; private set; }
+        public NametableAttribute GetAttribute(int x, int y)
+        {
+            var attributeX = x / 2;
+            var attributeY = y / 2;
+            return new NametableAttribute(this.Data.Array, (short)(this.Data.Offset + (attributeX * attributeY - 2)));
+        }
     }
 }

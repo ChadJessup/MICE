@@ -231,8 +231,16 @@ namespace MICE.CPU.MOS6502
         [MOS6502Opcode(0xE0, "CPX", AddressingModes.Immediate, cycles: 2, pcDelta: 2)]
         public void CPX(OpcodeContainer container) => this.CompareValues(CPU.Registers.X, CPU.ReadNextByte());
 
+        [MOS6502Opcode(0xDD, "CMP", AddressingModes.AbsoluteX, cycles: 4, pcDelta: 3)]
         [MOS6502Opcode(0xC9, "CMP", AddressingModes.Immediate, cycles: 2, pcDelta: 2)]
-        public void CMP(OpcodeContainer container) => this.CompareValues(CPU.Registers.A, CPU.ReadNextByte());
+        public void CMP(OpcodeContainer container)
+        {
+            var (value, address, isSamePage) = AddressingMode.GetAddressedValue(CPU, container);
+
+            this.CompareValues(CPU.Registers.A, value);
+
+            this.HandlePageBoundaryCrossed(container, isSamePage);
+        }
 
         #endregion
 
@@ -290,6 +298,9 @@ namespace MICE.CPU.MOS6502
 
         [MOS6502Opcode(0x08, "PHP", AddressingModes.Immediate, cycles: 3, pcDelta: 1)]
         public void PHP(OpcodeContainer container) => CPU.Stack.Push(CPU.Registers.P);
+
+        [MOS6502Opcode(0x28, "PLP", AddressingModes.Immediate, cycles: 4, pcDelta: 1)]
+        public void PLP(OpcodeContainer container) => this.WriteByteToRegister(CPU.Registers.P, CPU.Stack.PopByte(), S: false, Z: false);
 
         #endregion
 

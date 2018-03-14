@@ -205,12 +205,7 @@ namespace MICE.CPU.MOS6502
 
             opCode.Instruction(opCode);
 
-            if (opCode.Name == "JSR")
-            {
-                this.fs.WriteLine($"Jumped - NewPC: 0x{this.Registers.PC.Read():X4} OldPC: 0x{oldPC:X4}");
-            }
-
-            this.fs.WriteLine($"{this.stepCount:D4}:0x{code:X}:0x{this.Registers.PC.Read():X}:{opCode.Name}:{opCode.Cycles + opCode.AddedCycles}-PC:{Registers.PC.Read()}:A:{Registers.A.Read()}:X:{Registers.X.Read()}:Y:{Registers.Y.Read()}:SP:{Registers.SP.Read()}:P:{Convert.ToString(Registers.P.Read(), 2).PadLeft(8, '0')}");
+//            this.fs.WriteLine($"{this.stepCount:D4}:0x{code:X}:0x{this.Registers.PC.Read():X}:{opCode.Name}:{opCode.Cycles + opCode.AddedCycles}-PC:{Registers.PC.Read()}:A:{Registers.A.Read()}:X:{Registers.X.Read()}:Y:{Registers.Y.Read()}:SP:{Registers.SP.Read()}:P:{Convert.ToString(Registers.P.Read(), 2).PadLeft(8, '0')}");
 
             if (opCode.ShouldVerifyResults && (oldPC + opCode.PCDelta != this.Registers.PC))
             {

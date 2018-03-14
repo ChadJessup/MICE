@@ -307,11 +307,12 @@ namespace MICE.PPU.RicohRP2C02
             {
                 if (BackgroundHandler.ShowBackground && SpriteHandler.ShowSprites)
                 {
-                    byte backgroundPixel = BackgroundHandler.DrawBackgroundPixel(this.Cycle, this.ScanLine);
-                    byte spritePixel = SpriteHandler.DrawSpritePixel(this.Cycle, this.ScanLine);
+                    var pixelX = this.Cycle - 1;
+                    byte backgroundPixel = BackgroundHandler.DrawBackgroundPixel(pixelX, this.ScanLine);
+                    byte spritePixel = SpriteHandler.DrawSpritePixel(pixelX, this.ScanLine);
 
                     byte muxedPixel = PixelMuxer.MuxPixel(spritePixel, backgroundPixel);
-                    this.ScreenData[256 * this.ScanLine + (this.Cycle - 1)] = muxedPixel;
+                    this.ScreenData[256 * this.ScanLine + pixelX] = muxedPixel;
                 }
             }
             else if (this.Cycle >= 257 && this.Cycle <= 320)
