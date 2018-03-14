@@ -1,5 +1,6 @@
 ﻿using MICE.Nintendo;
 using MICE.Nintendo.Loaders;
+using System;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
@@ -111,10 +112,23 @@ namespace MICE.TestApp
 
             Task.Factory.StartNew(() =>
             {
+                DateTime lastTime = DateTime.Now;
+                long lastFrame = 0;
+                double fps = 0;
+                double improveBy = 0;
+
                 while (true)
                 {
+                    if ((DateTime.Now - lastTime).TotalSeconds >= 1)
+                    {
+                        fps = nes.CurrentFrame - lastFrame;
+                        lastFrame = nes.CurrentFrame;
+                        improveBy = 60 / fps;
+                        lastTime = DateTime.Now;
+                    }
+
                     Task.Delay(16);
-                    uiDispatcher.Invoke(() => this.Text = $"Frame: {nes.CurrentFrame}");
+                    uiDispatcher.Invoke(() => this.Text = $"Frame: {nes.CurrentFrame} FPS: {fps} Improve: {improveBy:F2}x");
                     this.Draw(nes.Screen);
                 }
             });
