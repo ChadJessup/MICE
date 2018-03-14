@@ -2,7 +2,6 @@
 using MICE.PPU.RicohRP2C02.Components;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace MICE.PPU.RicohRP2C02
 {
@@ -65,11 +64,11 @@ namespace MICE.PPU.RicohRP2C02
             set => this.registers.PPUCTRL.SetBit(4, value);
         }
 
-        public byte DrawBackgroundPixel(int x, int y)
+        public (byte, Tile) DrawBackgroundPixel(int x, int y)
         {
             if (x <= 8 && !this.DrawLeft8BackgroundPixels)
             {
-                return 0;
+                return (0, null);
             }
 
             var (indexedX, indexedY, nameTable) = this.SelectNametable(x, y);
@@ -77,7 +76,7 @@ namespace MICE.PPU.RicohRP2C02
             var tile = nameTable.GetTileFromPixel(indexedX, indexedY, this.IsBackgroundPatternTableAddress1000 ? 0x1000 : 0x0000, this.chrBanks[0]);
             var palette = this.ppuMemoryMap.ReadByte(tile.PaletteAddress);
 
-            return palette;
+            return (palette, tile);
         }
 
         private (int indexedX, int indexedY, Nametable nameTable) SelectNametable(int x, int y)

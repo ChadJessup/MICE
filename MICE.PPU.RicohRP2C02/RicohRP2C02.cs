@@ -46,7 +46,7 @@ namespace MICE.PPU.RicohRP2C02
             this.Registers = registers;
             this.MemoryMap = memoryMap;
             this.BackgroundHandler = new BackgroundHandler(this.MemoryMap, this.Registers, cpuMemoryMap, chrBanks);
-            this.SpriteHandler = new SpriteHandler(this.MemoryMap, this.Registers, cpuMemoryMap);
+            this.SpriteHandler = new SpriteHandler(this.MemoryMap, this.Registers, cpuMemoryMap, chrBanks);
             this.PixelMuxer = new PixelMuxer(this.Registers);
         }
 
@@ -136,11 +136,6 @@ namespace MICE.PPU.RicohRP2C02
             this.stepSW = new Stopwatch();
             this.frameSW = new Stopwatch();
 
-            this.Registers.PPUMASK.AfterWriteAction = (value) =>
-             {
-
-             };
-
             this.Registers.PPUADDR.AfterWriteAction = (value) =>
             {
                 this.ppuAddress = this.hasWrittenToggle
@@ -155,17 +150,8 @@ namespace MICE.PPU.RicohRP2C02
                 this.ppuAddress += (ushort)this.VRAMAddressIncrement;
             };
 
-            this.Registers.PPUDATA.AfterReadAction = () =>
-            {
-
-            };
-
             this.Registers.PPUDATA.AfterWriteAction = (value) =>
             {
-                if (value == 0x5f)
-                {
-
-                }
                 this.MemoryMap.Write(this.ppuAddress, value);
                 this.ppuAddress += (ushort)this.VRAMAddressIncrement;
             };
@@ -301,7 +287,7 @@ namespace MICE.PPU.RicohRP2C02
 
             if (this.SpriteHandler.ShowSprites)
             {
-                this.SpriteHandler.DrawSpritePixel(x, y);
+                this.SpriteHandler.DrawSpritePixel(x, y, this.PrimaryOAM);
             }
         }
 
@@ -312,11 +298,13 @@ namespace MICE.PPU.RicohRP2C02
                 if (BackgroundHandler.ShowBackground && SpriteHandler.ShowSprites)
                 {
                     var pixelX = this.Cycle - 1;
-                    byte backgroundPixel = BackgroundHandler.DrawBackgroundPixel(pixelX, this.ScanLine);
-                    byte spritePixel = SpriteHandler.DrawSpritePixel(pixelX, this.ScanLine);
+                    (byte backgroundPixel, Tile tile)  = BackgroundHandler.DrawBackgroundPixel(pixelX, this.ScanLine);
+                    (byte spritePixel, Sprite sprite) = SpriteHandler.DrawSpritePixel(pixelX, this.ScanLine, this.PrimaryOAM);
 
                     byte muxedPixel = PixelMuxer.MuxPixel(spritePixel, backgroundPixel);
                     this.ScreenData[256 * this.ScanLine + pixelX] = muxedPixel;
+
+                    this.HandleSprite0Hit(backgroundPixel, spritePixel, tile, sprite);
                 }
             }
             else if (this.Cycle >= 257 && this.Cycle <= 320)
@@ -348,5 +336,8 @@ namespace MICE.PPU.RicohRP2C02
                 }
             }
         }
+
+        private void HandleSprite0Hit(byte backgroundPixel, byte spritePixel, Tile tile, Sprite sprite)
+            => this.SpriteHandler.WasSprite0Hit = sprite?.IsSpriteZero ?? false && (backgroundPixel != 0x00 && spritePixel != 0x00);
     }
 }

@@ -38,12 +38,15 @@ namespace MICE.PPU.RicohRP2C02.Components
             tile.AttributeData = attrib.RawByte;
             tile.AttributeAddress = (short)(this.LowerIndex + attrib.Address);
 
-            var colorIndex = this.GetColorIndex(tile, chrBank);
+            var colorIndex = this.GetColorIndex(screenX, screenY, tile, chrBank);
 
-            // (0) = palette number
-            byte palette_num = (byte)((tile.AttributeData >> attrib.RawByte) & 3);
+            byte paletteId = 0;
+            if (colorIndex != 0)
+            {
+                paletteId = (byte)((tile.AttributeData >> 0) & 3);
+            }
 
-            tile.PaletteAddress = (short)(0x3f00 + 4 * palette_num + colorIndex);
+            tile.PaletteAddress = (short)(0x3f00 + 4 * paletteId + colorIndex);
 
             return tile;
         }
@@ -65,19 +68,19 @@ namespace MICE.PPU.RicohRP2C02.Components
             }
         }
 
-        private byte GetColorIndex(Tile tile, byte[] patterns)
+        private byte GetColorIndex(int x, int y, Tile tile, byte[] patterns)
         {
             // To get a color index, we slice down the data even further to grab specific pixel details
             // and pull the color details from the ROMs pattern table(s).
-            //var testAddress = patterns[tile.TileAddress];
+            // var testAddress = patterns[tile.TileAddress];
+            //return testAddress;
             //var testAddress2 = patterns[tile.TileAddress + 8];
 
-            var tiledY = tile.Location.y % 8;
-            var tiledX = tile.Location.x % 8;
+            var tiledX = x % 8;
+            var tiledY = y % 8;
 
-            // This borrowed from DotNES project...
-            var lowBitsOffset = (ushort)(tile.TileAddress + tile.TileIndex * 16 + tiledY);
-            var highBitsOffset = (ushort)(tile.TileAddress + tile.TileIndex * 16 + tiledY + 8);
+            var lowBitsOffset = (ushort)(tile.TileAddress + tiledY);
+            var highBitsOffset = (ushort)(lowBitsOffset + 8);
 
             byte lowBits = patterns[lowBitsOffset];
             byte highBits = patterns[highBitsOffset];

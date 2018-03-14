@@ -15,6 +15,8 @@ namespace MICE.PPU.RicohRP2C02.Components
 
         public int Index { get; private set; }
 
+        public bool IsSpriteZero { get; set; }
+
         public bool IsBehindBackground
         {
             get => this.byte2.GetBit(5);

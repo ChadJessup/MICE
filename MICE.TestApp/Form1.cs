@@ -130,7 +130,12 @@ namespace MICE.TestApp
 
             this.bitmap.UnlockBits(frame);
 
-            this.graphics.DrawImage(this.bitmap, this.bitmapRectangle);
+            try
+            {
+                this.graphics.DrawImage(this.bitmap, this.bitmapRectangle);
+            }
+            catch (ExternalException)
+            { }
         }
     }
 }

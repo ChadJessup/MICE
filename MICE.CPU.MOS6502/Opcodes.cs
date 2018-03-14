@@ -114,7 +114,7 @@ namespace MICE.CPU.MOS6502
                     CPU.WriteByteAt(address, (byte)(value >> 1), incrementPC: false);
 
                     CPU.IsNegative = false;
-                    this.HandleNegative(value);
+                    this.HandleZero(value);
                     break;
                 case AddressingModes.Accumulator:
                     CPU.IsCarry = (CPU.Registers.A & 1) == 1;
@@ -156,6 +156,8 @@ namespace MICE.CPU.MOS6502
             CPU.IsCarry = (value & 0b10000000) == 0b10000000;
             value = (byte)(value << 1);
 
+        //    CPU.IsCarry = value >> 8 != 0;
+
             if (container.AddressingMode == AddressingModes.Accumulator)
             {
                 this.WriteByteToRegister(CPU.Registers.A, value, S: true, Z: true);
@@ -166,8 +168,6 @@ namespace MICE.CPU.MOS6502
                 this.HandleNegative(value);
                 this.HandleZero(value);
             }
-
-//            this.WriteByteToRegister(CPU.Registers.A, value, S: true, Z: true);
         }
 
         [MOS6502Opcode(0x2A, "ROL", AddressingModes.Accumulator, cycles: 2, pcDelta: 1)]
@@ -397,7 +397,7 @@ namespace MICE.CPU.MOS6502
         {
             var (cycles, pcDelta) = this.Branch(!CPU.IsCarry);
 
-            container.AddedCycles = cycles;
+            //container.AddedCycles = cycles;
             container.PCDelta = pcDelta;
         }
 
@@ -406,7 +406,7 @@ namespace MICE.CPU.MOS6502
         {
             var (cycles, pcDelta) = this.Branch(CPU.IsCarry);
 
-            container.AddedCycles = cycles;
+           // container.AddedCycles = cycles;
             container.PCDelta = pcDelta;
         }
 
@@ -415,7 +415,7 @@ namespace MICE.CPU.MOS6502
         {
             var (cycles, pcDelta) = this.Branch(CPU.IsZero == false);
 
-            container.AddedCycles = cycles;
+            //container.AddedCycles = cycles;
             container.PCDelta = pcDelta;
         }
 
@@ -522,12 +522,13 @@ namespace MICE.CPU.MOS6502
             var (value, address, isSamePage) = AddressingMode.GetAddressedValue(CPU, container);
 
             var originalValue = CPU.Registers.A.Read();
-            var sum = (byte)(originalValue + value + (CPU.IsCarry ? 1 : 0));
-            CPU.IsCarry = sum > 0xFF;
+            var sum = originalValue + value + (CPU.IsCarry ? 1 : 0);
 
-            this.WriteByteToRegister(CPU.Registers.A, sum, S: true, Z: true);
+            CPU.IsCarry = sum >> 8 != 0;
+
+            this.WriteByteToRegister(CPU.Registers.A, (byte)sum, S: true, Z: true);
             this.HandlePageBoundaryCrossed(container, isSamePage);
-            this.HandleOverflow(originalValue, value, sum);
+            this.HandleOverflow(originalValue, value, (byte)sum);
         }
 
         [MOS6502Opcode(0xE9, "SBC", AddressingModes.Immediate, cycles: 2, pcDelta: 2)]
@@ -539,12 +540,12 @@ namespace MICE.CPU.MOS6502
 
             value = (byte)~value;
             var originalValue = CPU.Registers.A;
-            var sum = (byte)(CPU.Registers.A + value + (CPU.IsCarry ? 1 : 0));
-            CPU.IsCarry = sum > 0xFF;
+            var sum = CPU.Registers.A + value + (CPU.IsCarry ? 1 : 0);
+            CPU.IsCarry = sum >> 8 != 0;
 
-            this.WriteByteToRegister(CPU.Registers.A, sum, S: true, Z: true);
+            this.WriteByteToRegister(CPU.Registers.A, (byte)sum, S: true, Z: true);
             this.HandlePageBoundaryCrossed(container, isSamePage);
-            this.HandleOverflow(originalValue, value, sum);
+            this.HandleOverflow(originalValue, value, (byte)sum);
         }
 
         #endregion
@@ -686,7 +687,8 @@ namespace MICE.CPU.MOS6502
                 case AddressingModes.IndirectY:
                     if (!samePage.Value)
                     {
-                        container.AddedCycles++;
+                        // TODO: readd - just lining up some logging
+                        //container.AddedCycles++;
                     }
                     break;
                 default:

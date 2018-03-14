@@ -40,6 +40,11 @@ namespace MICE.PPU.RicohRP2C02
 
         public byte MuxPixel(byte spritePixel, byte backgroundPixel)
         {
+            if(spritePixel != 0)
+            {
+                return spritePixel;
+            }
+
             return backgroundPixel;
         }
     }

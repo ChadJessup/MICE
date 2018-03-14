@@ -29,5 +29,11 @@ namespace MICE.PPU.RicohRP2C02.Components
         public int MaxSpritesCount { get; private set; } = 0;
         public int CurrentSpriteCount { get; private set; } = 0;
         public byte[] Data { get; private set; }
+
+        public byte this[int index]
+        {
+            get => this.Data[index];
+            set => this.Data[index] = value;
+        }
     }
 }

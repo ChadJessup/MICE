@@ -104,13 +104,6 @@ namespace MICE.Common.Misc
                 }
             }
 
-            this.sw.WriteLine($"Read: 0x{index:X}-0x{value:X}");
-            if (index == 0x2002)
-            {
-                // Want it to match the other log...
-                this.sw.WriteLine($"Read: 0x{index:X}-0x{value:X}");
-            }
-
             return value;
 
             throw new InvalidOperationException($"Address was requested that hasn't been mapped (0x{index:X})");
@@ -118,12 +111,6 @@ namespace MICE.Common.Misc
 
         public virtual void Write(int index, byte value)
         {
-            this.sw.WriteLine($"Write: 0x{index:X}-0x{value:X}");
-            if (index == 0x3f00 || index == 0x3f20)
-            {
-                this.sw.WriteLine($"Write HERERERERE: 0x{index:X}-0x{value:X}");
-            }
-
             if (this.memorySegmentCache.TryGetValue(index, out IMemorySegment cachedSegment))
             {
                 cachedSegment.Write(index, value);
