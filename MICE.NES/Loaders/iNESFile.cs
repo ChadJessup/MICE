@@ -145,7 +145,7 @@ namespace MICE.Nintendo.Loaders
             return this;
         }
 
-        public NESCartridge LoadCartridge(StreamWriter sw)
+        public NESCartridge LoadCartridge()
         {
             var cartridge = new NESCartridge
             {
@@ -155,7 +155,7 @@ namespace MICE.Nintendo.Loaders
                 ROMBanks = this.ROMBanks,
             };
 
-            cartridge.InitializeMapper(this.MemoryMapperId, sw);
+            cartridge.InitializeMapper(this.MemoryMapperId);
 
             return cartridge;
         }

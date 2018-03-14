@@ -12,8 +12,8 @@ namespace MICE.Nintendo.Mappers
     {
         private List<(IMemorySegment segment, byte[] bytes)> bankLinkage = new List<(IMemorySegment segment, byte[] bytes)>();
 
-        public NROM(NESCartridge cartridge, StreamWriter sw)
-            : base(MemoryMapperIds.NROM.ToString(), cartridge, sw)
+        public NROM(NESCartridge cartridge)
+            : base(MemoryMapperIds.NROM.ToString(), cartridge)
         {
         }
 

@@ -25,7 +25,7 @@ namespace MICE.Nintendo
                 File.Delete(this.debugPath);
             }
 
-            this.sw = File.AppendText(this.debugPath);
+            //this.sw = File.AppendText(this.debugPath);
 
             this.cancellationToken = cancellationToken;
         }
@@ -85,17 +85,10 @@ namespace MICE.Nintendo
             // 1 System step = 1 CPU step + (3 PPU steps * CPU Cycles in Step) + (2 Audio steps * 1 CPU cycle).
             // Cycles are based on which instructions the CPU ran.
 
-            Stopwatch cpuSW = new Stopwatch();
-            cpuSW.Start();
             var cpuCycles = this.CPU.Step();
             CPU.CurrentCycle += cpuCycles;
-            cpuSW.Stop();
 
             var bytes = this.PPU.MemoryMap.GetMemorySegment<Palette>("Image Palette").Data;
-            if (bytes[0] != 0x0f && bytes[0] != 0xc7)
-            {
-
-            }
 
             for (int i = 0; i < cpuCycles * 3; i++)
             {
@@ -132,7 +125,7 @@ namespace MICE.Nintendo
         public void DMATransfer(byte value)
         {
             ushort readAddress = (ushort)(value << 8);
-            this.sw.WriteLine("DMA Just Happened!");
+            //this.sw.WriteLine("DMA Just Happened!");
 
             // TODO: This is terrible, and a double copy...convert to stream later through a bus or something.
             // Especially since this is normally DRAM and refreshed all the time from what I can tell?

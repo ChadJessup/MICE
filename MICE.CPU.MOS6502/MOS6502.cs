@@ -268,7 +268,7 @@ namespace MICE.CPU.MOS6502
 
         private void HandleNMIRequest()
         {
-            this.fs.WriteLine($"Handling NMI!");
+            //this.fs.WriteLine($"Handling NMI!");
             // Push PC to stack...
             this.Stack.Push(this.Registers.PC);
 
