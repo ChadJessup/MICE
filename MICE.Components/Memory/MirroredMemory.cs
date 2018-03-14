@@ -68,6 +68,11 @@ namespace MICE.Components.Memory
 
         public override void Write(int index, byte value)
         {
+            if (index == 0x3f00|| index == 0x3f20)
+            {
+
+            }
+
             var newIndex = (index - this.LowerIndex) + this.mirroredLowerIndex;
 
             // Still in our own mirrored memory (can repeatedly loop)...

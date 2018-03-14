@@ -162,6 +162,10 @@ namespace MICE.PPU.RicohRP2C02
 
             this.Registers.PPUDATA.AfterWriteAction = (value) =>
             {
+                if (value == 0x5f)
+                {
+
+                }
                 this.MemoryMap.Write(this.ppuAddress, value);
                 this.ppuAddress += (ushort)this.VRAMAddressIncrement;
             };

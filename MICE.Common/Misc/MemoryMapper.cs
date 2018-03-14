@@ -104,11 +104,11 @@ namespace MICE.Common.Misc
                 }
             }
 
- //           this.sw.WriteLine($"Read: 0x{index:X}-0x{value:X}");
+            this.sw.WriteLine($"Read: 0x{index:X}-0x{value:X}");
             if (index == 0x2002)
             {
                 // Want it to match the other log...
-//                this.sw.WriteLine($"Read: 0x{index:X}-0x{value:X}");
+                this.sw.WriteLine($"Read: 0x{index:X}-0x{value:X}");
             }
 
             return value;
@@ -118,10 +118,10 @@ namespace MICE.Common.Misc
 
         public virtual void Write(int index, byte value)
         {
-//            this.sw.WriteLine($"Write: 0x{index:X}-0x{value:X}");
-            if (index == 0x3f00)
+            this.sw.WriteLine($"Write: 0x{index:X}-0x{value:X}");
+            if (index == 0x3f00 || index == 0x3f20)
             {
-                //this.sw.WriteLine($"Write: 0x{index:X}-0x{value:X}");
+                this.sw.WriteLine($"Write HERERERERE: 0x{index:X}-0x{value:X}");
             }
 
             if (this.memorySegmentCache.TryGetValue(index, out IMemorySegment cachedSegment))

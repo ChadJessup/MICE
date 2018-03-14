@@ -74,9 +74,10 @@ namespace MICE.PPU.RicohRP2C02
 
             var (indexedX, indexedY, nameTable) = this.SelectNametable(x, y);
 
-            var tile = nameTable.GetTileFromPixel(x, y, this.IsBackgroundPatternTableAddress1000 ? 0x1000 : 0x0000, this.chrBanks[0]);
+            var tile = nameTable.GetTileFromPixel(indexedX, indexedY, this.IsBackgroundPatternTableAddress1000 ? 0x1000 : 0x0000, this.chrBanks[0]);
+            var palette = this.ppuMemoryMap.ReadByte(tile.PaletteAddress);
 
-            return this.imagePalette.ReadByte(tile.PaletteAddress);
+            return palette;
         }
 
         private (int indexedX, int indexedY, Nametable nameTable) SelectNametable(int x, int y)

@@ -41,7 +41,7 @@ namespace MICE.CPU.MOS6502
         {
             this.stack.Push(value);
             this.Pointer.Write((byte)(this.Pointer.Read() - 1));
-//           this.fs.WriteLine($"Write: 0x1{this.Pointer.Read():X}-0x{value:X}");
+           this.fs.WriteLine($"Write: 0x1{this.Pointer.Read():X}-0x{value:X}");
         }
 
         public void Push(ushort value)
@@ -57,7 +57,7 @@ namespace MICE.CPU.MOS6502
             this.Pointer.Write((byte)(this.Pointer.Read() + 1));
             var value = this.stack.Pop();
 
-//            this.fs.WriteLine($"Read: 0x1{this.Pointer.Read():X}-0x{value:X}");
+            this.fs.WriteLine($"Read: 0x1{this.Pointer.Read():X}-0x{value:X}");
             return value;
         }
 

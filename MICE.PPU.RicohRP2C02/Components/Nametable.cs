@@ -20,7 +20,7 @@ namespace MICE.PPU.RicohRP2C02.Components
         public AttributeTable AttributeTable { get; private set; }
 
         public Tile GetTileFromPixel(int screenX, int screenY, int bgOffset, byte[] chrBank)
-        { 
+        {
             var tileX = screenX / 8;
             var tileY = screenY / 8;
             var sliverY = screenX % 8;
@@ -41,7 +41,9 @@ namespace MICE.PPU.RicohRP2C02.Components
             var colorIndex = this.GetColorIndex(tile, chrBank);
 
             // (0) = palette number
-            tile.PaletteAddress = (short)(0x3f00);// + 4 * (0) + colorIndex);
+            byte palette_num = (byte)((tile.AttributeData >> attrib.RawByte) & 3);
+
+            tile.PaletteAddress = (short)(0x3f00 + 4 * palette_num + colorIndex);
 
             return tile;
         }
@@ -67,19 +69,23 @@ namespace MICE.PPU.RicohRP2C02.Components
         {
             // To get a color index, we slice down the data even further to grab specific pixel details
             // and pull the color details from the ROMs pattern table(s).
-            return patterns[tile.TileAddress];
+            //var testAddress = patterns[tile.TileAddress];
+            //var testAddress2 = patterns[tile.TileAddress + 8];
 
             var tiledY = tile.Location.y % 8;
             var tiledX = tile.Location.x % 8;
 
             // This borrowed from DotNES project...
-            byte lowBits = patterns[(ushort)(tile.TileAddress + tile.TileIndex* 16 + tiledY)];
-            byte highBits = patterns[(ushort)(tile.TileAddress + tile.TileIndex * 16 + tiledY + 8)];
+            var lowBitsOffset = (ushort)(tile.TileAddress + tile.TileIndex * 16 + tiledY);
+            var highBitsOffset = (ushort)(tile.TileAddress + tile.TileIndex * 16 + tiledY + 8);
+
+            byte lowBits = patterns[lowBitsOffset];
+            byte highBits = patterns[highBitsOffset];
 
             byte lowBit = (byte)((lowBits >> (7 - tiledX)) & 1);
             byte highBit = (byte)((highBits >> (7 - tiledX)) & 1);
 
-            //return (byte)(lowBit + highBit * 2);
+            return (byte)(lowBit + highBit * 2);
         }
 
         private byte GetPatternTableOffset(int x, int y)
