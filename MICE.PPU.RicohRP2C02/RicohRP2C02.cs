@@ -1,8 +1,6 @@
 ﻿using MICE.Common.Interfaces;
 using MICE.PPU.RicohRP2C02.Components;
-using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Threading;
 
 namespace MICE.PPU.RicohRP2C02
@@ -17,26 +15,10 @@ namespace MICE.PPU.RicohRP2C02
             public const int CyclesPerScanline = 341;
             public const int NTSCWidth = 256;
             public const int NTSCHeight = 224;
-
-            public static uint[] RGBAPalette = {
-                0x7C7C7CFF,0x0000FCFF,0x0000BCFF,0x4428BCFF,
-                0x940084FF,0xA80020FF,0xA81000FF,0x881400FF,
-                0x503000FF,0x007800FF,0x006800FF,0x005800FF,
-                0x004058FF,0x000000FF,0x000000FF,0x000000FF,
-                0xBCBCBCFF,0x0078F8FF,0x0058F8FF,0x6844FCFF,
-                0xD800CCFF,0xE40058FF,0xF83800FF,0xE45C10FF,
-                0xAC7C00FF,0x00B800FF,0x00A800FF,0x00A844FF,
-                0x008888FF,0x000000FF,0x000000FF,0x000000FF,
-                0xF8F8F8FF,0x3CBCFCFF,0x6888FCFF,0x9878F8FF,
-                0xF878F8FF,0xF85898FF,0xF87858FF,0xFCA044FF,
-                0xF8B800FF,0xB8F818FF,0x58D854FF,0x58F898FF,
-                0x00E8D8FF,0x787878FF,0x000000FF,0x000000FF,
-                0xFCFCFCFF,0xA4E4FCFF,0xB8B8F8FF,0xD8B8F8FF,
-                0xF8B8F8FF,0xF8A4C0FF,0xF0D0B0FF,0xFCE0A8FF,
-                0xF8D878FF,0xD8F878FF,0xB8F8B8FF,0xB8F8D8FF,
-                0x00FCFCFF,0xF8D8F8FF,0x000000FF,0x000000FF
-            };
         }
+
+        private ushort ppuAddress = 0;
+        private bool hasWrittenToggle = false;
 
         public RicohRP2C02(PPUMemoryMap memoryMap, PPURegisters registers, IMemoryMap cpuMemoryMap, IList<byte[]> chrBanks)
         {
@@ -65,9 +47,6 @@ namespace MICE.PPU.RicohRP2C02
         public SpriteHandler SpriteHandler { get; private set; }
         public PixelMuxer PixelMuxer { get; private set; }
 
-        private ushort ppuAddress = 0;
-        private bool hasWrittenToggle = false;
-
         public bool ShouldNMInterrupt { get; set; }
 
         public PPUMemoryMap MemoryMap { get; private set; }
@@ -87,12 +66,18 @@ namespace MICE.PPU.RicohRP2C02
             set => this.Registers.PPUCTRL.SetBit(2, value == VRAMAddressIncrements.Down32 ? true : false);
         }
 
+        /// <summary>
+        /// Gets or sets a value when the PPU is set to master/external mode. Not really used.
+        /// </summary>
         public bool IsPPUMaster
         {
             get => this.Registers.PPUCTRL.GetBit(6);
             set => this.Registers.PPUCTRL.SetBit(6, value);
         }
 
+        /// <summary>
+        /// Gets or sets a value when a Nonmaskable Interrupt was requested by the CPU.
+        /// </summary>
         public bool WasNMIRequested
         {
             get => this.Registers.PPUCTRL.GetBit(7);
@@ -122,10 +107,13 @@ namespace MICE.PPU.RicohRP2C02
         public int Cycle { get; private set; }
 
         /// <summary>
-        /// Current frame number being rendered.
+        /// Number of the current frame being rendered.
         /// </summary>
         public long FrameNumber { get; private set; }
 
+        /// <summary>
+        /// Gets a value indicating if the Frame is even or odd.
+        /// </summary>
         public bool IsFrameEven => this.FrameNumber % 2 == 0;
 
         public void PowerOn(CancellationToken cancellationToken)
@@ -265,19 +253,6 @@ namespace MICE.PPU.RicohRP2C02
             }
         }
 
-        private void SetPixel(int x, int y)
-        {
-            if (this.BackgroundHandler.ShowBackground)
-            {
-                this.BackgroundHandler.DrawBackgroundPixel(x, y);
-            }
-
-            if (this.SpriteHandler.ShowSprites)
-            {
-                this.SpriteHandler.DrawSpritePixel(x, y, this.PrimaryOAM);
-            }
-        }
-
         private void HandleVisibleScanlines()
         {
             if (this.Cycle > 0 && this.Cycle <= 256)
@@ -285,13 +260,13 @@ namespace MICE.PPU.RicohRP2C02
                 if (BackgroundHandler.ShowBackground && SpriteHandler.ShowSprites)
                 {
                     var pixelX = this.Cycle - 1;
-                    (byte backgroundPixel, Tile tile)  = BackgroundHandler.DrawBackgroundPixel(pixelX, this.ScanLine);
-                    (byte spritePixel, Sprite sprite) = SpriteHandler.DrawSpritePixel(pixelX, this.ScanLine, this.PrimaryOAM);
+                    (byte backgroundPixel, Tile tile) drawnTile = BackgroundHandler.DrawBackgroundPixel(pixelX, this.ScanLine);
+                    (byte spritePixel, Sprite sprite) drawnSprite = SpriteHandler.DrawSpritePixel(pixelX, this.ScanLine, this.PrimaryOAM);
 
-                    byte muxedPixel = PixelMuxer.MuxPixel(spritePixel, backgroundPixel);
-                    this.ScreenData[256 * this.ScanLine + pixelX] = muxedPixel;
+                    byte muxedPixel = PixelMuxer.MuxPixel(drawnSprite, drawnTile);
+                    this.ScreenData[(this.ScanLine * Constants.NTSCWidth) + pixelX] = muxedPixel;
 
-                    this.HandleSprite0Hit(backgroundPixel, spritePixel, tile, sprite);
+                    this.HandleSprite0Hit(drawnTile, drawnSprite);
                 }
             }
             else if (this.Cycle >= 257 && this.Cycle <= 320)
@@ -324,7 +299,10 @@ namespace MICE.PPU.RicohRP2C02
             }
         }
 
-        private void HandleSprite0Hit(byte backgroundPixel, byte spritePixel, Tile tile, Sprite sprite)
-            => this.SpriteHandler.WasSprite0Hit = sprite?.IsSpriteZero ?? false && (backgroundPixel != 0x00 && spritePixel != 0x00);
+        private void HandleSprite0Hit((byte backgroundPixel, Tile tile) drawnTile, (byte spritePixel, Sprite sprite) drawnSprite)
+            => this.SpriteHandler.WasSprite0Hit =
+                drawnSprite.sprite?.IsSpriteZero ?? false
+                && (drawnTile.backgroundPixel != 0x00
+                && drawnSprite.spritePixel != 0x00);
     }
 }

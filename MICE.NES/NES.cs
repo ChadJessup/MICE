@@ -134,7 +134,7 @@ namespace MICE.Nintendo
             ushort readAddress = (ushort)(value << 8);
             //this.sw.WriteLine("DMA Just Happened!");
 
-            this.CPUMemoryMap.BulkTransfer(readAddress, this.PPU.PrimaryOAM.Data, this.PPU.Registers.OAMADDR, 255);
+            this.CPUMemoryMap.BulkTransfer(readAddress, this.PPU.PrimaryOAM.Data, this.PPU.Registers.OAMADDR, 256);
         }
 
         public Task Run() => Task.Factory.StartNew(() =>

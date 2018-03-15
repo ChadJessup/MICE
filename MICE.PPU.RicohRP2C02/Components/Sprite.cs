@@ -10,18 +10,12 @@ namespace MICE.PPU.RicohRP2C02.Components
         private byte byte2;
         private byte byte3;
 
-        public int PositionY { get; private set; }
-        public int PositionX { get; private set; }
+        public int SpriteIndex { get; set; }
+        public int TileIndex { get; set; }
+        public (int X, int Y) Position { get; set; }
 
-        public int Index { get; private set; }
-
-        public bool IsSpriteZero { get; set; }
-
-        public bool IsBehindBackground
-        {
-            get => this.byte2.GetBit(5);
-            set => this.byte2.SetBit(5, value);
-        }
+        public ushort PaletteAddress { get; set; }
+        public ushort TileAddress { get; set; }
 
         public bool IsFlippedHorizontally
         {
@@ -34,5 +28,13 @@ namespace MICE.PPU.RicohRP2C02.Components
             get => this.byte2.GetBit(7);
             set => this.byte2.SetBit(7, value);
         }
+
+        public bool IsBehindBackground
+        {
+            get => this.byte2.GetBit(5);
+            set => this.byte2.SetBit(5, value);
+        }
+
+        public bool IsSpriteZero { get; set; }
     }
 }

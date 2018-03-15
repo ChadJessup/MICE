@@ -87,7 +87,7 @@ namespace MICE.PPU.RicohRP2C02
 
                 if (scanline >= spriteY && (scanline < spriteY + offset))
                 {
-                    this.spriteIndices[this.CurrentScanlineSpriteCount] = index;
+                    this.spriteIndices[this.CurrentScanlineSpriteCount] = (byte)(index * 4);
                     this.CurrentScanlineSpriteCount++;
                 }
             }
@@ -100,49 +100,52 @@ namespace MICE.PPU.RicohRP2C02
                 return (0, null);
             }
 
-            var sprite = new Sprite();
-
-            for (int spriteIndex = 0; spriteIndex < this.CurrentScanlineSpriteCount; ++spriteIndex)
+            for (int index = 0; index < this.CurrentScanlineSpriteCount; ++index)
             {
-                int oam_index = this.spriteIndices[spriteIndex];
-                if(oam_index == 0)
-                {
-                    sprite.IsSpriteZero = true;
-                }
+                var sprite = new Sprite();
+                sprite.SpriteIndex = index;
+                var oamIndex = this.spriteIndices[index];
 
-                byte sprite_y = (byte)(primaryOAM[oam_index * 4 + 0] + 1);
-                byte pt_index = primaryOAM[oam_index * 4 + 1];
-                byte attributes = (byte)(primaryOAM[oam_index * 4 + 2] & 0xE3);
-                byte sprite_x = primaryOAM[oam_index * 4 + 3];
+                sprite.IsSpriteZero = index == 0;
 
-                byte palette_number = (byte)(attributes & 3);
-                bool inFrontOfBG = (attributes & 0x20) == 0;
-                bool flipHorizontal = (attributes & 0x40) != 0;
-                bool flipVertical = (attributes & 0x80) != 0;
+                sprite.Position =
+                (
+                    X: primaryOAM[oamIndex + 3],
+                    Y: primaryOAM[oamIndex + 0]
+                );
 
-                if (sprite_y == 0 || sprite_y >= 240)
+                sprite.TileIndex = primaryOAM[oamIndex + 1];
+                byte attributes = (byte)(primaryOAM[oamIndex + 2] & 0xE3);
+
+                byte paletteNumber = (byte)(attributes & 3);
+                sprite.IsBehindBackground = (attributes & 0x20) == 0;
+                sprite.IsFlippedHorizontally = (attributes & 0x40) != 0;
+                sprite.IsFlippedVertically = (attributes & 0x80) != 0;
+
+                if (sprite.Position.Y == 0 || sprite.Position.Y >= 240)
                     continue;
 
-                if (x - sprite_x >= 8 || x < sprite_x)
+                if (x - sprite.Position.X >= 8 || x < sprite.Position.X)
                     continue;
 
-                int ti = x - sprite_x;
-                int tj = y - sprite_y;
+                int ti = x - sprite.Position.X;
+                int tj = y - sprite.Position.Y;
 
-                int i = flipHorizontal ? 7 - ti : ti;
-                int j = flipVertical ? 7 - tj : tj;
+                int i = sprite.IsFlippedHorizontally ? 7 - ti : ti;
+                int j = sprite.IsFlippedVertically ? 7 - tj : tj;
 
-                ushort sprite_pattern_table_base = (ushort)(this.IsSpritePatternTableAddress1000 ? 0x1000 : 0x0000);
+                sprite.TileAddress = (ushort)(this.IsSpritePatternTableAddress1000 ? 0x1000 : 0x0000 + sprite.TileIndex * 16);
 
-                byte color_index = this.GetColorIndex(i, (ushort)(sprite_pattern_table_base + pt_index * 16 + j), this.chrBanks[0]);
+                byte colorIndex = this.GetColorIndex(i, (ushort)(sprite.TileAddress + j), this.chrBanks[0]);
 
-                if (color_index == 0)
+                if (colorIndex == 0)
                 {
-                    return (0, null);
+                    return (0, sprite);
                 }
 
-                var palette = this.ppuMemoryMap.ReadByte((short)(0x3f10 + 4 * palette_number + color_index));
-                return (palette, sprite);
+                sprite.PaletteAddress = (ushort)(0x3f10 + 4 * paletteNumber + colorIndex);
+                var finalPixel = this.ppuMemoryMap.ReadByte(sprite.PaletteAddress);
+                return (finalPixel, sprite);
             }
 
             return (0, null);

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MICE.PPU.RicohRP2C02.Components;
+using System;
 
 namespace MICE.PPU.RicohRP2C02
 {
@@ -38,14 +39,32 @@ namespace MICE.PPU.RicohRP2C02
             set => this.registers.PPUMASK.SetBit(7, value);
         }
 
-        public byte MuxPixel(byte spritePixel, byte backgroundPixel)
+        public byte MuxPixel((byte pixel, Sprite sprite) drawnSprite, (byte pixel, Tile tile) drawnBackground)
         {
-            if(spritePixel != 0)
+            byte outputPixel = 0;
+
+            switch (outputPixel)
             {
-                return spritePixel;
+                case var _ when drawnSprite.pixel == 0 && drawnBackground.pixel == 0:
+                    break;
+                case var _ when drawnBackground.pixel == 0:
+                    outputPixel = drawnSprite.pixel;
+                    break;
+                case var _ when drawnSprite.pixel == 0:
+                    outputPixel = drawnBackground.pixel;
+                    break;
+                case var _ when drawnSprite.sprite.IsBehindBackground:
+                    outputPixel = drawnBackground.pixel;
+                    break;
+                case var _ when drawnSprite.pixel != 0 && !drawnSprite.sprite.IsBehindBackground:
+                    outputPixel = drawnSprite.pixel;
+                    break;
+                default:
+                    outputPixel = drawnBackground.pixel;
+                    break;
             }
 
-            return backgroundPixel;
+            return outputPixel;
         }
     }
 }
