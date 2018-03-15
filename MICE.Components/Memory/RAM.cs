@@ -8,5 +8,15 @@ namespace MICE.Components.Memory
             : base(lowerIndex, upperIndex, name)
         {
         }
+        public override byte ReadByte(int index)
+        {
+            // TODO: clear this up when input/audio come in for NES code.
+            if (index == 0x4017)
+            {
+                return 0x0;
+            }
+
+            return base.ReadByte(index);
+        }
     }
 }

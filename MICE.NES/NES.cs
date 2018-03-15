@@ -1,4 +1,5 @@
-﻿using MICE.Common.Interfaces;
+﻿using BenchmarkDotNet.Attributes;
+using MICE.Common.Interfaces;
 using MICE.Components.Bus;
 using MICE.Components.Memory;
 using MICE.CPU.MOS6502;
@@ -6,7 +7,6 @@ using MICE.Nintendo.Loaders;
 using MICE.PPU.RicohRP2C02;
 using MICE.PPU.RicohRP2C02.Components;
 using System;
-using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -25,7 +25,7 @@ namespace MICE.Nintendo
                 File.Delete(this.debugPath);
             }
 
-            //this.sw = File.AppendText(this.debugPath);
+            this.sw = File.AppendText(this.debugPath);
 
             this.cancellationToken = cancellationToken;
         }
@@ -79,6 +79,7 @@ namespace MICE.Nintendo
             this.CPUMemoryMap.GetMemorySegment<External>("PRG-ROM Upper Bank").AttachHandler(this.Cartridge.Mapper);
         }
 
+        [Benchmark]
         public void Step()
         {
             // 1 Step = 1 Frame to the NES, since we're doing frame-based timing here:
@@ -122,6 +123,7 @@ namespace MICE.Nintendo
             await Task.CompletedTask;
         }
 
+        [Benchmark]
         public void DMATransfer(byte value)
         {
             ushort readAddress = (ushort)(value << 8);

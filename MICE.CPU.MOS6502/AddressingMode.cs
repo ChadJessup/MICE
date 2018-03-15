@@ -40,15 +40,6 @@ namespace MICE.CPU.MOS6502
             return (0x00, absoluteAddress, null);
         }
 
-        public static (byte value, ushort address, bool? samePage) GetAbsoluteY(MOS6502 CPU, bool getValue = true)
-        {
-            var address = (ushort)(CPU.ReadNextShort() + CPU.Registers.Y);
-
-            return getValue
-                ? (CPU.ReadByteAt(address), address, AreSamePage(address, CPU.Registers.Y))
-                : ((byte)0x00, address, AreSamePage(address, CPU.Registers.Y));
-        }
-
         public static (byte value, ushort address, bool? samePage) GetIndirectY(MOS6502 CPU, bool getValue = true)
         {
             var incompleteYAddress = CPU.ReadNextByte(incrementPC: false);
@@ -63,11 +54,22 @@ namespace MICE.CPU.MOS6502
 
         public static (byte value, ushort address, bool? samePage) GetAbsoluteX(MOS6502 CPU, bool getValue = true)
         {
-            var address = (ushort)(CPU.ReadNextShort() + CPU.Registers.X);
+            var nextAddress = CPU.ReadNextShort();
+            var nextAddressWithX = (ushort)(nextAddress + CPU.Registers.X);
 
             return getValue
-                ? (CPU.ReadByteAt(address), address, AreSamePage(address, CPU.Registers.X))
-                : ((byte)0x00, address, AreSamePage(address, CPU.Registers.X));
+                ? (CPU.ReadByteAt(nextAddressWithX), nextAddressWithX, AreSamePage(nextAddress, nextAddressWithX))
+                : ((byte)0x00, nextAddressWithX, AreSamePage(nextAddress, nextAddressWithX));
+        }
+
+        public static (byte value, ushort address, bool? samePage) GetAbsoluteY(MOS6502 CPU, bool getValue = true)
+        {
+            var nextAddress = CPU.ReadNextShort();
+            var nextAddressWithY = (ushort)(nextAddress + CPU.Registers.Y);
+
+            return getValue
+                ? (CPU.ReadByteAt(nextAddressWithY), nextAddressWithY, AreSamePage(nextAddress, nextAddressWithY))
+                : ((byte)0x00, nextAddressWithY, AreSamePage(nextAddress, nextAddressWithY));
         }
 
         public static (byte value, ushort address, bool? samePage) GetImmediate(MOS6502 CPU, bool getValue = true)

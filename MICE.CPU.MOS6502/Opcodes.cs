@@ -99,6 +99,8 @@ namespace MICE.CPU.MOS6502
 
             this.HandleNegative(CPU.Registers.A);
             this.HandleZero(CPU.Registers.A);
+
+            this.HandlePageBoundaryCrossed(container, isSamePage);
         }
 
         [MOS6502Opcode(0x46, "LSR", AddressingModes.ZeroPage, cycles: 5, pcDelta: 2)]
@@ -141,7 +143,39 @@ namespace MICE.CPU.MOS6502
             value = (byte)(originalCarry << 8 | value >> 1);
             CPU.IsCarry = newCarry == 1;
 
-            CPU.WriteByteAt(address, value, incrementPC: false);
+            switch (container.AddressingMode)
+            {
+                case AddressingModes.Accumulator:
+                    this.WriteByteToRegister(CPU.Registers.A, value, S: false, Z: false);
+                    break;
+                default:
+                    CPU.WriteByteAt(address, value, incrementPC: false);
+                    break;
+            }
+
+            this.HandleNegative(value);
+            this.HandleZero(value);
+        }
+
+        [MOS6502Opcode(0x2A, "ROL", AddressingModes.Accumulator, cycles: 2, pcDelta: 1)]
+        public void ROL(OpcodeContainer container)
+        {
+            var (value, address, isSamePage) = AddressingMode.GetAddressedValue(CPU, container);
+
+            byte originalCarry = (byte)(CPU.IsCarry ? 1 : 0);
+            CPU.IsCarry = (value & 0b10000000) == 0x80;
+
+            value = (byte)(value << 1 | originalCarry);
+
+            switch (container.AddressingMode)
+            {
+                case AddressingModes.Accumulator:
+                    this.WriteByteToRegister(CPU.Registers.A, value, S: false, Z: false);
+                    break;
+                default:
+                    CPU.WriteByteAt(address, value, incrementPC: false);
+                    break;
+            }
 
             this.HandleNegative(value);
             this.HandleZero(value);
@@ -170,31 +204,13 @@ namespace MICE.CPU.MOS6502
             }
         }
 
-        [MOS6502Opcode(0x2A, "ROL", AddressingModes.Accumulator, cycles: 2, pcDelta: 1)]
-        public void ROL(OpcodeContainer container)
-        {
-            switch (container.AddressingMode)
-            {
-                case AddressingModes.Accumulator:
-                    byte originalCarry = (byte)(CPU.IsCarry ? 1 : 0);
-                    CPU.IsCarry = (CPU.Registers.A & 8) == 1;
-
-                    CPU.Registers.A.Write((byte)(CPU.Registers.A << 1 | originalCarry));
-
-                    CPU.IsNegative = false;
-                    this.HandleZero(CPU.Registers.A);
-                    break;
-                default:
-                    throw new InvalidOperationException($"Unexpected AddressingMode in LSR: {container.AddressingMode}");
-            }
-        }
-
         [MOS6502Opcode(0xEE, "INC", AddressingModes.Absolute, cycles: 6, pcDelta: 3)]
         [MOS6502Opcode(0xE6, "INC", AddressingModes.ZeroPage, cycles: 5, pcDelta: 2)]
+        [MOS6502Opcode(0xF6, "INC", AddressingModes.ZeroPageX, cycles: 6, pcDelta: 2)]
         public void INC(OpcodeContainer container)
         {
             var (value, address, isSamePage) = AddressingMode.GetAddressedValue(CPU, container);
-            CPU.WriteByteAt(address, value++, incrementPC: false);
+            CPU.WriteByteAt(address, ++value, incrementPC: false);
 
             this.HandleNegative(value);
             this.HandleZero(value);
@@ -231,8 +247,10 @@ namespace MICE.CPU.MOS6502
         [MOS6502Opcode(0xE0, "CPX", AddressingModes.Immediate, cycles: 2, pcDelta: 2)]
         public void CPX(OpcodeContainer container) => this.CompareValues(CPU.Registers.X, CPU.ReadNextByte());
 
+        [MOS6502Opcode(0xCD, "CMP", AddressingModes.Absolute, cycles: 4, pcDelta: 3)]
         [MOS6502Opcode(0xDD, "CMP", AddressingModes.AbsoluteX, cycles: 4, pcDelta: 3)]
         [MOS6502Opcode(0xC9, "CMP", AddressingModes.Immediate, cycles: 2, pcDelta: 2)]
+        [MOS6502Opcode(0xC5, "CMP", AddressingModes.ZeroPage, cycles: 3, pcDelta: 2)]
         public void CMP(OpcodeContainer container)
         {
             var (value, address, isSamePage) = AddressingMode.GetAddressedValue(CPU, container);
@@ -397,7 +415,7 @@ namespace MICE.CPU.MOS6502
         {
             var (cycles, pcDelta) = this.Branch(!CPU.IsCarry);
 
-            //container.AddedCycles = cycles;
+            container.AddedCycles = cycles;
             container.PCDelta = pcDelta;
         }
 
@@ -406,7 +424,7 @@ namespace MICE.CPU.MOS6502
         {
             var (cycles, pcDelta) = this.Branch(CPU.IsCarry);
 
-           // container.AddedCycles = cycles;
+            container.AddedCycles = cycles;
             container.PCDelta = pcDelta;
         }
 
@@ -415,7 +433,7 @@ namespace MICE.CPU.MOS6502
         {
             var (cycles, pcDelta) = this.Branch(CPU.IsZero == false);
 
-            //container.AddedCycles = cycles;
+            container.AddedCycles = cycles;
             container.PCDelta = pcDelta;
         }
 
@@ -575,7 +593,6 @@ namespace MICE.CPU.MOS6502
 
         private (int cycles, int pcDelta) Branch(bool condition)
         {
-            // TODO: handle page boundaries
             var originalPC = CPU.Registers.PC.Read();
             var cycles = 0;
 
@@ -583,6 +600,12 @@ namespace MICE.CPU.MOS6502
             {
                 var offset = (sbyte)CPU.ReadNextByte();
                 ushort newPC = (ushort)(CPU.Registers.PC + offset);
+
+                if (!this.AreSamePage(originalPC, newPC))
+                {
+                    cycles++;
+                }
+
                 CPU.SetPCTo(newPC);
 
                 cycles++;
@@ -682,13 +705,13 @@ namespace MICE.CPU.MOS6502
 
             switch (container.AddressingMode)
             {
+                case AddressingModes.Relative:
                 case AddressingModes.AbsoluteX:
                 case AddressingModes.AbsoluteY:
                 case AddressingModes.IndirectY:
                     if (!samePage.Value)
                     {
-                        // TODO: readd - just lining up some logging
-                        //container.AddedCycles++;
+                        container.AddedCycles++;
                     }
                     break;
                 default:
