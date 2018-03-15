@@ -5,36 +5,49 @@ namespace MICE.PPU.RicohRP2C02.Components
     // https://wiki.nesdev.com/w/index.php/PPU_OAM
     public class Sprite
     {
-        private byte byte0;
-        private byte byte1;
-        private byte byte2;
-        private byte byte3;
+        private byte yPosition;
+        private byte tileIndex;
+        private byte attributes;
+        private byte xPosition;
 
-        public int SpriteIndex { get; set; }
-        public int TileIndex { get; set; }
-        public (int X, int Y) Position { get; set; }
+        public Sprite(int spriteIndex, byte yPosition, byte tileIndex, byte attributes, byte xPosition)
+        {
+            this.SpriteIndex = spriteIndex;
+
+            this.yPosition = yPosition;
+            this.tileIndex = tileIndex;
+            this.attributes = attributes;
+            this.xPosition = xPosition;
+        }
+
+        public int SpriteIndex { get; private set; }
+        public int TileIndex => this.tileIndex;
+        public (int X, int Y) Position => (X: this.xPosition, Y: this.yPosition);
 
         public ushort PaletteAddress { get; set; }
         public ushort TileAddress { get; set; }
 
+        public byte PaletteNumber => (byte)(this.attributes & 3);
+
+        public bool IsBehindBackground
+        {
+            get => this.attributes.GetBit(5);
+            set => this.attributes.SetBit(5, value);
+        }
+
         public bool IsFlippedHorizontally
         {
-            get => this.byte2.GetBit(6);
-            set => this.byte2.SetBit(6, value);
+            get => this.attributes.GetBit(6);
+            set => this.attributes.SetBit(6, value);
         }
 
         public bool IsFlippedVertically
         {
-            get => this.byte2.GetBit(7);
-            set => this.byte2.SetBit(7, value);
+            get => this.attributes.GetBit(7);
+            set => this.attributes.SetBit(7, value);
         }
 
-        public bool IsBehindBackground
-        {
-            get => this.byte2.GetBit(5);
-            set => this.byte2.SetBit(5, value);
-        }
-
-        public bool IsSpriteZero { get; set; }
+        public bool IsSpriteZero => this.SpriteIndex == 0;
+        public bool IsVisible { get; set; }
     }
 }

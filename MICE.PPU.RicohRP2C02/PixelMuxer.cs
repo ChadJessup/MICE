@@ -1,5 +1,4 @@
 ﻿using MICE.PPU.RicohRP2C02.Components;
-using System;
 
 namespace MICE.PPU.RicohRP2C02
 {
@@ -7,10 +6,7 @@ namespace MICE.PPU.RicohRP2C02
     {
         private readonly PPURegisters registers;
 
-        public PixelMuxer(PPURegisters registers)
-        {
-            this.registers = registers;
-        }
+        public PixelMuxer(PPURegisters registers) => this.registers = registers;
 
         /// <summary>
         /// Gets or sets a value indicating whether or not to output gray scale.

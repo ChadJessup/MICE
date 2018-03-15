@@ -6,11 +6,18 @@ namespace MICE.PPU.RicohRP2C02
 {
     public class SpriteHandler
     {
+        private static class Constants
+        {
+            public const int MaxSprites = 64;
+            public const int MaxSpritesOnScreen = 8;
+        }
+
         private readonly IMemoryMap ppuMemoryMap;
         private readonly IMemoryMap cpuMemoryMap;
         private readonly PPURegisters registers;
-        private byte[] spriteIndices = new byte[8];
         private readonly IList<byte[]> chrBanks;
+        private readonly List<Sprite> currentSprites = new List<Sprite>(Constants.MaxSprites);
+        private readonly int[] spriteIndices = new int[Constants.MaxSpritesOnScreen];
 
         public SpriteHandler(IMemoryMap ppuMemoryMap, PPURegisters registers, IMemoryMap cpuMemoryMap, IList<byte[]> chrBanks)
         {
@@ -20,7 +27,7 @@ namespace MICE.PPU.RicohRP2C02
             this.cpuMemoryMap = cpuMemoryMap;
         }
 
-        public int CurrentScanlineSpriteCount { get; set; }
+        public int CurrentScanlineSpriteCount { get; private set; }
 
         public bool IsSmallSprites
         {
@@ -61,17 +68,7 @@ namespace MICE.PPU.RicohRP2C02
         /// </summary>
         public bool WasSprite0Hit
         {
-            get
-            {
-                var value = this.registers.PPUSTATUS.GetBit(6);
-
-                if (value)
-                {
-
-                }
-
-                return value;
-            }
+            get => this.registers.PPUSTATUS.GetBit(6);
             set => this.registers.PPUSTATUS.SetBit(6, value);
         }
 
@@ -81,8 +78,18 @@ namespace MICE.PPU.RicohRP2C02
 
             int offset = this.IsSmallSprites ? 8 : 16;
 
-            for (byte index = 0; index < 64 && this.CurrentScanlineSpriteCount < 8; index++)
+            for (byte index = 0; index < Constants.MaxSprites; index++)
             {
+                var indexMultiple = index * 4;
+                Sprite newSprite = new Sprite
+                    (
+                        index,
+                        oam.Data[indexMultiple + 0], // y position
+                        oam.Data[indexMultiple + 1], // tile index
+                        oam.Data[indexMultiple + 2], // attributes
+                        oam.Data[indexMultiple + 3]  // x position
+                    );
+
                 byte spriteY = (byte)(oam.Data[index * 4 + 0] + 1);
 
                 if (scanline >= spriteY && (scanline < spriteY + offset))
@@ -90,6 +97,8 @@ namespace MICE.PPU.RicohRP2C02
                     this.spriteIndices[this.CurrentScanlineSpriteCount] = (byte)(index * 4);
                     this.CurrentScanlineSpriteCount++;
                 }
+
+                this.currentSprites.Add(newSprite);
             }
         }
 

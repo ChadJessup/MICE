@@ -1,17 +1,16 @@
-﻿using System;
-using System.IO;
-using MICE.Common.Misc;
+﻿using MICE.Common.Misc;
 using MICE.Components.Memory;
 using MICE.CPU.MOS6502;
+using System.IO;
 
 namespace MICE.Nintendo
 {
     /// <summary>
     /// A class that represents how the NES CPU's memory is mapped out to various components.
     /// </summary>
-    public class CPUMemoryMap : MemoryMapper
+    public class NESMemoryMap : MemoryMapper
     {
-        public CPUMemoryMap(PPU.RicohRP2C02.PPURegisters ppuRegisters, StreamWriter sw) : base(sw)
+        public NESMemoryMap(PPU.RicohRP2C02.PPURegisters ppuRegisters, StreamWriter sw) : base(sw)
         {
             // The NES CPU's memory is mapped out like below - with some trickery possible in the ROM itself to further map out memory.
 

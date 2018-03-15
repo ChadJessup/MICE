@@ -41,7 +41,7 @@ namespace MICE.Nintendo
         public ControlBus ControlBus { get; } = new ControlBus();
 
         public RicohRP2C02 PPU { get; private set; }
-        public CPUMemoryMap CPUMemoryMap { get; private set; }
+        public NESMemoryMap CPUMemoryMap { get; private set; }
 
         public NESCartridge Cartridge { get; private set; }
         public Ricoh2A03 CPU { get; private set; }
@@ -57,7 +57,7 @@ namespace MICE.Nintendo
             }
 
             var ppuRegisters = new PPURegisters();
-            this.CPUMemoryMap = new CPUMemoryMap(ppuRegisters, this.sw);
+            this.CPUMemoryMap = new NESMemoryMap(ppuRegisters, this.sw);
             this.PPU = new RicohRP2C02(new PPUMemoryMap(this.sw), ppuRegisters, this.CPUMemoryMap, this.Cartridge.CharacterRomBanks);
 
             this.PPU.Registers.OAMDMA.AfterWriteAction = this.DMATransfer;
