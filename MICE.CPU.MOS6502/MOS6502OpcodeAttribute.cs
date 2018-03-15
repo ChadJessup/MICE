@@ -23,12 +23,12 @@ namespace MICE.CPU.MOS6502
 
         public bool ShouldVerify { get; private set; }
 
-        public MOS6502OpcodeAttribute(int code, string name, AddressingModes addressingMode, int cycles, int pcDelta, string description = "", bool verify = true)
+        public MOS6502OpcodeAttribute(int code, string name, AddressingModes addressingMode, int timing, int length, string description = "", bool verify = true)
             : base(code, name, description)
         {
             this.AddressingMode = addressingMode;
-            this.Cycles = cycles;
-            this.PCDelta = pcDelta;
+            this.Cycles = timing;
+            this.PCDelta = length;
             this.ShouldVerify = verify;
         }
     }
