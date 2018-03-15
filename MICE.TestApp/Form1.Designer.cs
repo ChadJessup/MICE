@@ -37,6 +37,7 @@
             this.ClientSize = new System.Drawing.Size(673, 499);
             this.Name = "Form1";
             this.Text = "MICE TestApp";
+            this.Shown += new System.EventHandler(this.OnShown);
             this.ResumeLayout(false);
 
         }

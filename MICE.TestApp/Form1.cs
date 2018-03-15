@@ -92,7 +92,6 @@ namespace MICE.TestApp
             palette.Entries[0x3f] = Color.FromArgb(0, 0, 0);
 
             this.bitmap.Palette = palette;
-            Go();
         }
 
         private void Go()
@@ -150,6 +149,11 @@ namespace MICE.TestApp
             }
             catch (ExternalException)
             { }
+        }
+
+        private void OnShown(object sender, EventArgs e)
+        {
+            this.Go();
         }
     }
 }

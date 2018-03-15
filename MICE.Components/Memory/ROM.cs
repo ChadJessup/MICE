@@ -1,4 +1,5 @@
-﻿using MICE.Common.Interfaces;
+﻿using System;
+using MICE.Common.Interfaces;
 
 namespace MICE.Components.Memory
 {
@@ -9,29 +10,10 @@ namespace MICE.Components.Memory
         {
         }
 
-        public override byte ReadByte(int index)
-        {
-            throw new System.NotImplementedException();
-        }
-
-        public override byte[] ReadBytes(ushort startAddress, int size)
-        {
-            throw new System.NotImplementedException();
-        }
-
-        public override ushort ReadShort(int index)
-        {
-            throw new System.NotImplementedException();
-        }
-
-        public override void Write(int index, byte value)
-        {
-            throw new System.NotImplementedException();
-        }
-
-        public override void Write(int index, ushort value)
-        {
-            throw new System.NotImplementedException();
-        }
+        public override byte ReadByte(int index) => throw new NotImplementedException();
+        public override ushort ReadShort(int index) => throw new NotImplementedException();
+        public override void Write(int index, byte value) => throw new NotImplementedException();
+        public override void Write(int index, ushort value) => throw new NotImplementedException();
+        public override void CopyBytes(ushort startAddress, Array destination, int destinationIndex, int length) => throw new NotImplementedException();
     }
 }

@@ -20,13 +20,13 @@ namespace MICE.Components.Memory
         public Action AfterReadAction => this.mappedRegister.AfterReadAction;
         public Action<T> AfterWriteAction => this.mappedRegister.AfterWriteAction;
 
+        public override void CopyBytes(ushort startAddress, Array destination, int destinationIndex, int length) => throw new NotImplementedException();
+
         public override int GetOffsetInSegment(int index) => throw new System.NotImplementedException();
 
         public T Read() => this.mappedRegister.Read();
         public override byte ReadByte(int index) => (byte)(object)this.mappedRegister.Read();
         public override ushort ReadShort(int index) => throw new System.NotImplementedException();
-
-        // TODO: blech...rethink generics here...
         public override void Write(int index, byte value) => this.Write((T)(object)value);
         public override void Write(int index, ushort value) => this.Read();
         public void Write(T value) => this.mappedRegister.Write(value);

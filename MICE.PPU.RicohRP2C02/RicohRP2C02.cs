@@ -38,9 +38,6 @@ namespace MICE.PPU.RicohRP2C02
             };
         }
 
-        private Stopwatch stepSW;
-        private Stopwatch frameSW;
-
         public RicohRP2C02(PPUMemoryMap memoryMap, PPURegisters registers, IMemoryMap cpuMemoryMap, IList<byte[]> chrBanks)
         {
             this.Registers = registers;
@@ -133,9 +130,6 @@ namespace MICE.PPU.RicohRP2C02
 
         public void PowerOn(CancellationToken cancellationToken)
         {
-            this.stepSW = new Stopwatch();
-            this.frameSW = new Stopwatch();
-
             this.Registers.PPUADDR.AfterWriteAction = (value) =>
             {
                 this.ppuAddress = this.hasWrittenToggle
@@ -194,8 +188,6 @@ namespace MICE.PPU.RicohRP2C02
 
         public int Step()
         {
-            stepSW.Start();
-
             // Prerender scanline
             if (this.ScanLine == -1)
             {
@@ -227,8 +219,6 @@ namespace MICE.PPU.RicohRP2C02
                 this.Cycle = 0;
             }
 
-            stepSW.Stop();
-
             return 0;
         }
 
@@ -241,9 +231,6 @@ namespace MICE.PPU.RicohRP2C02
         {
             this.ScanLine = -1;
             this.FrameNumber++;
-
-            this.frameSW.Stop();
-            this.frameSW.Start();
         }
 
         private void HandlePrerenderScanline()

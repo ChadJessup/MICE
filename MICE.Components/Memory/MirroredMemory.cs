@@ -1,5 +1,6 @@
 ﻿using MICE.Common.Interfaces;
 using MICE.Common.Misc;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -53,26 +54,10 @@ namespace MICE.Components.Memory
             this.cachedMemorySegments.Add(newIndex, foundMemorySegment);
 
             return foundMemorySegment.ReadByte(newIndex);
-            //return this.memoryMapper.ReadByte(newIndex + this.mirroredLowerIndex);
-        }
-
-        public override byte[] ReadBytes(ushort startAddress, int size)
-        {
-            throw new System.NotImplementedException();
-        }
-
-        public override ushort ReadShort(int index)
-        {
-            throw new System.NotImplementedException();
         }
 
         public override void Write(int index, byte value)
         {
-            if (index == 0x3f00|| index == 0x3f20)
-            {
-
-            }
-
             var newIndex = (index - this.LowerIndex) + this.mirroredLowerIndex;
 
             // Still in our own mirrored memory (can repeatedly loop)...
@@ -92,12 +77,30 @@ namespace MICE.Components.Memory
             this.cachedMemorySegments.Add(newIndex, foundMemorySegment);
 
             foundMemorySegment.Write(newIndex, value);
-            //this.memoryMapper.Write(newIndex + this.mirroredLowerIndex, value);
         }
 
-        public override void Write(int index, ushort value)
+        public override void CopyBytes(ushort startAddress, Array destination, int destinationIndex, int length)
         {
-            throw new System.NotImplementedException();
+            var newIndex = (startAddress - this.LowerIndex) + this.mirroredLowerIndex;
+
+            // Still in our own mirrored memory (can repeatedly loop)...
+            if (this.IsIndexInRange(newIndex))
+            {
+                this.CopyBytes(startAddress, destination, destinationIndex, length);
+            }
+
+            if (this.cachedMemorySegments.TryGetValue(newIndex, out IMemorySegment memorySegment))
+            {
+                memorySegment.CopyBytes(startAddress, destination, destinationIndex, length);
+            }
+
+            var foundMemorySegment = this.realMemorySegments.First(ms => ms.IsIndexInRange(newIndex));
+            this.cachedMemorySegments.Add(newIndex, foundMemorySegment);
+
+            foundMemorySegment.CopyBytes(startAddress, destination, destinationIndex, length);
         }
+
+        public override ushort ReadShort(int index) => throw new NotImplementedException();
+        public override void Write(int index, ushort value) => throw new NotImplementedException();
     }
 }

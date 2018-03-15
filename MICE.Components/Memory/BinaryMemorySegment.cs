@@ -19,18 +19,9 @@ namespace MICE.Components.Memory
         public override ushort ReadShort(int index) => BitConverter.ToUInt16(this.Data, this.GetOffsetInSegment(index));
         public override void Write(int index, byte value) => this.Data[this.GetOffsetInSegment(index)] = value;
         public override void Write(int index, ushort value) => throw new NotImplementedException();
-        public override byte[] ReadBytes(ushort startAddress, int size)
+        public override void CopyBytes(ushort startAddress, Array destinationArray, int destinationIndex, int length)
         {
-            var bytes = new byte[size];
-            Array.Copy(this.Data, this.GetOffsetInSegment(startAddress), bytes, 0, size);
-
-            //for (int i = 0; i < size; i++)
-            //{
-              //  var index = this.GetOffsetInSegment(startAddress);
-              //  bytes[i] = this.Data[index + i];
-            //}
-
-            return bytes;
+            Array.Copy(this.Data, this.GetOffsetInSegment(startAddress), destinationArray, destinationIndex, length);
         }
     }
 }

@@ -2,7 +2,6 @@
 using MICE.Nintendo.Loaders;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 
 namespace MICE.Nintendo.Mappers
@@ -30,10 +29,6 @@ namespace MICE.Nintendo.Mappers
                     : this.cartridge.ROMBanks[1];
 
                 this.bankLinkage.Add((memorySegment, whichBank));
-            }
-            else
-            {
-                // TODO: remove....checking logic.
             }
         }
 
@@ -77,19 +72,9 @@ namespace MICE.Nintendo.Mappers
             throw new InvalidOperationException($"Invalid memory range and/or size (byte) was requested to be read from in NROM Mapper: {index}");
         }
 
-        public override void Write(int index, byte value)
-        {
-            throw new NotImplementedException();
-        }
+        public override void Write(int index, byte value) => throw new NotImplementedException();
+        public override void Write(int index, ushort value) => throw new NotImplementedException();
 
-        public override void Write(int index, ushort value)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override byte[] ReadBytes(ushort startAddress, int size)
-        {
-            throw new NotImplementedException();
-        }
+        public override void CopyBytes(ushort startAddress, Array destination, int destinationIndex, int length) => throw new NotImplementedException();
     }
 }

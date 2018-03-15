@@ -188,7 +188,6 @@ namespace MICE.CPU.MOS6502
                 }
                 else if (this.CurrentCycle - this.nmiCycleStart >= 7)
                 {
- 
                 }
             }
 

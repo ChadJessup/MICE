@@ -1,4 +1,6 @@
-﻿namespace MICE.Common.Interfaces
+﻿using System;
+
+namespace MICE.Common.Interfaces
 {
     /// <summary>
     /// Interface that represents memory that is mapped to various memory segments.
@@ -9,6 +11,6 @@
         byte ReadByte(int index);
         void Write(int index, byte value);
         T GetMemorySegment<T>(string segmentName) where T : IMemorySegment;
-        byte[] BulkTransfer(ushort readAddress, int size);
+        void BulkTransfer(ushort startAddress, Array destinationArray, int destinationIndex, int size);
     }
 }

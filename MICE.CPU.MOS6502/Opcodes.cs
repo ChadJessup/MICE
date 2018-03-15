@@ -40,7 +40,13 @@ namespace MICE.CPU.MOS6502
                     this.opCodeCount.Add(code, 1);
                 }
 
-                return this.OpCodeMap[code];
+                if (this.OpCodeMap.TryGetValue(code, out OpcodeContainer container))
+                {
+                    return container;
+                }
+
+                Console.WriteLine($"Opcode hasn't been implemented: 0x{code:X}");
+                return null;
             }
         }
 
@@ -217,9 +223,10 @@ namespace MICE.CPU.MOS6502
             this.HandleZero(value);
         }
 
-        [MOS6502Opcode(0xD6, "DEC", AddressingModes.ZeroPageX, timing: 6, length: 2)]
         [MOS6502Opcode(0xC6, "DEC", AddressingModes.ZeroPage, timing: 5, length: 2)]
+        [MOS6502Opcode(0xD6, "DEC", AddressingModes.ZeroPageX, timing: 6, length: 2)]
         [MOS6502Opcode(0xCE, "DEC", AddressingModes.Absolute, timing: 6, length: 3)]
+        [MOS6502Opcode(0xDE, "DEC", AddressingModes.AbsoluteX, timing: 7, length: 3)]
         public void DEC(OpcodeContainer container)
         {
             var (value, address, isSamePage) = AddressingMode.GetAddressedValue(CPU, container);
@@ -232,6 +239,7 @@ namespace MICE.CPU.MOS6502
 
         [MOS6502Opcode(0x49, "EOR", AddressingModes.Immediate, timing: 2, length: 2)]
         [MOS6502Opcode(0x45, "EOR", AddressingModes.ZeroPage, timing: 3, length: 2)]
+        [MOS6502Opcode(0x4D, "EOR", AddressingModes.Absolute, timing: 4, length: 3)]
         public void EOR(OpcodeContainer container)
         {
             var (value, address, isSamePage) = AddressingMode.GetAddressedValue(CPU, container);
@@ -573,6 +581,7 @@ namespace MICE.CPU.MOS6502
         [MOS6502Opcode(0xE9, "SBC", AddressingModes.Immediate, timing: 2, length: 2)]
         [MOS6502Opcode(0xE5, "SBC", AddressingModes.ZeroPage, timing: 3, length: 2)]
         [MOS6502Opcode(0xF9, "SBC", AddressingModes.AbsoluteY, timing: 4, length: 3)]
+        [MOS6502Opcode(0xFD, "SBC", AddressingModes.AbsoluteX, timing: 4, length: 3)]
         public void SBC(OpcodeContainer container)
         {
             var (value, address, isSamePage) = AddressingMode.GetAddressedValue(CPU, container);
@@ -583,6 +592,7 @@ namespace MICE.CPU.MOS6502
             CPU.IsCarry = sum >> 8 != 0;
 
             this.WriteByteToRegister(CPU.Registers.A, (byte)sum, S: true, Z: true);
+
             this.HandlePageBoundaryCrossed(container, isSamePage);
             this.HandleOverflow(originalValue, value, (byte)sum);
         }

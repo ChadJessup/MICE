@@ -103,8 +103,13 @@ namespace MICE.Nintendo
                 }
             }
 
-            this.CurrentFrame = this.PPU.FrameNumber;
-            Array.Copy(this.PPU.ScreenData, this.Screen, this.PPU.ScreenData.Length);
+            if (this.PPU.FrameNumber > this.CurrentFrame)
+            {
+                this.CurrentFrame = this.PPU.FrameNumber;
+    //            this.Screen = this.PPU.ScreenData;
+                Array.Copy(this.PPU.ScreenData, this.Screen, this.PPU.ScreenData.Length);
+            }
+
             // TODO: APU Cycles
         }
 
@@ -129,10 +134,7 @@ namespace MICE.Nintendo
             ushort readAddress = (ushort)(value << 8);
             //this.sw.WriteLine("DMA Just Happened!");
 
-            // TODO: This is terrible, and a double copy...convert to stream later through a bus or something.
-            // Especially since this is normally DRAM and refreshed all the time from what I can tell?
-            var copiedBytes = this.CPUMemoryMap.BulkTransfer(readAddress, 255);
-            Array.Copy(copiedBytes, 0, this.PPU.PrimaryOAM.Data, this.PPU.Registers.OAMADDR, 255);
+            this.CPUMemoryMap.BulkTransfer(readAddress, this.PPU.PrimaryOAM.Data, this.PPU.Registers.OAMADDR, 255);
         }
 
         public Task Run() => Task.Factory.StartNew(() =>
