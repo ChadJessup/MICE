@@ -39,9 +39,9 @@ namespace MICE.CPU.MOS6502
 
         public void Push(byte value)
         {
-            this.stack.Push(value);
             this.Pointer.Write((byte)(this.Pointer.Read() - 1));
- //          this.fs.WriteLine($"Write: 0x1{this.Pointer.Read():X}-0x{value:X}");
+            this.stack.Push(value);
+            this.fs.WriteLine($"Write Stack Byte: 0x1{this.Pointer.Read():X}-0x{value:X}");
         }
 
         public void Push(ushort value)
@@ -50,23 +50,41 @@ namespace MICE.CPU.MOS6502
 
             this.Push(bytes[0]);
             this.Push(bytes[1]);
+
+            this.fs.WriteLine($"Write Stack Short: 0x1{this.Pointer.Read() + 1:X}-0x{value:X}");
         }
 
-        public byte PopByte()
+        public byte PopByte(bool hopBack2 = true)
         {
             this.Pointer.Write((byte)(this.Pointer.Read() + 1));
-            var value = this.stack.Pop();
+            byte outputValue;
+            if (hopBack2 && this.stack.Count >= 2)
+            {
+                var value1 = this.stack.Pop();
+                var value2 = this.stack.Pop();
 
-//            this.fs.WriteLine($"Read: 0x1{this.Pointer.Read():X}-0x{value:X}");
-            return value;
+                this.stack.Push(value1);
+                outputValue = value2;
+            }
+            else
+            {
+                outputValue = this.stack.Pop();
+            }
+
+            this.fs.WriteLine($"Read Stack Byte: 0x1{this.Pointer.Read():X}-0x{outputValue:X}");
+            return outputValue;
         }
 
         public ushort PopShort()
         {
-            var high = this.PopByte();
-            var low = this.PopByte();
+            // Since things are pushed with shorts or bytes, popping a byte is non-intuitive...at least for the .NET Stack<T> class.
+            var high = this.PopByte(hopBack2: false);
+            var low = this.PopByte(hopBack2: false);
 
-            return (ushort)(high << 8 | low);
+            var value = (ushort)(high << 8 | low);
+            this.fs.WriteLine($"Read Stack Short: 0x1{this.Pointer.Read() - 1:X}-0x{value:X}");
+
+            return value; ;
         }
     }
 }

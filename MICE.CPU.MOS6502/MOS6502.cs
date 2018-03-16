@@ -195,17 +195,29 @@ namespace MICE.CPU.MOS6502
             var code = this.ReadNextByte();
 
             // Grab our version of the opcode...
-            var opCode = this.Opcodes[code];
+            OpcodeContainer opCode = null;
+            try
+            {
+                opCode = this.Opcodes[code];
 
-            opCode.Instruction(opCode);
+                opCode.Instruction(opCode);
+                //    Console.WriteLine($"Last Opcode ran: {opCode} at Step: {this.stepCount}");
+            }
+            catch (Exception e)
+            {
+                this.fs.WriteLine($"{this.stepCount:D4}:0x{code:X}:0x{this.Registers.PC.Read():X}:{opCode?.Name}:{opCode?.Cycles + opCode?.AddedCycles}-PC:{Registers.PC.Read()}:A:{Registers.A.Read()}:X:{Registers.X.Read()}:Y:{Registers.Y.Read()}:SP:{Registers.SP.Read()}:P:{Convert.ToString(Registers.P.Read(), 2).PadLeft(8, '0')}");
+                this.fs.WriteLine($"Exception thrown from opcode attempt: {opCode}{Environment.NewLine}{e.Message}");
+                this.fs.Flush();
+            }
 
             int logStart = 000000;
-            int logFor = 100000;
+            int logFor = 37278;
             int logCap = logStart + logFor;
 
             if (this.stepCount > logStart && this.stepCount < logCap)
             {
                 this.fs.WriteLine($"{this.stepCount:D4}:0x{code:X}:0x{this.Registers.PC.Read():X}:{opCode.Name}:{opCode.Cycles + opCode.AddedCycles}-PC:{Registers.PC.Read()}:A:{Registers.A.Read()}:X:{Registers.X.Read()}:Y:{Registers.Y.Read()}:SP:{Registers.SP.Read()}:P:{Convert.ToString(Registers.P.Read(), 2).PadLeft(8, '0')}");
+                this.fs.Flush();
             }
 
             if (this.stepCount >= logCap)
@@ -223,7 +235,7 @@ namespace MICE.CPU.MOS6502
             this.stepCount++;
             this.ranOpcodeCount++;
 
-            if (this.stepCount == 34593)
+            if (this.stepCount == 36681)
             {
 
             }

@@ -40,13 +40,14 @@ namespace MICE.CPU.MOS6502
                     this.opCodeCount.Add(code, 1);
                 }
 
-                if (this.OpCodeMap.TryGetValue(code, out OpcodeContainer container))
+                try
                 {
-                    return container;
+                    return this.OpCodeMap[code];
                 }
-
-                Console.WriteLine($"Opcode hasn't been implemented: 0x{code:X}");
-                return null;
+                catch
+                {
+                    throw new InvalidOperationException($"Opcode requested that isn't implemented: {code}");
+                }
             }
         }
 
@@ -146,21 +147,21 @@ namespace MICE.CPU.MOS6502
             var originalCarry = CPU.IsCarry ? 1 : 0;
             var newCarry = (byte)(value & 1);
 
-            value = (byte)(originalCarry << 8 | value >> 1);
+            var newValue = (byte)(originalCarry << 7 | value >> 1);
             CPU.IsCarry = newCarry == 1;
 
             switch (container.AddressingMode)
             {
                 case AddressingModes.Accumulator:
-                    this.WriteByteToRegister(CPU.Registers.A, value, S: false, Z: false);
+                    this.WriteByteToRegister(CPU.Registers.A, newValue, S: false, Z: false);
                     break;
                 default:
-                    CPU.WriteByteAt(address, value, incrementPC: false);
+                    CPU.WriteByteAt(address, newValue, incrementPC: false);
                     break;
             }
 
-            this.HandleNegative(value);
-            this.HandleZero(value);
+            this.HandleNegative(newValue);
+            this.HandleZero(newValue);
         }
 
         [MOS6502Opcode(0x2A, "ROL", AddressingModes.Accumulator, timing: 2, length: 1)]
@@ -340,7 +341,7 @@ namespace MICE.CPU.MOS6502
         public void PHA(OpcodeContainer container) => CPU.Stack.Push(CPU.Registers.A);
 
         [MOS6502Opcode(0x68, "PLA", AddressingModes.Immediate, timing: 4, length: 1)]
-        public void PLA(OpcodeContainer container) => this.WriteByteToRegister(CPU.Registers.A, CPU.Stack.PopByte(), S: true, Z: true);
+        public void PLA(OpcodeContainer container) => this.WriteByteToRegister(CPU.Registers.A, CPU.Stack.PopByte(hopBack2: false), S: true, Z: true);
 
         [MOS6502Opcode(0x08, "PHP", AddressingModes.Immediate, timing: 3, length: 1)]
         public void PHP(OpcodeContainer container) => CPU.Stack.Push(CPU.Registers.P);

@@ -25,10 +25,7 @@ namespace MICE.Components.Memory
         public virtual bool IsIndexInRange(int index) => index >= this.LowerIndex && index <= this.UpperIndex;
         public virtual (int min, int max) GetRange() => (min: this.LowerIndex, max: this.UpperIndex);
 
-        public int GetOffsetInSegment(int index)
-        {
-            return Math.Max(0, index - this.LowerIndex);
-        }
+        public virtual int GetOffsetInSegment(int index) => Math.Max(0, index - this.LowerIndex);
 
         public abstract byte ReadByte(int index);
         public abstract ushort ReadShort(int index);
@@ -37,5 +34,8 @@ namespace MICE.Components.Memory
         public abstract void Write(int index, ushort value);
 
         public abstract void CopyBytes(ushort startAddress, Array destination, int destinationIndex, int length);
+
+        public Action<int, byte> AfterReadAction { get; set; }
+        public Action<int, byte> AfterWriteAction { get; set; }
     }
 }

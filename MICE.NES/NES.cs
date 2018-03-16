@@ -142,6 +142,7 @@ namespace MICE.Nintendo
             while (!this.cancellationToken.IsCancellationRequested)
             {
                 this.Step();
+
                 // TODO: Get RAW Screen data from PPU.
                 // TODO: Audio.
             }

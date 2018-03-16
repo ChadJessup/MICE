@@ -40,6 +40,16 @@ namespace MICE.CPU.MOS6502
             return (0x00, absoluteAddress, null);
         }
 
+        public static (byte value, ushort address, bool? samePage) GetIndirect(MOS6502 CPU, bool getValue = true)
+        {
+            var indirectAddress = CPU.ReadNextShort(incrementPC: false);
+            var baseAddress = CPU.ReadShortAt(indirectAddress, incrementPC: false);
+
+            return getValue
+                ? (CPU.ReadByteAt(baseAddress), baseAddress, AreSamePage(indirectAddress, baseAddress))
+                : ((byte)0x00, baseAddress, AreSamePage(indirectAddress, baseAddress));
+        }
+
         public static (byte value, ushort address, bool? samePage) GetIndirectY(MOS6502 CPU, bool getValue = true)
         {
             var incompleteYAddress = CPU.ReadNextByte(incrementPC: false);
@@ -89,6 +99,8 @@ namespace MICE.CPU.MOS6502
                 case AddressingModes.Accumulator:
                     // Keep an eye on this one, could cause an issue if caller thinks accumulator has an address like this...
                     return (CPU.Registers.A, 0x0000, null);
+                case AddressingModes.Indirect:
+                    return AddressingMode.GetIndirect(CPU, getValue);
                 case AddressingModes.IndirectY:
                     return AddressingMode.GetIndirectY(CPU, getValue);
                 case AddressingModes.Immediate:

@@ -34,5 +34,8 @@ namespace MICE.Components.Memory
         public abstract void Write(int index, ushort value);
 
         public abstract void CopyBytes(ushort startAddress, Array destination, int destinationIndex, int length);
+
+        public Action<int, byte> AfterReadAction { get; set; }
+        public Action<int, byte> AfterWriteAction { get; set; }
     }
 }

@@ -4,20 +4,39 @@ namespace MICE.Components.Memory
 {
     public abstract class BinaryMemorySegment : MemorySegment
     {
-        public BinaryMemorySegment(int lowerIndex, int upperIndex, string name)
+        public BinaryMemorySegment(int lowerIndex, int upperIndex, string name, Action<int, byte> afterWriteAction = null, Action<int, byte> afterReadAction = null)
             : base(lowerIndex, upperIndex, name)
         {
             var length = Math.Max(1, upperIndex - lowerIndex);
 
-            // TODO: fix this in getoffsetinsegment
+            this.AfterReadAction = afterReadAction;
+            this.AfterWriteAction = afterWriteAction;
+
+            // TODO: fix this in getoffsetinsegment by overriding it...
             this.Data = new byte[length + 1];
         }
 
-        public byte[] Data { get; set; }
+        public byte[] Data
+        {
+            get;
+            set;
+        }
 
-        public override byte ReadByte(int index) => this.Data[this.GetOffsetInSegment(index)];
+        public override byte ReadByte(int index)
+        {
+            var value = this.Data[this.GetOffsetInSegment(index)];
+            this.AfterReadAction?.Invoke(index, value);
+
+            return value;
+        }
+
         public override ushort ReadShort(int index) => BitConverter.ToUInt16(this.Data, this.GetOffsetInSegment(index));
-        public override void Write(int index, byte value) => this.Data[this.GetOffsetInSegment(index)] = value;
+        public override void Write(int index, byte value)
+        {
+            this.Data[this.GetOffsetInSegment(index)] = value;
+            this.AfterWriteAction?.Invoke(index, value);
+        }
+
         public override void Write(int index, ushort value) => throw new NotImplementedException();
         public override void CopyBytes(ushort startAddress, Array destinationArray, int destinationIndex, int length)
         {
