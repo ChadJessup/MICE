@@ -17,7 +17,9 @@ namespace MICE.PPU.RicohRP2C02
         private readonly PPURegisters registers;
         private readonly IList<byte[]> chrBanks;
         private readonly List<Sprite> currentSprites = new List<Sprite>(Constants.MaxSprites);
-        private readonly int[] spriteIndices = new int[Constants.MaxSpritesOnScreen];
+        private readonly List<Sprite> currentScanlineSprites = new List<Sprite>(Constants.MaxSprites);
+
+        private int lastScannedScanline = 0;
 
         public SpriteHandler(IMemoryMap ppuMemoryMap, PPURegisters registers, IMemoryMap cpuMemoryMap, IList<byte[]> chrBanks)
         {
@@ -74,6 +76,15 @@ namespace MICE.PPU.RicohRP2C02
 
         public void EvaluateSpritesOnScanline(OAM oam, int scanline)
         {
+            // Don't need to scan the same scanline more than once with current algorithm.
+            if (this.lastScannedScanline == scanline)
+            {
+                return;
+            }
+
+            this.lastScannedScanline = scanline;
+            this.currentScanlineSprites.Clear();
+
             this.CurrentScanlineSpriteCount = 0;
 
             int offset = this.IsSmallSprites ? 8 : 16;
@@ -81,24 +92,28 @@ namespace MICE.PPU.RicohRP2C02
             for (byte index = 0; index < Constants.MaxSprites; index++)
             {
                 var indexMultiple = index * 4;
+
                 Sprite newSprite = new Sprite
                     (
                         index,
-                        oam.Data[indexMultiple + 0], // y position
-                        oam.Data[indexMultiple + 1], // tile index
-                        oam.Data[indexMultiple + 2], // attributes
-                        oam.Data[indexMultiple + 3]  // x position
+                        this.IsSmallSprites,
+                        this.IsSpritePatternTableAddress1000,
+                        oam[indexMultiple + 0], // y position
+                        oam[indexMultiple + 1], // tile index
+                        oam[indexMultiple + 2], // attributes
+                        oam[indexMultiple + 3]  // x position
                     );
 
-                byte spriteY = (byte)(oam.Data[index * 4 + 0] + 1);
-
-                if (scanline >= spriteY && (scanline < spriteY + offset))
+                if (newSprite.IsOnScanline(scanline, offset))
                 {
-                    this.spriteIndices[this.CurrentScanlineSpriteCount] = (byte)(index * 4);
                     this.CurrentScanlineSpriteCount++;
+                    this.currentScanlineSprites.Add(newSprite);
                 }
 
-                this.currentSprites.Add(newSprite);
+                if (!this.currentSprites.Contains(newSprite))
+                {
+                    this.currentSprites.Add(newSprite);
+                }
             }
         }
 
@@ -111,67 +126,24 @@ namespace MICE.PPU.RicohRP2C02
 
             for (int index = 0; index < this.CurrentScanlineSpriteCount; ++index)
             {
-                var sprite = new Sprite();
-                sprite.SpriteIndex = index;
-                var oamIndex = this.spriteIndices[index];
+                var sprite = this.currentScanlineSprites[index];
 
-                sprite.IsSpriteZero = index == 0;
-
-                sprite.Position =
-                (
-                    X: primaryOAM[oamIndex + 3],
-                    Y: primaryOAM[oamIndex + 0]
-                );
-
-                sprite.TileIndex = primaryOAM[oamIndex + 1];
-                byte attributes = (byte)(primaryOAM[oamIndex + 2] & 0xE3);
-
-                byte paletteNumber = (byte)(attributes & 3);
-                sprite.IsBehindBackground = (attributes & 0x20) == 0;
-                sprite.IsFlippedHorizontally = (attributes & 0x40) != 0;
-                sprite.IsFlippedVertically = (attributes & 0x80) != 0;
-
-                if (sprite.Position.Y == 0 || sprite.Position.Y >= 240)
-                    continue;
-
-                if (x - sprite.Position.X >= 8 || x < sprite.Position.X)
-                    continue;
-
-                int ti = x - sprite.Position.X;
-                int tj = y - sprite.Position.Y;
-
-                int i = sprite.IsFlippedHorizontally ? 7 - ti : ti;
-                int j = sprite.IsFlippedVertically ? 7 - tj : tj;
-
-                sprite.TileAddress = (ushort)(this.IsSpritePatternTableAddress1000 ? 0x1000 : 0x0000 + sprite.TileIndex * 16);
-
-                byte colorIndex = this.GetColorIndex(i, (ushort)(sprite.TileAddress + j), this.chrBanks[0]);
-
-                if (colorIndex == 0)
+                if (!sprite.IsVisible(x, y))
                 {
-                    return (0, sprite);
+                    continue;
                 }
 
-                sprite.PaletteAddress = (ushort)(0x3f10 + 4 * paletteNumber + colorIndex);
-                var finalPixel = this.ppuMemoryMap.ReadByte(sprite.PaletteAddress);
+                var finalPixel = sprite.GetFinalPixel(x, y, this.chrBanks[0], this.ppuMemoryMap);
                 return (finalPixel, sprite);
             }
 
             return (0, null);
         }
 
-        private byte GetColorIndex(int i, ushort address, byte[] patterns)
+        public void ClearSprites()
         {
-            var lowBitsOffset = address;
-            var highBitsOffset = (ushort)(lowBitsOffset + 8);
-
-            byte lowBits = patterns[lowBitsOffset];
-            byte highBits = patterns[highBitsOffset];
-
-            byte lowBit = (byte)((lowBits >> (7 - i)) & 1);
-            byte highBit = (byte)((highBits >> (7 - i)) & 1);
-
-            return (byte)(lowBit + highBit * 2);
+            this.currentScanlineSprites.Clear();
+            this.currentSprites.Clear();
         }
     }
 }

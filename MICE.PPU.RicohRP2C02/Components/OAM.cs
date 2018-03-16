@@ -13,7 +13,7 @@ namespace MICE.PPU.RicohRP2C02.Components
         public OAM(int size)
         {
             this.Data = new byte[size];
-            this.MaxSpritesCount = size / 4;
+            this.MaxSpritesCount = size / Constants.SizeOfSprite;
 
             if (this.MaxSpritesCount <= 0)
             {
@@ -26,8 +26,8 @@ namespace MICE.PPU.RicohRP2C02.Components
             }
         }
 
-        public int MaxSpritesCount { get; private set; } = 0;
-        public int CurrentSpriteCount { get; private set; } = 0;
+        public int MaxSpritesCount { get; private set; }
+        public int CurrentSpriteCount { get; private set; }
         public byte[] Data { get; private set; }
 
         public byte this[int index]

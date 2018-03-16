@@ -271,7 +271,7 @@ namespace MICE.PPU.RicohRP2C02
             }
             else if (this.Cycle >= 257 && this.Cycle <= 320)
             {
-                this.Registers.OAMADDR.Write(00);
+                // this.Registers.OAMADDR.Write(00);
                 SpriteHandler.EvaluateSpritesOnScanline(this.PrimaryOAM, this.ScanLine + 1);
             }
             else if (this.Cycle >= 321 && this.Cycle <= 336)
@@ -290,6 +290,7 @@ namespace MICE.PPU.RicohRP2C02
             if (this.ScanLine == 241 && this.Cycle == 1)
             {
                 this.IsVBlank = true;
+                this.SpriteHandler.ClearSprites();
 
                 if (this.WasNMIRequested)
                 {
@@ -300,9 +301,17 @@ namespace MICE.PPU.RicohRP2C02
         }
 
         private void HandleSprite0Hit((byte backgroundPixel, Tile tile) drawnTile, (byte spritePixel, Sprite sprite) drawnSprite)
-            => this.SpriteHandler.WasSprite0Hit =
+        {
+            // Sprite0 hit flag gets reset in cycle 1 of prerender line.
+            if (this.SpriteHandler.WasSprite0Hit)
+            {
+                return;
+            }
+
+            this.SpriteHandler.WasSprite0Hit =
                 drawnSprite.sprite?.IsSpriteZero ?? false
                 && (drawnTile.backgroundPixel != 0x00
                 && drawnSprite.spritePixel != 0x00);
+        }
     }
 }

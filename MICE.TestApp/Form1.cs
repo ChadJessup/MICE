@@ -105,7 +105,11 @@ namespace MICE.TestApp
             nes.LoadCartridge(cartridge);
             nes.PowerOn();
 
-            Task.Factory.StartNew(() => nes.Run());
+            Task.Factory.StartNew(
+                () => nes.Run(),
+                token,
+                TaskCreationOptions.LongRunning,
+                TaskScheduler.Current);
 
             var uiDispatcher = Dispatcher.CurrentDispatcher;
 
@@ -116,7 +120,7 @@ namespace MICE.TestApp
                 double fps = 0;
                 double improveBy = 0;
 
-                while (true)
+                while (!token.IsCancellationRequested)
                 {
                     if ((DateTime.Now - lastTime).TotalSeconds >= 1)
                     {
@@ -126,11 +130,15 @@ namespace MICE.TestApp
                         lastTime = DateTime.Now;
                     }
 
+                    // Basic 60 fps lock...not good, but I don't care atm.
                     Task.Delay(16);
                     uiDispatcher.Invoke(() => this.Text = $"Frame: {nes.CurrentFrame} FPS: {fps} Improve: {improveBy:F2}x");
                     this.Draw(nes.Screen);
                 }
-            });
+            },
+            token,
+            TaskCreationOptions.LongRunning,
+            TaskScheduler.Current);
         }
 
         private Rectangle bitmapRectangle = new Rectangle(0, 0, 256, 240);
