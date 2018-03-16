@@ -27,12 +27,16 @@ namespace MICE.Components.Memory
 
             foreach (var memorySegment in this.memoryMapper)
             {
-                if (memorySegment.LowerIndex >= this.mirroredLowerIndex && memorySegment.UpperIndex <= this.mirroredUpperIndex)
+                if (this.mirroredLowerIndex >= memorySegment.LowerIndex && memorySegment.UpperIndex <= this.mirroredUpperIndex)
                 {
                     this.realMemorySegments.Add(memorySegment);
                 }
             }
-            //this.realMemorySegments = this.memoryMapper.GetSegmentsInRange(this.mirroredLowerIndex, this.mirroredUpperIndex).ToList();
+
+            if (!this.realMemorySegments.Any())
+            {
+                throw new InvalidOperationException($"Mirrored memory ({this.Name}) setup, but it can't find another memory segment to link to.");
+            }
         }
 
         public override byte ReadByte(int index)

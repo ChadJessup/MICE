@@ -89,8 +89,6 @@ namespace MICE.Nintendo
             var cpuCycles = this.CPU.Step();
             CPU.CurrentCycle += cpuCycles;
 
-            var bytes = this.PPU.MemoryMap.GetMemorySegment<Palette>("Image Palette").Data;
-
             for (int i = 0; i < cpuCycles * 3; i++)
             {
                 var ppuCycles = this.PPU.Step();

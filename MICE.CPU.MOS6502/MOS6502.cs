@@ -211,7 +211,7 @@ namespace MICE.CPU.MOS6502
             }
 
             int logStart = 000000;
-            int logFor = 37278;
+            int logFor = 100000;
             int logCap = logStart + logFor;
 
             if (this.stepCount > logStart && this.stepCount < logCap)
@@ -235,7 +235,7 @@ namespace MICE.CPU.MOS6502
             this.stepCount++;
             this.ranOpcodeCount++;
 
-            if (this.stepCount == 36681)
+            if (this.stepCount == 49137)
             {
 
             }

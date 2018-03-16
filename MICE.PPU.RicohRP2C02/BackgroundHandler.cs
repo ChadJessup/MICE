@@ -66,6 +66,9 @@ namespace MICE.PPU.RicohRP2C02
 
         public (byte, Tile) DrawBackgroundPixel(int x, int y)
         {
+            x = 5 * 8;
+            y = 4 * 8;
+
             if (x <= 8 && !this.DrawLeft8BackgroundPixels)
             {
                 return (0, null);
@@ -74,32 +77,38 @@ namespace MICE.PPU.RicohRP2C02
             var (indexedX, indexedY, nameTable) = this.SelectNametable(x, y);
 
             var tile = nameTable.GetTileFromPixel(indexedX, indexedY, this.IsBackgroundPatternTableAddress1000 ? 0x1000 : 0x0000, this.chrBanks[0]);
+
+            if (tile.PaletteAddress == 0x3f10)
+            {
+
+            }
+
             var palette = this.ppuMemoryMap.ReadByte(tile.PaletteAddress);
 
             return (palette, tile);
         }
 
-        private (int indexedX, int indexedY, Nametable nameTable) SelectNametable(int x, int y)
+        private (int scrolledX, int scrolledY, Nametable nameTable) SelectNametable(int x, int y)
         {
             var (scrollX, scrollY) = this.scrollHandler.GetScrollValues();
 
             int nameTableId = 0;
-            int indexedX = (scrollY + x) % 512;
+            int scrolledX = (scrollY + x) % 512;
 
-            if (indexedX >= 256)
+            if (scrolledX >= 256)
             {
                 nameTableId += 1;
-                indexedX -= 256;
+                scrolledX -= 256;
             }
 
-            int indexedY = (scrollY + y) % 480;
-            if (indexedY >= 240)
+            int scrolledY = (scrollY + y) % 480;
+            if (scrolledY >= 240)
             {
                 nameTableId += 2;
-                indexedY -= 240;
+                scrolledY -= 240;
             }
 
-            return (indexedX, indexedY, this.GetTable(nameTableId));
+            return (scrolledX, scrolledY, this.GetTable(nameTableId));
         }
 
         // TODO: mirroring...

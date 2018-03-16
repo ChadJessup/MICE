@@ -46,7 +46,7 @@ namespace MICE.CPU.MOS6502
                 }
                 catch
                 {
-                    throw new InvalidOperationException($"Opcode requested that isn't implemented: {code}");
+                    throw new InvalidOperationException($"Opcode requested that isn't implemented: 0x{code:X}");
                 }
             }
         }
@@ -57,16 +57,15 @@ namespace MICE.CPU.MOS6502
 
         #region Bit Operations
 
-        //[MOS6502Opcode(0x24, 3, "BIT", AddressingMode.ZeroPage)]
+        [MOS6502Opcode(0x24, "BIT", AddressingModes.ZeroPage, timing: 3, length: 2)]
         [MOS6502Opcode(0x2C, "BIT", AddressingModes.Absolute, timing: 4, length: 3)]
         public void BIT(OpcodeContainer container)
         {
-            var value = CPU.ReadNextShort();
+            var (value, address, isSamePage) = AddressingMode.GetAddressedValue(CPU, container);
+
             var accumulator = CPU.Registers.A.Read();
 
             byte result = (byte)(value & accumulator);
-
-            CPU.IncrementPC();
 
             this.HandleNegative(result);
             this.HandleZero(result);
@@ -75,56 +74,52 @@ namespace MICE.CPU.MOS6502
 
         [MOS6502Opcode(0x09, "ORA", AddressingModes.Immediate, timing: 2, length: 2)]
         [MOS6502Opcode(0x05, "ORA", AddressingModes.ZeroPage, timing: 3, length: 2)]
+        [MOS6502Opcode(0x15, "ORA", AddressingModes.ZeroPageX, timing: 4, length: 2)]
+        [MOS6502Opcode(0x0D, "ORA", AddressingModes.Absolute, timing: 4, length: 3)]
+        [MOS6502Opcode(0x1D, "ORA", AddressingModes.AbsoluteX, timing: 4, length: 3)]
+        [MOS6502Opcode(0x19, "ORA", AddressingModes.AbsoluteY, timing: 4, length: 3)]
+        [MOS6502Opcode(0x01, "ORA", AddressingModes.IndirectX, timing: 6, length: 2)]
+        [MOS6502Opcode(0x11, "ORA", AddressingModes.IndirectY, timing: 5, length: 2)]
         public void ORA(OpcodeContainer container)
-        {
-            switch (container.AddressingMode)
-            {
-                case AddressingModes.Immediate:
-                    CPU.Registers.A.Write((byte)(CPU.Registers.A | CPU.ReadNextByte()));
-                    break;
-                case AddressingModes.ZeroPage:
-                    var zeroPageAddress = CPU.ReadNextByte();
-                    CPU.Registers.A.Write((byte)(CPU.Registers.A | CPU.ReadByteAt(zeroPageAddress, incrementPC: false)));
-                    break;
-                default:
-                    throw this.ExceptionForUnhandledAddressingMode(container);
-            }
-
-            this.HandleNegative(CPU.Registers.A);
-            this.HandleZero(CPU.Registers.A);
-        }
-
-        [MOS6502Opcode(0x35, "AND", AddressingModes.ZeroPageX, timing: 4, length: 2)]
-        [MOS6502Opcode(0x25, "AND", AddressingModes.ZeroPage, timing: 3, length: 2)]
-        [MOS6502Opcode(0x3D, "AND", AddressingModes.AbsoluteX, timing: 4, length: 3)]
-        [MOS6502Opcode(0x29, "AND", AddressingModes.Immediate, timing: 2, length: 2)]
-        public void AND(OpcodeContainer container)
         {
             var (value, address, isSamePage) = AddressingMode.GetAddressedValue(CPU, container);
 
-            CPU.Registers.A.Write((byte)(CPU.Registers.A & value));
-
+            CPU.Registers.A.Write((byte)(CPU.Registers.A | value));
+            
             this.HandleNegative(CPU.Registers.A);
             this.HandleZero(CPU.Registers.A);
 
             this.HandlePageBoundaryCrossed(container, isSamePage);
         }
 
-        [MOS6502Opcode(0x46, "LSR", AddressingModes.ZeroPage, timing: 5, length: 2)]
+        [MOS6502Opcode(0x29, "AND", AddressingModes.Immediate, timing: 2, length: 2)]
+        [MOS6502Opcode(0x25, "AND", AddressingModes.ZeroPage, timing: 3, length: 2)]
+        [MOS6502Opcode(0x35, "AND", AddressingModes.ZeroPageX, timing: 4, length: 2)]
+        [MOS6502Opcode(0x2D, "AND", AddressingModes.Absolute, timing: 4, length: 3)]
+        [MOS6502Opcode(0x3D, "AND", AddressingModes.AbsoluteX, timing: 4, length: 3)]
+        [MOS6502Opcode(0x39, "AND", AddressingModes.AbsoluteY, timing: 4, length: 3)]
+        [MOS6502Opcode(0x21, "AND", AddressingModes.IndirectX, timing: 6, length: 2)]
+        [MOS6502Opcode(0x31, "AND", AddressingModes.IndirectY, timing: 5, length: 2)]
+        public void AND(OpcodeContainer container)
+        {
+            var (value, address, isSamePage) = AddressingMode.GetAddressedValue(CPU, container);
+
+            this.WriteByteToRegister(CPU.Registers.A, (byte)(CPU.Registers.A & value), S: true, Z: true);
+
+            this.HandlePageBoundaryCrossed(container, isSamePage);
+        }
+
         [MOS6502Opcode(0x4A, "LSR", AddressingModes.Accumulator, timing: 2, length: 1)]
+        [MOS6502Opcode(0x46, "LSR", AddressingModes.ZeroPage, timing: 5, length: 2)]
+        [MOS6502Opcode(0x56, "LSR", AddressingModes.ZeroPageX, timing: 6, length: 2)]
+        [MOS6502Opcode(0x4E, "LSR", AddressingModes.Absolute, timing: 6, length: 3)]
+        [MOS6502Opcode(0x5E, "LSR", AddressingModes.AbsoluteX, timing: 7, length: 3)]
         public void LSR(OpcodeContainer container)
         {
             var (value, address, isSamePage) = AddressingMode.GetAddressedValue(CPU, container);
 
             switch (container.AddressingMode)
             {
-                case AddressingModes.ZeroPage:
-                    CPU.IsCarry = (value & 1) == 1;
-                    CPU.WriteByteAt(address, (byte)(value >> 1), incrementPC: false);
-
-                    CPU.IsNegative = false;
-                    this.HandleZero(value);
-                    break;
                 case AddressingModes.Accumulator:
                     CPU.IsCarry = (CPU.Registers.A & 1) == 1;
                     CPU.Registers.A.Write((byte)(CPU.Registers.A >> 1));
@@ -133,7 +128,12 @@ namespace MICE.CPU.MOS6502
                     this.HandleZero(CPU.Registers.A);
                     break;
                 default:
-                    throw new InvalidOperationException($"Unexpected AddressingMode in LSR: {container.AddressingMode}");
+                    CPU.IsCarry = (value & 1) == 1;
+                    CPU.WriteByteAt(address, (byte)(value >> 1), incrementPC: false);
+
+                    CPU.IsNegative = false;
+                    this.HandleZero(value);
+                    break;
             }
         }
 
@@ -165,6 +165,10 @@ namespace MICE.CPU.MOS6502
         }
 
         [MOS6502Opcode(0x2A, "ROL", AddressingModes.Accumulator, timing: 2, length: 1)]
+        [MOS6502Opcode(0x26, "ROL", AddressingModes.ZeroPage, timing: 5, length: 2)]
+        [MOS6502Opcode(0x36, "ROL", AddressingModes.ZeroPageX, timing: 6, length: 2)]
+        [MOS6502Opcode(0x2E, "ROL", AddressingModes.Absolute, timing: 6, length: 3)]
+        [MOS6502Opcode(0x3E, "ROL", AddressingModes.AbsoluteX, timing: 7, length: 3)]
         public void ROL(OpcodeContainer container)
         {
             var (value, address, isSamePage) = AddressingMode.GetAddressedValue(CPU, container);
@@ -188,16 +192,17 @@ namespace MICE.CPU.MOS6502
             this.HandleZero(value);
         }
 
-        [MOS6502Opcode(0x06, "ASL", AddressingModes.ZeroPage, timing: 5, length: 2)]
         [MOS6502Opcode(0x0A, "ASL", AddressingModes.Accumulator, timing: 2, length: 1)]
+        [MOS6502Opcode(0x06, "ASL", AddressingModes.ZeroPage, timing: 5, length: 2)]
+        [MOS6502Opcode(0x16, "ASL", AddressingModes.ZeroPageX, timing: 6, length: 2)]
+        [MOS6502Opcode(0x0E, "ASL", AddressingModes.Absolute, timing: 6, length: 3)]
+        [MOS6502Opcode(0x1E, "ASL", AddressingModes.AbsoluteX, timing: 7, length: 3)]
         public void ASL(OpcodeContainer container)
         {
             var (value, address, isSamePage) = AddressingMode.GetAddressedValue(CPU, container);
 
             CPU.IsCarry = (value & 0b10000000) == 0b10000000;
             value = (byte)(value << 1);
-
-        //    CPU.IsCarry = value >> 8 != 0;
 
             if (container.AddressingMode == AddressingModes.Accumulator)
             {
@@ -561,10 +566,14 @@ namespace MICE.CPU.MOS6502
         #region Math Instructions
 
         // https://stackoverflow.com/a/29224684/1865301
-        [MOS6502Opcode(0x7D, "ADC", AddressingModes.AbsoluteX, timing: 4, length: 3)]
-        [MOS6502Opcode(0x6D, "ADC", AddressingModes.Absolute, timing: 4, length: 3)]
         [MOS6502Opcode(0x69, "ADC", AddressingModes.Immediate, timing: 2, length: 2)]
         [MOS6502Opcode(0x65, "ADC", AddressingModes.ZeroPage, timing: 3, length: 2)]
+        [MOS6502Opcode(0x75, "ADC", AddressingModes.ZeroPageX, timing: 4, length: 2)]
+        [MOS6502Opcode(0x6D, "ADC", AddressingModes.Absolute, timing: 4, length: 3)]
+        [MOS6502Opcode(0x7D, "ADC", AddressingModes.AbsoluteX, timing: 4, length: 3)]
+        [MOS6502Opcode(0x79, "ADC", AddressingModes.AbsoluteY, timing: 4, length: 3)]
+        [MOS6502Opcode(0x61, "ADC", AddressingModes.IndirectX, timing: 6, length: 2)]
+        [MOS6502Opcode(0x71, "ADC", AddressingModes.IndirectY, timing: 5, length: 2)]
         public void ADC(OpcodeContainer container)
         {
             var (value, address, isSamePage) = AddressingMode.GetAddressedValue(CPU, container);
@@ -581,8 +590,12 @@ namespace MICE.CPU.MOS6502
 
         [MOS6502Opcode(0xE9, "SBC", AddressingModes.Immediate, timing: 2, length: 2)]
         [MOS6502Opcode(0xE5, "SBC", AddressingModes.ZeroPage, timing: 3, length: 2)]
-        [MOS6502Opcode(0xF9, "SBC", AddressingModes.AbsoluteY, timing: 4, length: 3)]
+        [MOS6502Opcode(0xF5, "SBC", AddressingModes.ZeroPageX, timing: 4, length: 2)]
+        [MOS6502Opcode(0xED, "SBC", AddressingModes.AbsoluteX, timing: 4, length: 3)]
         [MOS6502Opcode(0xFD, "SBC", AddressingModes.AbsoluteX, timing: 4, length: 3)]
+        [MOS6502Opcode(0xF9, "SBC", AddressingModes.AbsoluteY, timing: 4, length: 3)]
+        [MOS6502Opcode(0xE1, "SBC", AddressingModes.IndirectX, timing: 6, length: 2)]
+        [MOS6502Opcode(0xF1, "SBC", AddressingModes.IndirectY, timing: 5, length: 2)]
         public void SBC(OpcodeContainer container)
         {
             var (value, address, isSamePage) = AddressingMode.GetAddressedValue(CPU, container);
