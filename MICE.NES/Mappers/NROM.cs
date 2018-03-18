@@ -30,6 +30,18 @@ namespace MICE.Nintendo.Mappers
 
                 this.bankLinkage.Add((memorySegment, whichBank));
             }
+            else if (memorySegment.LowerIndex == 0x0000)
+            {
+                this.bankLinkage.Add((memorySegment, this.cartridge.CharacterRomBanks[0]));
+            }
+            else if (memorySegment.LowerIndex == 0x1000)
+            {
+                var whichBank = this.cartridge.CharacterRomBanks.Count == 1
+                    ? this.cartridge.CharacterRomBanks[0]
+                    : this.cartridge.CharacterRomBanks[1];
+
+                this.bankLinkage.Add((memorySegment, whichBank));
+            }
         }
 
         /// <summary>
@@ -40,8 +52,8 @@ namespace MICE.Nintendo.Mappers
         /// <returns>The data that was read.</returns>
         public override ushort ReadShort(int index)
         {
-//            this.sw.WriteLine($"Read: 0x{index + 1:X}");
-//            this.sw.WriteLine($"Read: 0x{index:X}");
+            //            this.sw.WriteLine($"Read: 0x{index + 1:X}");
+            //            this.sw.WriteLine($"Read: 0x{index:X}");
 
             foreach (var (segment, bytes) in this.bankLinkage.Where(linkage => linkage.segment.IsIndexInRange(index)))
             {
@@ -49,7 +61,7 @@ namespace MICE.Nintendo.Mappers
                 return BitConverter.ToUInt16(bytes, arrayOffset);
             }
 
-            throw new InvalidOperationException($"Invalid memory range and/or size (ushort) was requested to be read from in NROM Mapper: {index}");
+            throw new InvalidOperationException($"Invalid memory range and/or size (ushort) was requested to be read from in NROM Mapper: 0x{index:X4}");
         }
 
         /// <summary>
@@ -65,11 +77,11 @@ namespace MICE.Nintendo.Mappers
                 var arrayOffset = segment.GetOffsetInSegment(index);
 
                 var value = bytes[arrayOffset];
-//                this.sw.WriteLine($"Read: 0x{index:X}-0x{value:X}");
+                //                this.sw.WriteLine($"Read: 0x{index:X}-0x{value:X}");
                 return value;
             }
 
-            throw new InvalidOperationException($"Invalid memory range and/or size (byte) was requested to be read from in NROM Mapper: {index}");
+            throw new InvalidOperationException($"Invalid memory range and/or size (byte) was requested to be read from in NROM Mapper: 0x{index:X4}");
         }
 
         public override void Write(int index, byte value) => throw new NotImplementedException();

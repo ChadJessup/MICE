@@ -210,7 +210,7 @@ namespace MICE.CPU.MOS6502
                 this.fs.Flush();
             }
 
-            int logStart = 000000;
+            int logStart = 270000;
             int logFor = 100000;
             int logCap = logStart + logFor;
 
@@ -235,7 +235,7 @@ namespace MICE.CPU.MOS6502
             this.stepCount++;
             this.ranOpcodeCount++;
 
-            if (this.stepCount == 49137)
+            if (this.stepCount == 271239)
             {
 
             }

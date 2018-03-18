@@ -32,7 +32,7 @@ namespace MICE.Nintendo
             this.Add(new MemoryMappedRegister<byte>(0x2002, 0x2002, ppuRegisters.PPUSTATUS, "Mapped PPU Status Register"));
             this.Add(new MemoryMappedRegister<byte>(0x2003, 0x2003, ppuRegisters.OAMADDR, "Mapped PPU SPR-RAM Address Register"));
             this.Add(new MemoryMappedRegister<byte>(0x2004, 0x2004, ppuRegisters.OAMDATA, "Mapped PPU SPR-RAM I/O Register"));
-            this.Add(new MemoryMappedRegister<byte>(0x2005, 0x2005, ppuRegisters.PPUSCROLL, "Mapped PPU Scroll Position Register"));
+            this.Add(new MemoryMappedRegister<ushort>(0x2005, 0x2005, ppuRegisters.PPUSCROLL, "Mapped PPU Scroll Position Register"));
             this.Add(new MemoryMappedRegister<byte>(0x2006, 0x2006, ppuRegisters.PPUADDR, "Mapped PPU Read/Write Address Register"));
             this.Add(new MemoryMappedRegister<byte>(0x2007, 0x2007, ppuRegisters.PPUDATA, "Mapped PPU Read/Write Data Register"));
 

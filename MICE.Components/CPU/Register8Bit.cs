@@ -4,7 +4,7 @@ namespace MICE.Components.CPU
 {
     public class Register8Bit : Register<byte>
     {
-        public Register8Bit(string name, Action afterRead = null, Action<byte> afterWrite = null)
+        public Register8Bit(string name, Action<int?, byte> afterRead = null, Action<int?, byte> afterWrite = null)
             : base(name, afterRead, afterWrite)
         {
         }
@@ -15,13 +15,13 @@ namespace MICE.Components.CPU
             ? (byte)(this.Value | (1 << index))
             : (byte)(this.Value & ~(1 << index));
 
-            this.AfterWriteAction?.Invoke(this.Value);
+            this.AfterWriteAction?.Invoke(null, this.Value);
         }
 
         public bool GetBit(int bitNumber)
         {
             var value = (this.Value & (1 << bitNumber)) != 0;
-            this.AfterReadAction?.Invoke();
+            this.AfterReadAction?.Invoke(null, this.Value);
 
             return value;
         }
@@ -29,13 +29,13 @@ namespace MICE.Components.CPU
         public override void Write(byte value)
         {
             this.Value = value;
-            this.AfterWriteAction?.Invoke(this.Value);
+            this.AfterWriteAction?.Invoke(null, this.Value);
         }
 
         public override byte Read()
         {
-            var value = this.Value;
-            this.AfterReadAction?.Invoke();
+            var value = this.ReadByteInsteadAction?.Invoke(null, this.Value) ?? this.Value;
+            this.AfterReadAction?.Invoke(null, this.Value);
 
             return value;
         }

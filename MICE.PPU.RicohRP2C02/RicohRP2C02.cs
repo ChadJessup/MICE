@@ -17,8 +17,22 @@ namespace MICE.PPU.RicohRP2C02
             public const int NTSCHeight = 224;
         }
 
-        private ushort ppuAddress = 0;
-        private bool hasWrittenToggle = false;
+        /// <summary>
+        /// Contains the PPU Address that writes at $2007 will be written to.
+        /// </summary>
+        public ushort ppuAddress = 0;
+
+        /// <summary>
+        /// Partial PPU Address, as two writes are needed in order to complete the address.
+        /// </summary>
+        private ushort partialPpuAddress = 0;
+
+        private bool tempWriteHigh = true;
+        private bool writeHigh
+        {
+            get => this.tempWriteHigh;
+            set => this.tempWriteHigh = value;
+        }
 
         public RicohRP2C02(PPUMemoryMap memoryMap, PPURegisters registers, IMemoryMap cpuMemoryMap, IList<byte[]> chrBanks)
         {
@@ -52,8 +66,6 @@ namespace MICE.PPU.RicohRP2C02
         public PPUMemoryMap MemoryMap { get; private set; }
 
         public PPURegisters Registers { get; private set; }
-
-        public int BaseNametableAddress => (this.Registers.PPUCTRL.GetBit(0) ? 1 : 0) | (this.Registers.PPUCTRL.GetBit(1) ? 1 : 0) << 2;
 
         /// <summary>
         /// Gets or sets the VRAM Address Increment.
@@ -118,39 +130,53 @@ namespace MICE.PPU.RicohRP2C02
 
         public void PowerOn(CancellationToken cancellationToken)
         {
-            this.Registers.PPUADDR.AfterWriteAction = (value) =>
+            this.Registers.PPUADDR.AfterWriteAction = (address, value) =>
             {
-                this.ppuAddress = this.hasWrittenToggle
-                ? (ushort)(this.ppuAddress | value)
-                : (ushort)(value << 8);
+                if (this.writeHigh)
+                {
+                    this.partialPpuAddress = (ushort)((this.partialPpuAddress & 0x80FF) | ((value & 0x3F) << 8));
+                }
+                else
+                {
+                    this.partialPpuAddress = (ushort)((this.partialPpuAddress & 0xFF00) | value);
+                    this.ppuAddress = this.partialPpuAddress;
+                }
 
-                this.hasWrittenToggle = !this.hasWrittenToggle;
+                this.writeHigh = !this.writeHigh;
             };
 
-            this.Registers.PPUDATA.AfterReadAction = () =>
-            {
-                this.ppuAddress += (ushort)this.VRAMAddressIncrement;
-            };
+            this.Registers.PPUSCROLL.AfterReadAction = (address, value) => this.writeHigh = !this.writeHigh;
+            this.Registers.PPUDATA.AfterReadAction = (address, value) => this.ppuAddress += (ushort)this.VRAMAddressIncrement;
+            this.Registers.PPUCTRL.AfterWriteAction = (address, value) => this.ShouldNMInterrupt = false;
 
-            this.Registers.PPUDATA.AfterWriteAction = (value) =>
+            this.Registers.PPUDATA.AfterWriteAction = (address, value) =>
             {
                 this.MemoryMap.Write(this.ppuAddress, value);
                 this.ppuAddress += (ushort)this.VRAMAddressIncrement;
             };
 
-            this.Registers.PPUSTATUS.AfterReadAction = () =>
+            this.Registers.PPUSTATUS.AfterReadAction = (_, value) =>
             {
-                this.Registers.PPUSCROLL.Write(0);
-                this.Registers.PPUADDR.Write(0);
-                this.ppuAddress = 0;
-                this.hasWrittenToggle = false;
+                this.writeHigh = true;
 
                 this.IsVBlank = false;
             };
 
-            this.Registers.PPUCTRL.AfterWriteAction = (value) =>
+            this.Registers.PPUDATA.ReadShortInsteadAction = (_, value) => this.ppuAddress;
+
+            byte bufferedRead = 0;
+            this.Registers.PPUDATA.ReadByteInsteadAction = (address, value) =>
             {
-                this.ShouldNMInterrupt = false;
+                if (this.ppuAddress >= 0x3F00 && this.ppuAddress <= 0x3FFF)
+                {
+                    bufferedRead = this.MemoryMap.ReadByte(this.ppuAddress);
+                    return bufferedRead;
+                }
+
+                var temp = bufferedRead;
+                bufferedRead = this.MemoryMap.ReadByte(this.ppuAddress);
+
+                return temp;
             };
 
             this.Restart(cancellationToken);
@@ -164,9 +190,9 @@ namespace MICE.PPU.RicohRP2C02
 
             this.Registers.OAMADDR.Write(0);
             this.Registers.PPUSCROLL.Write(0);
-            this.Registers.PPUDATA.Write(0);
+           // this.Registers.PPUDATA.Write(0);
 
-            this.hasWrittenToggle = false;
+            this.writeHigh = true;
             this.ppuAddress = 0;
 
             this.FrameNumber = 0;
@@ -260,8 +286,8 @@ namespace MICE.PPU.RicohRP2C02
                 if (BackgroundHandler.ShowBackground && SpriteHandler.ShowSprites)
                 {
                     var pixelX = this.Cycle - 1;
-                    (byte backgroundPixel, Tile tile) drawnTile = BackgroundHandler.DrawBackgroundPixel(pixelX, this.ScanLine);
-                    (byte spritePixel, Sprite sprite) drawnSprite = SpriteHandler.DrawSpritePixel(pixelX, this.ScanLine, this.PrimaryOAM);
+                    (byte backgroundPixel, Tile tile) drawnTile = BackgroundHandler.GetBackgroundPixel(pixelX, this.ScanLine, this.ppuAddress);
+                    (byte spritePixel, Sprite sprite) drawnSprite = SpriteHandler.GetSpritePixel(pixelX, this.ScanLine, this.PrimaryOAM);
 
                     byte muxedPixel = PixelMuxer.MuxPixel(drawnSprite, drawnTile);
                     this.ScreenData[(this.ScanLine * Constants.NTSCWidth) + pixelX] = muxedPixel;

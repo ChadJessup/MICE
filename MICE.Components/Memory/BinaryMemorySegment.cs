@@ -16,11 +16,7 @@ namespace MICE.Components.Memory
             this.Data = new byte[length + 1];
         }
 
-        public byte[] Data
-        {
-            get;
-            set;
-        }
+        public byte[] Data { get; set; }
 
         public override byte ReadByte(int index)
         {

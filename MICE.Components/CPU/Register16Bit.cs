@@ -8,7 +8,7 @@
         }
 
         public override void Write(ushort value) => this.Value = value;
-        public override ushort Read() => this.Value;
+        public override ushort Read() => this.ReadShortInsteadAction?.Invoke(null, this.Value) ?? this.Value;
 
         public override string ToString() => $"0x{this.Value:X} - {this.Name}";
     }

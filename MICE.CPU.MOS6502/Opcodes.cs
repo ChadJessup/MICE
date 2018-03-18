@@ -85,7 +85,7 @@ namespace MICE.CPU.MOS6502
             var (value, address, isSamePage) = AddressingMode.GetAddressedValue(CPU, container);
 
             CPU.Registers.A.Write((byte)(CPU.Registers.A | value));
-            
+
             this.HandleNegative(CPU.Registers.A);
             this.HandleZero(CPU.Registers.A);
 
@@ -342,6 +342,9 @@ namespace MICE.CPU.MOS6502
         [MOS6502Opcode(0x9A, "TXS", AddressingModes.Immediate, timing: 2, length: 1)]
         public void TXS(OpcodeContainer container) => CPU.Registers.SP.Write(CPU.Registers.X);
 
+        [MOS6502Opcode(0xBA, "TSX", AddressingModes.Immediate, timing: 2, length: 1)]
+        public void TSX(OpcodeContainer container) => CPU.Registers.X.Write(CPU.Registers.SP);
+
         [MOS6502Opcode(0x48, "PHA", AddressingModes.Immediate, timing: 3, length: 1)]
         public void PHA(OpcodeContainer container) => CPU.Stack.Push(CPU.Registers.A);
 
@@ -367,11 +370,16 @@ namespace MICE.CPU.MOS6502
         public void STA(OpcodeContainer container)
         {
             var (value, address, isSamePage) = AddressingMode.GetAddressedValue(CPU, container, getValue: false);
+            if(address == 0x2006 && (CPU.Registers.A == 0x21 || CPU.Registers.A == 0x06))
+            {
+
+            }
+
             CPU.WriteByteAt(address, CPU.Registers.A);
         }
 
         [MOS6502Opcode(0x86, "STX", AddressingModes.ZeroPage, timing: 3, length: 2)]
-        [MOS6502Opcode(0x96, "STX", AddressingModes.ZeroPageY, timing:4, length: 2)]
+        [MOS6502Opcode(0x96, "STX", AddressingModes.ZeroPageY, timing: 4, length: 2)]
         [MOS6502Opcode(0x8E, "STX", AddressingModes.Absolute, timing: 4, length: 3)]
         public void STX(OpcodeContainer container)
         {
@@ -391,6 +399,11 @@ namespace MICE.CPU.MOS6502
         #endregion
 
         #region Jumps
+
+        [MOS6502Opcode(0xEA, "NOP", AddressingModes.Implied, timing: 2, length: 1)]
+        public void NOP(OpcodeContainer container)
+        {
+        }
 
         [MOS6502Opcode(0x6C, "JMP", AddressingModes.Indirect, timing: 5, length: 3, verify: false)]
         [MOS6502Opcode(0x4C, "JMP", AddressingModes.Absolute, timing: 3, length: 3, verify: false)]

@@ -2,7 +2,6 @@
 using MICE.Components.CPU;
 using MICE.Components.Memory;
 using System;
-using System.Collections.Generic;
 using System.IO;
 
 namespace MICE.CPU.MOS6502
@@ -37,7 +36,7 @@ namespace MICE.CPU.MOS6502
         {
             this.Data[this.GetAdjustedStackPointer()] = value;
 
-            this.fs.WriteLine($"Write Stack Byte: 0x1{this.Pointer.Read():X}-0x{value:X}");
+      //      this.fs.WriteLine($"Write Stack Byte: 0x1{this.Pointer.Read():X}-0x{value:X}");
             this.DecrementStackPointer();
         }
 
@@ -51,7 +50,7 @@ namespace MICE.CPU.MOS6502
             this.DecrementStackPointer();
             this.DecrementStackPointer();
 
-            this.fs.WriteLine($"Write Stack Short: 0x1{this.Pointer.Read() + 1:X}-0x{value:X}");
+     //       this.fs.WriteLine($"Write Stack Short: 0x1{this.Pointer.Read() + 1:X}-0x{value:X}");
         }
 
         public byte PopByte()
@@ -59,7 +58,7 @@ namespace MICE.CPU.MOS6502
             this.IncrementStackPointer();
 
             byte outputValue = this.Data[this.GetAdjustedStackPointer()];
-            this.fs.WriteLine($"Read Stack Byte: 0x1{this.Pointer.Read():X}-0x{outputValue:X}");
+     //       this.fs.WriteLine($"Read Stack Byte: 0x1{this.Pointer.Read():X}-0x{outputValue:X}");
 
             return outputValue;
         }
@@ -73,7 +72,7 @@ namespace MICE.CPU.MOS6502
 
             var value = (ushort)(high << 8 | low & 0xff);
 
-            this.fs.WriteLine($"Read Stack Short: 0x1{this.Pointer.Read() - 1:X}-0x{value:X}");
+    //        this.fs.WriteLine($"Read Stack Short: 0x1{this.Pointer.Read() - 1:X}-0x{value:X}");
 
             return value;
         }

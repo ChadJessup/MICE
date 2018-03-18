@@ -72,11 +72,18 @@ namespace MICE.Nintendo
 
         private void MapToCartridge()
         {
-            // Various parts of a cartridge are mapped into the NES's memory map.
-            this.CPUMemoryMap.GetMemorySegment<SRAM>("SRAM").Data = this.Cartridge.SRAM;
+            // Little confused here...https://wiki.nesdev.com/w/index.php/CPU_memory_map
+            // states "battery backed save OR Work RAM.  The 01-Implied test cartridge, has no SRAM, but writes to it...
+            // so if cartridge doesn't have ram let's just put some memory there anyways!
+            this.CPUMemoryMap.GetMemorySegment<SRAM>("SRAM").Data = this.Cartridge.SRAM ?? new byte[0x7fff - 0x6000];
 
+            // Various parts of a cartridge are mapped into the NES's CPU memory map.
             this.CPUMemoryMap.GetMemorySegment<External>("PRG-ROM Lower Bank").AttachHandler(this.Cartridge.Mapper);
             this.CPUMemoryMap.GetMemorySegment<External>("PRG-ROM Upper Bank").AttachHandler(this.Cartridge.Mapper);
+
+            // Various parts of a cartridge are mapped into the NES's PPU memory map.
+            this.PPU.MemoryMap.GetMemorySegment<PatternTable>("Pattern Table 0").AttachHandler(this.Cartridge.Mapper);
+            this.PPU.MemoryMap.GetMemorySegment<PatternTable>("Pattern Table 1").AttachHandler(this.Cartridge.Mapper);
         }
 
         [Benchmark]
@@ -92,6 +99,10 @@ namespace MICE.Nintendo
             for (int i = 0; i < cpuCycles * 3; i++)
             {
                 var ppuCycles = this.PPU.Step();
+                if (this.PPU.ppuAddress == 0x00000206)
+                {
+
+                }
 
                 if (this.PPU.ShouldNMInterrupt)
                 {
@@ -127,7 +138,7 @@ namespace MICE.Nintendo
         }
 
         [Benchmark]
-        public void DMATransfer(byte value)
+        public void DMATransfer(int? address, byte value)
         {
             ushort readAddress = (ushort)(value << 8);
             //this.sw.WriteLine("DMA Just Happened!");

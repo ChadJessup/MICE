@@ -46,6 +46,8 @@ namespace MICE.PPU.RicohRP2C02
             this.imagePalette = ppuMemoryMap.GetMemorySegment<Palette>("Image Palette");
         }
 
+        public int BaseNametableAddress => (this.registers.PPUCTRL.GetBit(0) ? 1 : 0) | (this.registers.PPUCTRL.GetBit(1) ? 1 : 0) << 2;
+
         public bool DrawLeft8BackgroundPixels
         {
             get => this.registers.PPUMASK.GetBit(1);
@@ -64,31 +66,26 @@ namespace MICE.PPU.RicohRP2C02
             set => this.registers.PPUCTRL.SetBit(4, value);
         }
 
-        public (byte, Tile) DrawBackgroundPixel(int x, int y)
+        public (byte, Tile) GetBackgroundPixel(int x, int y, ushort PPUADDR)
         {
-            x = 5 * 8;
-            y = 4 * 8;
+            //x = 5 * 8;
+            //y = 4 * 8;
 
             if (x <= 8 && !this.DrawLeft8BackgroundPixels)
             {
                 return (0, null);
             }
 
-            var (indexedX, indexedY, nameTable) = this.SelectNametable(x, y);
+            var (scrolledX, scrolledY, nameTable) = this.GetScrolledXYAndNametable(x, y);
 
-            var tile = nameTable.GetTileFromPixel(indexedX, indexedY, this.IsBackgroundPatternTableAddress1000 ? 0x1000 : 0x0000, this.chrBanks[0]);
-
-            if (tile.PaletteAddress == 0x3f10)
-            {
-
-            }
+            var tile = nameTable.GetTileFromPixel(scrolledX, scrolledY, this.IsBackgroundPatternTableAddress1000 ? 0x1000 : 0x0000, this.chrBanks[0], registers, PPUADDR);
 
             var palette = this.ppuMemoryMap.ReadByte(tile.PaletteAddress);
 
             return (palette, tile);
         }
 
-        private (int scrolledX, int scrolledY, Nametable nameTable) SelectNametable(int x, int y)
+        private (int scrolledX, int scrolledY, Nametable nameTable) GetScrolledXYAndNametable(int x, int y)
         {
             var (scrollX, scrollY) = this.scrollHandler.GetScrollValues();
 

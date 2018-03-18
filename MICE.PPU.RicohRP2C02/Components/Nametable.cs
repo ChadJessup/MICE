@@ -19,14 +19,26 @@ namespace MICE.PPU.RicohRP2C02.Components
 
         public AttributeTable AttributeTable { get; private set; }
 
-        public Tile GetTileFromPixel(int screenX, int screenY, int bgOffset, byte[] chrBank)
+        public Tile GetTileFromPixel(int scrolledX, int scrolledY, int bgOffset, byte[] chrBank, PPURegisters registers, ushort PPUADDR)
         {
-            var tileX = screenX / 8;
-            var tileY = screenY / 8;
-            var sliverY = screenX % 8;
-            var sliverX = screenY % 8;
+            var tileX = scrolledX / 8;
+            var tileY = scrolledY / 8;
+            var sliverY = scrolledX % 8;
+            var sliverX = scrolledY % 8;
 
             var tile = new Tile();
+
+            var v = PPUADDR;
+            if (v != 0x0000)
+            {
+
+            }
+            var test = 0x2000 | (v & 0x0fff);
+            var test2 = 0x23C0 | (v & 0x0C00) | ((v >> 4) & 0x38) | ((v >> 2) & 0x07);
+            if (test != 0x2000 || test2 != 0x23c0)
+            {
+
+            }
 
             tile.PPUAddress = (short)(0x2000 + tileX + (tileY * Constants.NumberOfColumns));
             tile.Nametable = this.WhichNametableAmI();
@@ -38,7 +50,7 @@ namespace MICE.PPU.RicohRP2C02.Components
             tile.AttributeData = attrib.RawByte;
             tile.AttributeAddress = (short)(this.LowerIndex + attrib.Address);
 
-            var colorIndex = this.GetColorIndex(screenX, screenY, tile, chrBank);
+            var colorIndex = this.GetColorIndex(scrolledX, scrolledY, tile, chrBank);
 
             byte paletteId = 0;
             if (colorIndex != 0)

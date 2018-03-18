@@ -1,7 +1,4 @@
 ﻿using MICE.Components.CPU;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace MICE.PPU.RicohRP2C02
 {
@@ -41,12 +38,13 @@ namespace MICE.PPU.RicohRP2C02
         /// Fine control of the PPU's scroll position (X, Y).
         /// This register is memory mapped to the CPU at $2005.
         /// </summary>
-        public Register8Bit PPUSCROLL = new Register8Bit("PPUSCROLL");
+        public ShiftRegister16Bit PPUSCROLL = new ShiftRegister16Bit("PPUSCROLL");
 
         /// <summary>
         /// PPU read/write address.
         /// This register is memory mapped to the CPU at $2006.
         /// While this is an 8bit register, the CPU double writes to it for 16-bit addressing.
+        /// Note: Some documentation calls this: 'v'?
         /// </summary>
         public Register8Bit PPUADDR = new Register8Bit("PPUADDR");
 

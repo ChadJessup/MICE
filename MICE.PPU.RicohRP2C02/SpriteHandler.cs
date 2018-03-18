@@ -117,7 +117,7 @@ namespace MICE.PPU.RicohRP2C02
             }
         }
 
-        public (byte, Sprite) DrawSpritePixel(int x, int y, OAM primaryOAM)
+        public (byte, Sprite) GetSpritePixel(int x, int y, OAM primaryOAM)
         {
             if (x <= 8 && !this.DrawLeft8SpritePixels)
             {
