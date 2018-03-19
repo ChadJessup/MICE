@@ -132,7 +132,7 @@ namespace MICE.CPU.MOS6502
 
         public void Reset(CancellationToken cancellationToken)
         {
-            this.Opcodes = new Opcodes(this);
+            this.Opcodes = new Opcodes(this, this.fs);
             this.Registers = new Registers();
             this.Registers.PC.Write(this.memoryMap.ReadShort(this.InterruptOffsets[InterruptType.Reset]));
 
@@ -192,16 +192,16 @@ namespace MICE.CPU.MOS6502
             }
 
             // Grab an Opcode from the PC register:
-            var code = this.ReadNextByte();
 
             // Grab our version of the opcode...
             OpcodeContainer opCode = null;
+            byte code = 0;
             try
             {
+                code = this.ReadNextByte();
                 opCode = this.Opcodes[code];
 
                 opCode.Instruction(opCode);
-                //    Console.WriteLine($"Last Opcode ran: {opCode} at Step: {this.stepCount}");
             }
             catch (Exception e)
             {
@@ -210,8 +210,8 @@ namespace MICE.CPU.MOS6502
                 this.fs.Flush();
             }
 
-            int logStart = 270000;
-            int logFor = 100000;
+            int logStart = 000;
+            int logFor = 282000;
             int logCap = logStart + logFor;
 
             if (this.stepCount > logStart && this.stepCount < logCap)
@@ -235,7 +235,7 @@ namespace MICE.CPU.MOS6502
             this.stepCount++;
             this.ranOpcodeCount++;
 
-            if (this.stepCount == 271239)
+            if (this.stepCount == 2)
             {
 
             }

@@ -23,8 +23,8 @@ namespace MICE.Nintendo.Loaders
 
         public byte[] SRAM { get; set; }
 
-        public IList<byte[]> RAMBanks { get; set; }
-        public IList<byte[]> ROMBanks { get; set; }
+        public IList<byte[]> ProgramRAMBanks { get; set; }
+        public IList<byte[]> ProgramROMBanks { get; set; }
         public IList<byte[]> CharacterRomBanks { get; set; }
 
         public MemoryMapperIds MapperId { get; private set; }

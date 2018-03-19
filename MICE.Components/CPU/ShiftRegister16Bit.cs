@@ -7,6 +7,7 @@
         {
         }
 
+        // TODO: fix this
         public override void Write(ushort value) => this.Value = (ushort)(this.Value << 8 | value);
         public override ushort Read() => this.Value;
 

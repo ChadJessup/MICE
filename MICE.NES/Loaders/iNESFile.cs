@@ -151,8 +151,8 @@ namespace MICE.Nintendo.Loaders
             {
                 CharacterRomBanks = this.CharacterBanks,
                 MirroringMode = this.MirroringMode,
-                RAMBanks = this.RAMBanks,
-                ROMBanks = this.ROMBanks,
+                ProgramRAMBanks = this.RAMBanks,
+                ProgramROMBanks = this.ROMBanks,
             };
 
             cartridge.InitializeMapper(this.MemoryMapperId);

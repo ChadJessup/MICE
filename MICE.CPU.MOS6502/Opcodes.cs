@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using MICE.Components.CPU;
@@ -10,9 +11,11 @@ namespace MICE.CPU.MOS6502
     {
         private Dictionary<int, int> opCodeCount = new Dictionary<int, int>();
         private MOS6502 CPU;
+        private StreamWriter sw;
 
-        public Opcodes(MOS6502 cpu)
+        public Opcodes(MOS6502 cpu, StreamWriter sw)
         {
+            this.sw = sw;
             this.CPU = cpu;
 
             var bindingFlags = BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance;
@@ -104,9 +107,15 @@ namespace MICE.CPU.MOS6502
         {
             var (value, address, isSamePage) = AddressingMode.GetAddressedValue(CPU, container);
 
-            this.WriteByteToRegister(CPU.Registers.A, (byte)(CPU.Registers.A & value), S: true, Z: true);
+            var newValue = CPU.Registers.A & value;
+            this.WriteByteToRegister(CPU.Registers.A, (byte)newValue, S: true, Z: true);
 
             this.HandlePageBoundaryCrossed(container, isSamePage);
+
+            if (container.Code == 0x3d)
+            {
+                container.AddedCycles++;
+            }
         }
 
         [MOS6502Opcode(0x4A, "LSR", AddressingModes.Accumulator, timing: 2, length: 1)]
@@ -249,7 +258,10 @@ namespace MICE.CPU.MOS6502
         public void EOR(OpcodeContainer container)
         {
             var (value, address, isSamePage) = AddressingMode.GetAddressedValue(CPU, container);
-            this.WriteByteToRegister(CPU.Registers.A, (byte)(CPU.Registers.A ^ value), S: true, Z: true);
+
+            var newValue = CPU.Registers.A ^ value;
+
+            this.WriteByteToRegister(CPU.Registers.A, (byte)newValue, S: true, Z: true);
         }
 
         #endregion
@@ -370,10 +382,6 @@ namespace MICE.CPU.MOS6502
         public void STA(OpcodeContainer container)
         {
             var (value, address, isSamePage) = AddressingMode.GetAddressedValue(CPU, container, getValue: false);
-            if(address == 0x2006 && (CPU.Registers.A == 0x21 || CPU.Registers.A == 0x06))
-            {
-
-            }
 
             CPU.WriteByteAt(address, CPU.Registers.A);
         }
@@ -599,6 +607,11 @@ namespace MICE.CPU.MOS6502
             this.WriteByteToRegister(CPU.Registers.A, (byte)sum, S: true, Z: true);
             this.HandlePageBoundaryCrossed(container, isSamePage);
             this.HandleOverflow(originalValue, value, (byte)sum);
+
+            if (container.Code == 0x79)
+            {
+                container.AddedCycles++;
+            }
         }
 
         [MOS6502Opcode(0xE9, "SBC", AddressingModes.Immediate, timing: 2, length: 2)]
@@ -622,6 +635,11 @@ namespace MICE.CPU.MOS6502
 
             this.HandlePageBoundaryCrossed(container, isSamePage);
             this.HandleOverflow(originalValue, value, (byte)sum);
+
+            if(container.Code == 0xf9)
+            {
+                container.AddedCycles++;
+            }
         }
 
         #endregion

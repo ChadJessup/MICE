@@ -20,13 +20,13 @@ namespace MICE.Nintendo.Mappers
         {
             if (memorySegment.LowerIndex == 0x8000)
             {
-                this.bankLinkage.Add((memorySegment, this.cartridge.ROMBanks[0]));
+                this.bankLinkage.Add((memorySegment, this.cartridge.ProgramROMBanks[0]));
             }
             else if (memorySegment.LowerIndex == 0xC000)
             {
-                var whichBank = this.cartridge.ROMBanks.Count == 1
-                    ? this.cartridge.ROMBanks[0]
-                    : this.cartridge.ROMBanks[1];
+                var whichBank = this.cartridge.ProgramROMBanks.Count == 1
+                    ? this.cartridge.ProgramROMBanks[0]
+                    : this.cartridge.ProgramROMBanks[1];
 
                 this.bankLinkage.Add((memorySegment, whichBank));
             }

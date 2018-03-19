@@ -1,5 +1,6 @@
 ﻿using MICE.Common.Interfaces;
 using MICE.PPU.RicohRP2C02.Components;
+using System;
 using System.Collections.Generic;
 using System.Threading;
 
@@ -27,12 +28,7 @@ namespace MICE.PPU.RicohRP2C02
         /// </summary>
         private ushort partialPpuAddress = 0;
 
-        private bool tempWriteHigh = true;
-        private bool writeHigh
-        {
-            get => this.tempWriteHigh;
-            set => this.tempWriteHigh = value;
-        }
+        private bool writeHigh { get; set; }
 
         public RicohRP2C02(PPUMemoryMap memoryMap, PPURegisters registers, IMemoryMap cpuMemoryMap, IList<byte[]> chrBanks)
         {
@@ -130,20 +126,7 @@ namespace MICE.PPU.RicohRP2C02
 
         public void PowerOn(CancellationToken cancellationToken)
         {
-            this.Registers.PPUADDR.AfterWriteAction = (address, value) =>
-            {
-                if (this.writeHigh)
-                {
-                    this.partialPpuAddress = (ushort)((this.partialPpuAddress & 0x80FF) | ((value & 0x3F) << 8));
-                }
-                else
-                {
-                    this.partialPpuAddress = (ushort)((this.partialPpuAddress & 0xFF00) | value);
-                    this.ppuAddress = this.partialPpuAddress;
-                }
-
-                this.writeHigh = !this.writeHigh;
-            };
+            this.Registers.PPUADDR.AfterWriteAction = (address, value) => this.UpdatePPUAddress(value);
 
             this.Registers.PPUSCROLL.AfterReadAction = (address, value) => this.writeHigh = !this.writeHigh;
             this.Registers.PPUDATA.AfterReadAction = (address, value) => this.ppuAddress += (ushort)this.VRAMAddressIncrement;
@@ -320,7 +303,6 @@ namespace MICE.PPU.RicohRP2C02
 
                 if (this.WasNMIRequested)
                 {
-                    // TODO: do NMI.
                     this.ShouldNMInterrupt = true;
                 }
             }
@@ -338,6 +320,21 @@ namespace MICE.PPU.RicohRP2C02
                 drawnSprite.sprite?.IsSpriteZero ?? false
                 && (drawnTile.backgroundPixel != 0x00
                 && drawnSprite.spritePixel != 0x00);
+        }
+
+        private void UpdatePPUAddress(byte value)
+        {
+            if (this.writeHigh)
+            {
+                this.partialPpuAddress = (ushort)((this.partialPpuAddress & 0x80FF) | ((value & 0x3F) << 8));
+            }
+            else
+            {
+                this.partialPpuAddress = (ushort)((this.partialPpuAddress & 0xFF00) | value);
+                this.ppuAddress = this.partialPpuAddress;
+            }
+
+            this.writeHigh = !this.writeHigh;
         }
     }
 }
