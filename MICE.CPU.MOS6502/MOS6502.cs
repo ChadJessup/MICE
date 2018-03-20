@@ -1,5 +1,6 @@
 ﻿using MICE.Common;
 using MICE.Common.Interfaces;
+using MICE.Components.Memory;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -202,6 +203,7 @@ namespace MICE.CPU.MOS6502
                 opCode = this.Opcodes[code];
 
                 opCode.Instruction(opCode);
+                var sram = this.memoryMap.GetMemorySegment<SRAM>("SRAM").Data;
             }
             catch (Exception e)
             {
@@ -235,7 +237,7 @@ namespace MICE.CPU.MOS6502
             this.stepCount++;
             this.ranOpcodeCount++;
 
-            if (this.stepCount == 2)
+            if (this.stepCount == 62076)
             {
 
             }

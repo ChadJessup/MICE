@@ -15,13 +15,13 @@ namespace MICE.Components.CPU
             ? (byte)(this.Value | (1 << index))
             : (byte)(this.Value & ~(1 << index));
 
-            this.AfterWriteAction?.Invoke(null, this.Value);
+           // this.AfterWriteAction?.Invoke(null, this.Value);
         }
 
         public bool GetBit(int bitNumber)
         {
             var value = (this.Value & (1 << bitNumber)) != 0;
-            this.AfterReadAction?.Invoke(null, this.Value);
+            //this.AfterReadAction?.Invoke(null, this.Value);
 
             return value;
         }

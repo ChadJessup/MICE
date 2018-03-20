@@ -66,13 +66,9 @@ namespace MICE.CPU.MOS6502
         {
             var (value, address, isSamePage) = AddressingMode.GetAddressedValue(CPU, container);
 
-            var accumulator = CPU.Registers.A.Read();
-
-            byte result = (byte)(value & accumulator);
-
-            this.HandleNegative(result);
-            this.HandleZero(result);
-            this.HandleOverflow(accumulator, (byte)value, result);
+            this.HandleNegative(value);
+            this.HandleZero((byte)(value & CPU.Registers.A));
+            CPU.IsOverflowed = (value & 0x40) != 0;
         }
 
         [MOS6502Opcode(0x09, "ORA", AddressingModes.Immediate, timing: 2, length: 2)]
@@ -255,6 +251,7 @@ namespace MICE.CPU.MOS6502
         [MOS6502Opcode(0x49, "EOR", AddressingModes.Immediate, timing: 2, length: 2)]
         [MOS6502Opcode(0x45, "EOR", AddressingModes.ZeroPage, timing: 3, length: 2)]
         [MOS6502Opcode(0x4D, "EOR", AddressingModes.Absolute, timing: 4, length: 3)]
+        [MOS6502Opcode(0x5D, "EOR", AddressingModes.AbsoluteX, timing: 4, length: 3)]
         public void EOR(OpcodeContainer container)
         {
             var (value, address, isSamePage) = AddressingMode.GetAddressedValue(CPU, container);
@@ -341,6 +338,10 @@ namespace MICE.CPU.MOS6502
         [MOS6502Opcode(0xB1, "LDA", AddressingModes.IndirectY, timing: 5, length: 2)]
         public void LDA(OpcodeContainer container)
         {
+            if (CPU.Registers.PC == 0x35f5)
+            {
+
+            }
             var (value, address, samePage) = AddressingMode.GetAddressedValue(CPU, container);
             this.WriteByteToRegister(CPU.Registers.A, value, S: true, Z: true);
 
@@ -408,7 +409,13 @@ namespace MICE.CPU.MOS6502
 
         #region Jumps
 
+        [MOS6502Opcode(0x1A, "NOP", AddressingModes.Implied, timing: 2, length: 1)] // unofficial
+        [MOS6502Opcode(0x3A, "NOP", AddressingModes.Implied, timing: 2, length: 1)] // unofficial
+        [MOS6502Opcode(0x5A, "NOP", AddressingModes.Implied, timing: 2, length: 1)] // unofficial
+        [MOS6502Opcode(0x7A, "NOP", AddressingModes.Implied, timing: 2, length: 1)] // unofficial
+        [MOS6502Opcode(0xDA, "NOP", AddressingModes.Implied, timing: 2, length: 1)] // unofficial
         [MOS6502Opcode(0xEA, "NOP", AddressingModes.Implied, timing: 2, length: 1)]
+        [MOS6502Opcode(0xFA, "NOP", AddressingModes.Implied, timing: 2, length: 1)] // unofficial
         public void NOP(OpcodeContainer container)
         {
         }
@@ -626,15 +633,14 @@ namespace MICE.CPU.MOS6502
         {
             var (value, address, isSamePage) = AddressingMode.GetAddressedValue(CPU, container);
 
-            value = (byte)~value;
-            var originalValue = CPU.Registers.A;
-            var sum = CPU.Registers.A + value + (CPU.IsCarry ? 1 : 0);
-            CPU.IsCarry = sum >> 8 != 0;
+            var oldAccumulator = CPU.Registers.A.Read();
+            var result = CPU.Registers.A - value - 1 + (CPU.IsCarry ? 1 : 0);
+            CPU.IsCarry = result < 0x100;
 
-            this.WriteByteToRegister(CPU.Registers.A, (byte)sum, S: true, Z: true);
+            this.WriteByteToRegister(CPU.Registers.A, (byte)result, S: true, Z: true);
 
             this.HandlePageBoundaryCrossed(container, isSamePage);
-            this.HandleOverflow(originalValue, value, (byte)sum);
+            this.HandleOverflow(oldAccumulator, value, (byte)result);
 
             if(container.Code == 0xf9)
             {
@@ -650,10 +656,11 @@ namespace MICE.CPU.MOS6502
         private void HandleZero(byte operand) => CPU.IsZero = operand == 0;
 
         // https://stackoverflow.com/a/29224684/1865301
-        private void HandleOverflow(byte original, byte argument, byte sum)
+        private void HandleOverflow(byte original, byte operand, byte value)
         {
             // CPU.IsOverflowed = (original & 0x80) == (argument & 0x80) && (original & 0x80) != (sum & 0x80);
-            CPU.IsOverflowed = (~(original ^ argument) & (original ^ sum) & 0x80) != 0;
+            // CPU.IsOverflowed = (~(original ^ argument) & (original ^ sum) & 0x80) != 0;
+            CPU.IsOverflowed = ((original ^ operand) & 0x80) != 0 && ((original ^ value) & 0x80) != 0;
             //CPU.IsOverflowed = result < 0;
         }
 

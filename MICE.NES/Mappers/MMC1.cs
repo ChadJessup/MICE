@@ -13,7 +13,7 @@ namespace MICE.Nintendo.Mappers
     {
         private List<(IMemorySegment segment, byte[] bytes)> bankLinkage = new List<(IMemorySegment segment, byte[] bytes)>();
 
-        private byte[] currentProgramRAMBank;
+        //private byte[] currentProgramRAMBank;
 
         // PRG bank(internal, $E000-$FFFF)
         private byte[] currentProgramROMBank8000;
@@ -32,6 +32,9 @@ namespace MICE.Nintendo.Mappers
         ///PRG bank (internal, $E000-$FFFF)
         /// </summary>
         public byte Control { get; private set; }
+
+        protected ProgramROMBankMode ProgramRomBankMode { get; private set; }
+        protected CharacterROMBankMode CharacterRomBankMode { get; private set; }
 
         public MMC1(NESCartridge cartridge)
             : base(MemoryMapperIds.MMC1.ToString(), cartridge)
@@ -132,16 +135,20 @@ namespace MICE.Nintendo.Mappers
         public override void Write(int address, byte value)
         {
             // TODO: Convert to memory map maayyyyyybe?
+            this.HandleLoadRegister(address, value);
+
+            return;
+
             switch (address)
             {
                 case var _ when address >= 0x8000 && address <= 0x9FFF:
-                    this.HandleLoadRegister(address, value);
                     break;
                 case var _ when address >= 0xA000 && address <= 0xBFFF:
                     break;
                 case var _ when address >= 0xC000 && address <= 0xDFFF:
                     break;
                 case var _ when address >= 0xE000 && address <= 0xFFFF:
+                    this.SetProgramRomBank(value);
                     break;
                 default:
                     throw new InvalidOperationException($"Unexpected address (0x{address:X4}) requested in MMC1 Mapper");
@@ -158,6 +165,7 @@ namespace MICE.Nintendo.Mappers
             if (value.GetBit(7))
             {
                 this.ResetLoadRegister();
+                this.ParseControlRegister((byte)(this.Control | 0x0C));
                 return;
             }
 
@@ -175,28 +183,83 @@ namespace MICE.Nintendo.Mappers
             Console.WriteLine($"Incoming: {incomingValue} Register: {existingValue}");
         }
 
+        private void SwapProgramBank(byte value)
+        {
+            var newBank = (value & 0x0F);
+            this.currentProgramROMBank8000 = this.cartridge.ProgramROMBanks[newBank];
+        }
+
         private void ParseLoadRegister(int address)
         {
             switch (address)
             {
                 case var _ when address >= 0x8000 && address <= 0x9FFF:
-                    this.Control = this.LoadRegister.Read();
-                    this.SetNametableMirroring();
+                    this.ParseControlRegister(this.LoadRegister.Read());
                     break;
                 case var _ when address >= 0xA000 && address <= 0xBFFF:
+                    this.SetCharacterRomBank(0, this.LoadRegister.Read());
                     break;
                 case var _ when address >= 0xC000 && address <= 0xDFFF:
+                    this.SetCharacterRomBank(1, this.LoadRegister.Read());
                     break;
                 case var _ when address >= 0xE000 && address <= 0xFFFF:
+                    this.SetProgramRomBank(this.LoadRegister.Read());
                     break;
                 default:
                     throw new InvalidOperationException($"Unexpected address (0x{address:X4}) requested in MMC1 Mapper");
             }
         }
 
-        private void SetNametableMirroring()
+        private void ParseControlRegister(byte loadRegisterValue)
         {
-            switch (this.Control & 0x3)
+            this.Control = loadRegisterValue;
+            this.SetNametableMirroring(this.Control);
+            this.CharacterRomBankMode = (CharacterROMBankMode)((this.Control >> 4) & 1);
+            this.ProgramRomBankMode = (ProgramROMBankMode)((this.Control >> 2) & 3);
+        }
+
+        private void SetCharacterRomBank(int romBankNumber, byte value)
+        {
+            switch (this.CharacterRomBankMode)
+            {
+                case CharacterROMBankMode.Switch8kb:
+                    break;
+                case CharacterROMBankMode.SwitchTwo4kb:
+                    break;
+                default:
+                    throw new InvalidOperationException($"Unexpected CharacterROMBankMode: {this.CharacterRomBankMode}");
+            }
+
+
+            Console.WriteLine($"Switched Character ROM Bank: {this.CharacterRomBankMode}");
+        }
+
+        private void SetProgramRomBank(byte value)
+        {
+            var bank = (byte)(value & 0x0F);
+            switch (this.ProgramRomBankMode)
+            {
+                case ProgramROMBankMode.Switch32kbAt8000:
+                case ProgramROMBankMode.Switch32kbAt8000Dupe:
+                    break;
+                case ProgramROMBankMode.FixedFirstBankSwitchLast:
+                    this.currentProgramROMBank8000 = this.cartridge.ProgramROMBanks.First();
+                    this.currentProgramROMBankC000 = this.cartridge.ProgramROMBanks[bank];
+                    break;
+                case ProgramROMBankMode.FixLastBankSwitchFirst:
+                    this.currentProgramROMBank8000 = this.cartridge.ProgramROMBanks[bank];
+                    this.currentProgramROMBankC000 = this.cartridge.ProgramROMBanks.Last();
+                    break;
+                default:
+                    throw new InvalidOperationException($"Unexpected ProgramROMBankMode: {this.ProgramRomBankMode}");
+            }
+
+            Console.WriteLine($"Switched Program ROM Bank: {this.ProgramRomBankMode}");
+        }
+
+        private void SetNametableMirroring(byte controlByte)
+        {
+            switch (controlByte & 0x3)
             {
                 case 0:
                     this.cartridge.MirroringMode = MirroringMode.SingleScreen;
@@ -213,12 +276,28 @@ namespace MICE.Nintendo.Mappers
                 default:
                     throw new InvalidOperationException($"Unexpected Nametable Mirror value: {this.Control & 0x3}");
             }
+
+            Console.WriteLine($"Set cartridge to new nametable mirroring mode: {this.cartridge.MirroringMode}");
         }
 
         private void ResetLoadRegister()
         {
             this.LoadRegister.Write(0);
             this.loadRegisterWriteCount = 0;
+        }
+
+        protected enum CharacterROMBankMode
+        {
+            Switch8kb = 0,
+            SwitchTwo4kb = 1
+        }
+
+        protected enum ProgramROMBankMode
+        {
+            Switch32kbAt8000 = 0,
+            Switch32kbAt8000Dupe = 1,
+            FixedFirstBankSwitchLast = 2,
+            FixLastBankSwitchFirst = 3,
         }
     }
 }
