@@ -48,6 +48,11 @@ namespace MICE.Nintendo.Mappers
 
         public override void AddMemorySegment(IMemorySegment memorySegment)
         {
+            if (!this.cartridge.CharacterRomBanks.Any())
+            {
+                this.cartridge.CharacterRomBanks.Add(new byte[0x2000]);
+            }
+
             switch (memorySegment)
             {
                 case var ms when ms.LowerIndex == 0x6000:
@@ -135,13 +140,12 @@ namespace MICE.Nintendo.Mappers
         public override void Write(int address, byte value)
         {
             // TODO: Convert to memory map maayyyyyybe?
-            this.HandleLoadRegister(address, value);
-
-            return;
-
             switch (address)
             {
+                case var _ when address < 0x2000:
+                    break;
                 case var _ when address >= 0x8000 && address <= 0x9FFF:
+                    this.HandleLoadRegister(address, value);
                     break;
                 case var _ when address >= 0xA000 && address <= 0xBFFF:
                     break;
@@ -229,7 +233,6 @@ namespace MICE.Nintendo.Mappers
                 default:
                     throw new InvalidOperationException($"Unexpected CharacterROMBankMode: {this.CharacterRomBankMode}");
             }
-
 
             Console.WriteLine($"Switched Character ROM Bank: {this.CharacterRomBankMode}");
         }

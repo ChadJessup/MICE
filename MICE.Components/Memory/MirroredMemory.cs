@@ -77,10 +77,16 @@ namespace MICE.Components.Memory
                 return;
             }
 
-            var foundMemorySegment = this.realMemorySegments.First(ms => ms.IsIndexInRange(newIndex));
-            this.cachedMemorySegments.Add(newIndex, foundMemorySegment);
+            try
+            {
+                var foundMemorySegment = this.realMemorySegments.First(ms => ms.IsIndexInRange(newIndex));
+                this.cachedMemorySegments.Add(newIndex, foundMemorySegment);
+                foundMemorySegment.Write(newIndex, value);
+            }
+            catch (Exception e)
+            {
 
-            foundMemorySegment.Write(newIndex, value);
+            }
         }
 
         public override void CopyBytes(ushort startAddress, Array destination, int destinationIndex, int length)

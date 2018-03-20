@@ -18,6 +18,11 @@ namespace MICE.Nintendo.Mappers
 
         public override void AddMemorySegment(IMemorySegment memorySegment)
         {
+            if (!this.cartridge.CharacterRomBanks.Any())
+            {
+                this.cartridge.CharacterRomBanks.Add(new byte[2000]);
+            }
+
             if (memorySegment.LowerIndex == 0x8000)
             {
                 this.bankLinkage.Add((memorySegment, this.cartridge.ProgramROMBanks[0]));
@@ -84,8 +89,8 @@ namespace MICE.Nintendo.Mappers
             throw new InvalidOperationException($"Invalid memory range and/or size (byte) was requested to be read from in NROM Mapper: 0x{index:X4}");
         }
 
-        public override void Write(int index, byte value) => throw new NotImplementedException();
-        public override void Write(int index, ushort value) => throw new NotImplementedException();
+        public override void Write(int index, byte value) {}
+        public override void Write(int index, ushort value) { }
 
         public override void CopyBytes(ushort startAddress, Array destination, int destinationIndex, int length) => throw new NotImplementedException();
     }

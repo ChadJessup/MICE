@@ -165,6 +165,8 @@ namespace MICE.CPU.MOS6502
 
         private long nmiCycleStart = 0;
 
+        private byte[] sram;
+
         /// <summary>
         /// Steps the CPU and returns the amount of Cycles that would have occurred if the CPU were real.
         /// The cycles can be used by other components as a timing mechanism.
@@ -203,7 +205,7 @@ namespace MICE.CPU.MOS6502
                 opCode = this.Opcodes[code];
 
                 opCode.Instruction(opCode);
-                var sram = this.memoryMap.GetMemorySegment<SRAM>("SRAM").Data;
+                sram = this.memoryMap.GetMemorySegment<SRAM>("SRAM").Data;
             }
             catch (Exception e)
             {
@@ -212,13 +214,13 @@ namespace MICE.CPU.MOS6502
                 this.fs.Flush();
             }
 
-            int logStart = 000;
-            int logFor = 282000;
+            int logStart = 0x000000000003dbc2;
+            int logFor = 0x72FF;
             int logCap = logStart + logFor;
 
             if (this.stepCount > logStart && this.stepCount < logCap)
             {
-                this.fs.WriteLine($"{this.stepCount:D4}:0x{code:X}:0x{this.Registers.PC.Read():X}:{opCode?.Name}:{opCode?.Cycles + opCode?.AddedCycles}-PC:{Registers.PC.Read()}:A:{Registers.A.Read()}:X:{Registers.X.Read()}:Y:{Registers.Y.Read()}:SP:{Registers.SP.Read()}:P:{Convert.ToString(Registers.P.Read(), 2).PadLeft(8, '0')}");
+                this.fs.WriteLine($"{0:D4}:0x{code:X}:0x{this.Registers.PC.Read():X}:{opCode?.Name}:{opCode?.Cycles + opCode?.AddedCycles}-PC:{Registers.PC.Read()}:A:{Registers.A.Read()}:X:{Registers.X.Read()}:Y:{Registers.Y.Read()}:SP:{Registers.SP.Read()}:P:{Convert.ToString(Registers.P.Read(), 2).PadLeft(8, '0')}");
                 this.fs.Flush();
             }
 
@@ -237,7 +239,7 @@ namespace MICE.CPU.MOS6502
             this.stepCount++;
             this.ranOpcodeCount++;
 
-            if (this.stepCount == 62076)
+            if (this.stepCount == 0x3dbc2)
             {
 
             }

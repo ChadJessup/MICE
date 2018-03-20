@@ -100,12 +100,13 @@ namespace MICE.TestApp
             var token = cts.Token;
             var nes = new NES(token);
             //var cartridge = NESLoader.CreateCartridge(@"C:\Emulators\NES\Games\World\Donkey Kong (JU).nes");
-            //var cartridge = NESLoader.CreateCartridge(@"C:\Emulators\NES\Games\Super Mario Bros.nes");
+            var cartridge = NESLoader.CreateCartridge(@"C:\Emulators\NES\Games\Super Mario Bros.nes");
 
             // Test ROMS.
             //var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\blargg_nes_cpu_test5\official.nes");
-            var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\nes_instr_test\rom_singles\01-implied.nes");
-            
+            //var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\nestest.nes");
+            //var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\instr_test-v3\official_only.nes");
+
             // gray screen
             //var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\blargg_ppu_tests_2005.09.15b\sprite_ram.nes");
             //var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\nes_instr_test\rom_singles\01-implied.nes");
@@ -113,6 +114,10 @@ namespace MICE.TestApp
             // needs CNROM
             //var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\cpu_dummy_reads\cpu_dummy_reads.nes");
 
+            //var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\nes_instr_test\rom_singles\01-implied.nes");
+            //var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\nes_instr_test\rom_singles\02-immediate.nes");
+            //var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\nes_instr_test\rom_singles\03-zero_page.nes");
+            //var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\sprite_hit_tests_2005.10.05\01.basics.nes");
 
             nes.LoadCartridge(cartridge);
             nes.PowerOn();

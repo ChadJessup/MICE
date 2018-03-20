@@ -338,7 +338,7 @@ namespace MICE.CPU.MOS6502
         [MOS6502Opcode(0xB1, "LDA", AddressingModes.IndirectY, timing: 5, length: 2)]
         public void LDA(OpcodeContainer container)
         {
-            if (CPU.Registers.PC == 0x35f5)
+            if (CPU.Registers.PC == 0x8ee3)
             {
 
             }
@@ -413,6 +413,7 @@ namespace MICE.CPU.MOS6502
         [MOS6502Opcode(0x3A, "NOP", AddressingModes.Implied, timing: 2, length: 1)] // unofficial
         [MOS6502Opcode(0x5A, "NOP", AddressingModes.Implied, timing: 2, length: 1)] // unofficial
         [MOS6502Opcode(0x7A, "NOP", AddressingModes.Implied, timing: 2, length: 1)] // unofficial
+        [MOS6502Opcode(0x80, "NOP", AddressingModes.Implied, timing: 2, length: 1)] // unofficial
         [MOS6502Opcode(0xDA, "NOP", AddressingModes.Implied, timing: 2, length: 1)] // unofficial
         [MOS6502Opcode(0xEA, "NOP", AddressingModes.Implied, timing: 2, length: 1)]
         [MOS6502Opcode(0xFA, "NOP", AddressingModes.Implied, timing: 2, length: 1)] // unofficial
@@ -622,6 +623,7 @@ namespace MICE.CPU.MOS6502
         }
 
         [MOS6502Opcode(0xE9, "SBC", AddressingModes.Immediate, timing: 2, length: 2)]
+        [MOS6502Opcode(0xEB, "SBC", AddressingModes.Immediate, timing: 2, length: 2)] // unofficial
         [MOS6502Opcode(0xE5, "SBC", AddressingModes.ZeroPage, timing: 3, length: 2)]
         [MOS6502Opcode(0xF5, "SBC", AddressingModes.ZeroPageX, timing: 4, length: 2)]
         [MOS6502Opcode(0xED, "SBC", AddressingModes.AbsoluteX, timing: 4, length: 3)]

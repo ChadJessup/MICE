@@ -29,6 +29,10 @@ namespace MICE.Components.Memory
         public override ushort ReadShort(int index) => BitConverter.ToUInt16(this.Data, this.GetOffsetInSegment(index));
         public override void Write(int index, byte value)
         {
+            if (index == 0x300 && value !=0x0)
+            {
+
+            }
             this.Data[this.GetOffsetInSegment(index)] = value;
             this.AfterWriteAction?.Invoke(index, value);
         }

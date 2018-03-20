@@ -21,7 +21,12 @@ namespace MICE.PPU.RicohRP2C02
         /// <summary>
         /// Contains the PPU Address that writes at $2007 will be written to.
         /// </summary>
-        public ushort ppuAddress = 0;
+        private ushort tempPpuAddress = 0;
+        public ushort ppuAddress
+        {
+            get => this.tempPpuAddress;
+            set => this.tempPpuAddress = value;
+        }
 
         /// <summary>
         /// Partial PPU Address, as two writes are needed in order to complete the address.
@@ -29,6 +34,8 @@ namespace MICE.PPU.RicohRP2C02
         private ushort partialPpuAddress = 0;
 
         private bool writeHigh { get; set; }
+
+        private byte registerLatch;
 
         public RicohRP2C02(PPUMemoryMap memoryMap, PPURegisters registers, IMemoryMap cpuMemoryMap, IList<byte[]> chrBanks)
         {
@@ -126,14 +133,35 @@ namespace MICE.PPU.RicohRP2C02
 
         public void PowerOn(CancellationToken cancellationToken)
         {
-            this.Registers.PPUADDR.AfterWriteAction = (address, value) => this.UpdatePPUAddress(value);
+            this.Registers.PPUADDR.AfterWriteAction = (address, value) =>
+            {
+                this.registerLatch = value;
+                this.UpdatePPUAddress(value);
+            };
 
-            this.Registers.PPUSCROLL.AfterReadAction = (address, value) => this.writeHigh = !this.writeHigh;
+            this.Registers.PPUADDR.ReadByteInsteadAction = (address, value) => this.registerLatch;
+
+            this.Registers.PPUSCROLL.AfterReadAction = (address, value) =>
+            {
+                this.writeHigh = !this.writeHigh;
+            };
+
+            this.Registers.PPUSCROLL.AfterReadAction = (address, value) =>
+            {
+                Console.WriteLine($"{this.ScanLine}-{this.Cycle}: Scroll registers written to: {value}");
+            };
+
             this.Registers.PPUDATA.AfterReadAction = (address, value) => this.ppuAddress += (ushort)this.VRAMAddressIncrement;
-            this.Registers.PPUCTRL.AfterWriteAction = (address, value) => this.ShouldNMInterrupt = false;
+            this.Registers.PPUCTRL.AfterWriteAction = (address, value) =>
+            {
+                this.ShouldNMInterrupt = false;
+                this.partialPpuAddress = (ushort)((this.partialPpuAddress & 0xF3FF) | ((value & 0x03) << 10));
+            };
 
             this.Registers.PPUDATA.AfterWriteAction = (address, value) =>
             {
+                this.registerLatch = value;
+
                 this.MemoryMap.Write(this.ppuAddress, value);
                 this.ppuAddress += (ushort)this.VRAMAddressIncrement;
             };
@@ -324,6 +352,8 @@ namespace MICE.PPU.RicohRP2C02
 
         private void UpdatePPUAddress(byte value)
         {
+            this.registerLatch = value;
+
             if (this.writeHigh)
             {
                 this.partialPpuAddress = (ushort)((this.partialPpuAddress & 0x80FF) | ((value & 0x3F) << 8));
