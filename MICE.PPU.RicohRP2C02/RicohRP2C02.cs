@@ -1,6 +1,7 @@
 ﻿using MICE.Common.Helpers;
 using MICE.Common.Interfaces;
 using MICE.PPU.RicohRP2C02.Components;
+using System;
 using System.Collections.Generic;
 using System.Threading;
 
@@ -129,7 +130,7 @@ namespace MICE.PPU.RicohRP2C02
 
         public void PowerOn(CancellationToken cancellationToken)
         {
-            this.Registers.PPUADDR.AfterWriteAction = (address, value) =>
+            this.Registers.PPUADDR.AfterWriteAction = (_, value) =>
             {
                 this.registerLatch = value;
                 this.UpdatePPUAddress(value);
@@ -146,7 +147,7 @@ namespace MICE.PPU.RicohRP2C02
                 this.InternalRegisters.t = (ushort)((this.InternalRegisters.t & 0xF3FF) | ((value & 0x03) << 10));
             };
 
-            this.Registers.PPUDATA.AfterWriteAction = (address, value) =>
+            this.Registers.PPUDATA.AfterWriteAction = (_, value) =>
             {
                 this.registerLatch = value;
 
@@ -163,7 +164,7 @@ namespace MICE.PPU.RicohRP2C02
             this.Registers.PPUDATA.ReadShortInsteadAction = (_, value) => this.InternalRegisters.v;
 
             byte bufferedRead = 0;
-            this.Registers.PPUDATA.ReadByteInsteadAction = (address, value) =>
+            this.Registers.PPUDATA.ReadByteInsteadAction = (_, value) =>
             {
                 if (this.InternalRegisters.v >= 0x3F00 && this.InternalRegisters.v <= 0x3FFF)
                 {
@@ -200,48 +201,36 @@ namespace MICE.PPU.RicohRP2C02
 
         public int Step()
         {
-            // Prerender scanline
-            if (this.ScanLine == -1)
+            switch (this.ScanLine)
             {
-                this.HandlePrerenderScanline();
-            }
-            else if (this.ScanLine >= 0 && this.ScanLine <= 239)
-            {
-                this.HandleVisibleScanlines();
-            }
-            else if (this.ScanLine == 240)
-            {
-                this.HandlePostRenderScanline();
-            }
-            else if (this.ScanLine >= 241 && this.ScanLine <= 260)
-            {
-                this.HandleVerticalBlankLines();
-            }
-
-            if (this.ScanLine == 261)
-            {
-                this.HandleFinalScanline();
+                case -1:
+                    this.HandlePrerenderScanline();
+                    break;
+                case var sl when sl >= 0 && sl <= 239:
+                    this.HandleVisibleScanlines();
+                    break;
+                case 240:
+                    this.HandlePostRenderScanline();
+                    break;
+                case var sl when sl >= 241 && sl <= 260:
+                    this.HandleVerticalBlankLines();
+                    break;
+                case 261:
+                    this.HandleFinalScanline();
+                    break;
             }
 
-            if (this.Cycle > 0 && this.Cycle % 8 == 0)
+            switch (this.Cycle)
             {
-                this.ScrollHandler.IncrementCoarseX();
-            }
-
-            if (this.Cycle == 256)
-            {
-                if (this.IsRenderingEnabled)
-                {
+                case var c when c > 0 && c % 8 == 0:
+                    this.ScrollHandler.IncrementCoarseX();
+                    break;
+                case var c when c == 256 && this.IsRenderingEnabled:
                     this.ScrollHandler.IncrementCoarseY();
-                }
-            }
-            else if (this.Cycle == 257)
-            {
-                // if rendering is enabled copy all bits related to horizontal position from t to v.
-                if(this.IsRenderingEnabled)
-                {
+                    break;
+                case var c when c == 257 && this.IsRenderingEnabled:
                     this.ScrollHandler.CopyHorizontalBits();
-                }
+                    break;
             }
 
             this.Cycle++;
@@ -268,22 +257,27 @@ namespace MICE.PPU.RicohRP2C02
 
         private void HandlePrerenderScanline()
         {
-            if (this.Cycle == 0)
+            switch (this.Cycle)
             {
                 // Idle cycle
+                case 0:
+                    break;
+                case var c when c >= 1 && c <= 256:
+                    break;
+                case var c when c >= 280 && c <= 304:
+                    this.ScrollHandler.CopyVerticalBits();
+                    break;
             }
-            else if (this.Cycle >= 1 && this.Cycle <= 256)
-            {
-                if (this.Cycle == 1)
-                {
-                    this.IsVBlank = false;
-                    this.SpriteHandler.WasSprite0Hit = false;
-                    this.SpriteHandler.WasSpriteOverflow = false;
-                }
 
-                // Current scanline data fetch cycles
+            if (this.Cycle == 1)
+            {
+                this.IsVBlank = false;
+                this.SpriteHandler.WasSprite0Hit = false;
+                this.SpriteHandler.WasSpriteOverflow = false;
             }
-            else if (this.Cycle >= 257 && this.Cycle <= 320)
+
+            // Current scanline data fetch cycles
+            if (this.Cycle >= 257 && this.Cycle <= 320)
             {
                 this.Registers.OAMADDR.Write(00);
                 // Tile Data fetch for next scanline
@@ -296,25 +290,15 @@ namespace MICE.PPU.RicohRP2C02
             {
                 // For unknown reason, 2-bytes fetched which are fetched again later.
             }
-
-            if (this.Cycle >= 280 && this.Cycle <= 304)
-            {
-                // If rendering is enabled, at the end of vblank,
-                // shortly after the horizontal bits are copied from t to v at dot 257,
-                // the PPU will repeatedly copy the vertical bits from t to v from dots
-                // 280 to 304, completing the full initialization of v from t
-                this.ScrollHandler.CopyVerticalBits();
-            }
         }
 
         private void HandleVisibleScanlines()
         {
-            if (this.Cycle > 0 && this.Cycle <= 256)
+            switch (this.Cycle)
             {
-                if (this.IsRenderingEnabled && SpriteHandler.ShowSprites)
-                {
+                case var c when c > 0 && c <= 256 && this.IsRenderingEnabled && SpriteHandler.ShowSprites:
                     var pixelX = this.Cycle - 1;
-                    
+
                     (byte backgroundPixel, Tile tile) drawnTile = BackgroundHandler.GetBackgroundPixel(pixelX, this.ScanLine);
                     (byte spritePixel, Sprite sprite) drawnSprite = SpriteHandler.GetSpritePixel(pixelX, this.ScanLine, this.PrimaryOAM);
 
@@ -322,15 +306,30 @@ namespace MICE.PPU.RicohRP2C02
                     this.ScreenData[(this.ScanLine * Constants.NTSCWidth) + pixelX] = muxedPixel;
 
                     this.HandleSprite0Hit(drawnTile, drawnSprite);
-                }
+                    break;
+                case var c when c >= 257 && c <= 320:
+                    // this.Registers.OAMADDR.Write(00);
+                    SpriteHandler.EvaluateSpritesOnScanline(this.PrimaryOAM, this.ScanLine + 1);
+                    break;
             }
-            else if (this.Cycle >= 257 && this.Cycle <= 320)
+
+            switch (this.Cycle % 8)
             {
-                // this.Registers.OAMADDR.Write(00);
-                SpriteHandler.EvaluateSpritesOnScanline(this.PrimaryOAM, this.ScanLine + 1);
-            }
-            else if (this.Cycle >= 321 && this.Cycle <= 336)
-            {
+                case 1:
+                    this.BackgroundHandler.FetchNametableByte();
+                    break;
+                case 3:
+                    this.BackgroundHandler.FetchAttributeByte();
+                    break;
+                case 5:
+                    this.BackgroundHandler.FetchLowBGTile();
+                    break;
+                case 7:
+                    this.BackgroundHandler.FetchHighBGTile();
+                    this.ScrollHandler.IncrementCoarseX();
+                    break;
+                case 0:
+                    break;
             }
         }
 

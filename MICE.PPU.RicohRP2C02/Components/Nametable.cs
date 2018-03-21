@@ -75,9 +75,6 @@ namespace MICE.PPU.RicohRP2C02.Components
         {
             // To get a color index, we slice down the data even further to grab specific pixel details
             // and pull the color details from the ROMs pattern table(s).
-            // var testAddress = patterns[tile.TileAddress];
-            //return testAddress;
-            //var testAddress2 = patterns[tile.TileAddress + 8];
 
             var tiledX = x % 8;
             var tiledY = y % 8;

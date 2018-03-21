@@ -111,8 +111,6 @@ namespace MICE.Common.Misc
 
         public virtual void Write(int index, byte value)
         {
-            this.sw.WriteLine($"Wrote byte: 0x{value:X4} at 0x{index:X4}");
-
             if (this.memorySegmentCache.TryGetValue(index, out IMemorySegment cachedSegment))
             {
                 cachedSegment.Write(index, value);

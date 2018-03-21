@@ -57,9 +57,6 @@ namespace MICE.Nintendo.Mappers
         /// <returns>The data that was read.</returns>
         public override ushort ReadShort(int index)
         {
-            //            this.sw.WriteLine($"Read: 0x{index + 1:X}");
-            //            this.sw.WriteLine($"Read: 0x{index:X}");
-
             foreach (var (segment, bytes) in this.bankLinkage.Where(linkage => linkage.segment.IsIndexInRange(index)))
             {
                 var arrayOffset = segment.GetOffsetInSegment(index);
@@ -81,9 +78,7 @@ namespace MICE.Nintendo.Mappers
             {
                 var arrayOffset = segment.GetOffsetInSegment(index);
 
-                var value = bytes[arrayOffset];
-                //                this.sw.WriteLine($"Read: 0x{index:X}-0x{value:X}");
-                return value;
+                return bytes[arrayOffset];
             }
 
             throw new InvalidOperationException($"Invalid memory range and/or size (byte) was requested to be read from in NROM Mapper: 0x{index:X4}");

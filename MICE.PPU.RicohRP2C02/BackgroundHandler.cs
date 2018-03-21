@@ -23,7 +23,7 @@ namespace MICE.PPU.RicohRP2C02
         private Palette imagePalette;
         private readonly IList<byte[]> chrBanks;
 
-        public BackgroundHandler(IMemoryMap ppuMemoryMap, PPURegisters registers, PPUInternalRegisters internalRegisters, ScrollHandler scrollHandler, IMemoryMap cpuMemoryMap, IList<byte[]>chrBanks)
+        public BackgroundHandler(IMemoryMap ppuMemoryMap, PPURegisters registers, PPUInternalRegisters internalRegisters, ScrollHandler scrollHandler, IMemoryMap cpuMemoryMap, IList<byte[]> chrBanks)
         {
             this.chrBanks = chrBanks;
             this.ppuMemoryMap = ppuMemoryMap;
@@ -36,7 +36,6 @@ namespace MICE.PPU.RicohRP2C02
         }
 
         // Cache memory segments that are used heavily....
-        // TODO: Find a better way, this sucks.
         private void CacheMemorySegments(IMemoryMap ppuMemoryMap)
         {
             this.nameTable0 = ppuMemoryMap.GetMemorySegment<Nametable>("Name Table 0");
@@ -69,9 +68,6 @@ namespace MICE.PPU.RicohRP2C02
 
         public (byte, Tile) GetBackgroundPixel(int x, int y)
         {
-            //x = 5 * 8;
-            //y = 4 * 8;
-
             if (x <= 8 && !this.DrawLeft8BackgroundPixels)
             {
                 return (0, null);
@@ -79,9 +75,11 @@ namespace MICE.PPU.RicohRP2C02
 
             var nameTable = this.GetTable(this.scrollHandler.vNametable);
 
-//            var (scrolledX, scrolledY, nameTable) = this.GetScrolledXYAndNametable(x, y);
+            // var (scrolledX, scrolledY, nameTable) = this.GetScrolledXYAndNametable(x, y);
 
-            var tile = nameTable.GetTileFromPixel(this.scrollHandler, this.IsBackgroundPatternTableAddress1000 ? 0x1000 : 0x0000, this.chrBanks[0], this.internalRegisters);
+            var tile = nameTable.GetTileFromPixel(this.scrollHandler,
+                this.IsBackgroundPatternTableAddress1000 ? 0x1000 : 0x0000,
+                this.chrBanks[0], this.internalRegisters);
 
             var palette = this.ppuMemoryMap.ReadByte(tile.PaletteAddress);
 
@@ -91,29 +89,13 @@ namespace MICE.PPU.RicohRP2C02
         private (int scrolledX, int scrolledY, Nametable nameTable) GetScrolledXYAndNametable(int x, int y)
         {
             var (scrollX, scrollY) = this.scrollHandler.GetScrollValues();
-            
-            //int nameTableId = 0;
-            //int scrolledX = (scrollY + x) % 512;
-
-            //if (scrolledX >= 256)
-            //{
-            //    nameTableId += 1;
-            //    scrolledX -= 256;
-            //}
-
-            //int scrolledY = (scrollY + y) % 480;
-            //if (scrolledY >= 240)
-            //{
-            //    nameTableId += 2;
-            //    scrolledY -= 240;
-            //}
 
             return (this.scrollHandler.tCoarseXScroll, this.scrollHandler.tCoarseYScroll, this.GetTable(this.scrollHandler.tNametable));
         }
 
-        // TODO: mirroring...
         private Nametable GetTable(int nametableId)
         {
+            // TODO: mirroring...
             switch (nametableId)
             {
                 case 0:
@@ -127,6 +109,34 @@ namespace MICE.PPU.RicohRP2C02
                 default:
                     throw new InvalidOperationException($"Unexpected Nametable Id requested: {nametableId}");
             }
+        }
+
+        public void FetchAttributeByte()
+        {
+            ushort address = (ushort)(0x23C0 | (this.internalRegisters.v & 0x0C00) | ((this.internalRegisters.v >> 4) & 0x38) | ((this.internalRegisters.v >> 2) & 0x07));
+            int shift = ((this.internalRegisters.v >> 4) & 4) | (this.internalRegisters.v & 2);
+            var atbyte = (byte)(((this.ppuMemoryMap.ReadByte(address) >> shift) & 3) << 2);
+        }
+
+        private byte nameTableByte = 0;
+        public void FetchNametableByte()
+        {
+            ushort address = (ushort)(0x2000 | this.internalRegisters.v & 0x0FFF);
+            this.nameTableByte = this.ppuMemoryMap.ReadByte(address);
+        }
+
+        public void FetchHighBGTile()
+        {
+            int fineY = (this.internalRegisters.v >> 12) & 7;
+            ushort address = (ushort)(this.BaseNametableAddress + nameTableByte * 16 + fineY + 8);
+            var highTileByte = this.ppuMemoryMap.ReadByte(address);
+        }
+
+        public void FetchLowBGTile()
+        {
+            int fineY = (this.internalRegisters.v >> 12) & 7;
+            ushort address = (ushort)(this.BaseNametableAddress + nameTableByte * 16 + fineY);
+            var lowTileByte = this.ppuMemoryMap.ReadByte(address);
         }
     }
 }
