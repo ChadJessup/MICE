@@ -6,7 +6,7 @@
         {
             var rawAttribute = bytes[address];
 
-            this.Address = address;
+            this.Address = (short)(0x2000 + address);
             this.RawByte = rawAttribute;
             this.TopLeft = rawAttribute & 0b10000000 | rawAttribute & 0b0100000;
             this.TopRight = rawAttribute & 0b00100000 | rawAttribute & 0b0001000;

@@ -8,6 +8,7 @@ namespace MICE.PPU.RicohRP2C02
     public class BackgroundHandler
     {
         private readonly PPURegisters registers;
+        private readonly PPUInternalRegisters internalRegisters;
         private readonly IMemoryMap ppuMemoryMap;
         private readonly IMemoryMap cpuMemoryMap;
         private readonly ScrollHandler scrollHandler;
@@ -22,14 +23,14 @@ namespace MICE.PPU.RicohRP2C02
         private Palette imagePalette;
         private readonly IList<byte[]> chrBanks;
 
-        public BackgroundHandler(IMemoryMap ppuMemoryMap, PPURegisters registers, IMemoryMap cpuMemoryMap, IList<byte[]>chrBanks)
+        public BackgroundHandler(IMemoryMap ppuMemoryMap, PPURegisters registers, PPUInternalRegisters internalRegisters, ScrollHandler scrollHandler, IMemoryMap cpuMemoryMap, IList<byte[]>chrBanks)
         {
             this.chrBanks = chrBanks;
             this.ppuMemoryMap = ppuMemoryMap;
             this.registers = registers;
+            this.internalRegisters = internalRegisters;
             this.cpuMemoryMap = cpuMemoryMap;
-
-            this.scrollHandler = new ScrollHandler(registers);
+            this.scrollHandler = scrollHandler;
 
             this.CacheMemorySegments(ppuMemoryMap);
         }
@@ -66,7 +67,7 @@ namespace MICE.PPU.RicohRP2C02
             set => this.registers.PPUCTRL.SetBit(4, value);
         }
 
-        public (byte, Tile) GetBackgroundPixel(int x, int y, ushort PPUADDR)
+        public (byte, Tile) GetBackgroundPixel(int x, int y)
         {
             //x = 5 * 8;
             //y = 4 * 8;
@@ -76,9 +77,11 @@ namespace MICE.PPU.RicohRP2C02
                 return (0, null);
             }
 
-            var (scrolledX, scrolledY, nameTable) = this.GetScrolledXYAndNametable(x, y);
+            var nameTable = this.GetTable(this.scrollHandler.vNametable);
 
-            var tile = nameTable.GetTileFromPixel(scrolledX, scrolledY, this.IsBackgroundPatternTableAddress1000 ? 0x1000 : 0x0000, this.chrBanks[0], registers, PPUADDR);
+//            var (scrolledX, scrolledY, nameTable) = this.GetScrolledXYAndNametable(x, y);
+
+            var tile = nameTable.GetTileFromPixel(this.scrollHandler, this.IsBackgroundPatternTableAddress1000 ? 0x1000 : 0x0000, this.chrBanks[0], this.internalRegisters);
 
             var palette = this.ppuMemoryMap.ReadByte(tile.PaletteAddress);
 
@@ -88,24 +91,24 @@ namespace MICE.PPU.RicohRP2C02
         private (int scrolledX, int scrolledY, Nametable nameTable) GetScrolledXYAndNametable(int x, int y)
         {
             var (scrollX, scrollY) = this.scrollHandler.GetScrollValues();
+            
+            //int nameTableId = 0;
+            //int scrolledX = (scrollY + x) % 512;
 
-            int nameTableId = 0;
-            int scrolledX = (scrollY + x) % 512;
+            //if (scrolledX >= 256)
+            //{
+            //    nameTableId += 1;
+            //    scrolledX -= 256;
+            //}
 
-            if (scrolledX >= 256)
-            {
-                nameTableId += 1;
-                scrolledX -= 256;
-            }
+            //int scrolledY = (scrollY + y) % 480;
+            //if (scrolledY >= 240)
+            //{
+            //    nameTableId += 2;
+            //    scrolledY -= 240;
+            //}
 
-            int scrolledY = (scrollY + y) % 480;
-            if (scrolledY >= 240)
-            {
-                nameTableId += 2;
-                scrolledY -= 240;
-            }
-
-            return (scrolledX, scrolledY, this.GetTable(nameTableId));
+            return (this.scrollHandler.tCoarseXScroll, this.scrollHandler.tCoarseYScroll, this.GetTable(this.scrollHandler.tNametable));
         }
 
         // TODO: mirroring...

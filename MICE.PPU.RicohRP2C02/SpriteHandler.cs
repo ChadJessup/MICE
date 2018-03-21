@@ -24,9 +24,9 @@ namespace MICE.PPU.RicohRP2C02
         public SpriteHandler(IMemoryMap ppuMemoryMap, PPURegisters registers, IMemoryMap cpuMemoryMap, IList<byte[]> chrBanks)
         {
             this.chrBanks = chrBanks;
-            this.ppuMemoryMap = ppuMemoryMap;
             this.registers = registers;
             this.cpuMemoryMap = cpuMemoryMap;
+            this.ppuMemoryMap = ppuMemoryMap;
         }
 
         public int CurrentScanlineSpriteCount { get; private set; }

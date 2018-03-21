@@ -1,6 +1,6 @@
-﻿using MICE.Common.Interfaces;
+﻿using MICE.Common.Helpers;
+using MICE.Common.Interfaces;
 using MICE.PPU.RicohRP2C02.Components;
-using System;
 using System.Collections.Generic;
 using System.Threading;
 
@@ -18,30 +18,15 @@ namespace MICE.PPU.RicohRP2C02
             public const int NTSCHeight = 224;
         }
 
-        /// <summary>
-        /// Contains the PPU Address that writes at $2007 will be written to.
-        /// </summary>
-        private ushort tempPpuAddress = 0;
-        public ushort ppuAddress
-        {
-            get => this.tempPpuAddress;
-            set => this.tempPpuAddress = value;
-        }
-
-        /// <summary>
-        /// Partial PPU Address, as two writes are needed in order to complete the address.
-        /// </summary>
-        private ushort partialPpuAddress = 0;
-
-        private bool writeHigh { get; set; }
-
         private byte registerLatch;
 
         public RicohRP2C02(PPUMemoryMap memoryMap, PPURegisters registers, IMemoryMap cpuMemoryMap, IList<byte[]> chrBanks)
         {
             this.Registers = registers;
             this.MemoryMap = memoryMap;
-            this.BackgroundHandler = new BackgroundHandler(this.MemoryMap, this.Registers, cpuMemoryMap, chrBanks);
+            this.ScrollHandler = new ScrollHandler(this.Registers, this.InternalRegisters);
+
+            this.BackgroundHandler = new BackgroundHandler(this.MemoryMap, this.Registers, this.InternalRegisters, this.ScrollHandler, cpuMemoryMap, chrBanks);
             this.SpriteHandler = new SpriteHandler(this.MemoryMap, this.Registers, cpuMemoryMap, chrBanks);
             this.PixelMuxer = new PixelMuxer(this.Registers);
         }
@@ -62,13 +47,22 @@ namespace MICE.PPU.RicohRP2C02
 
         public BackgroundHandler BackgroundHandler { get; private set; }
         public SpriteHandler SpriteHandler { get; private set; }
+        public ScrollHandler ScrollHandler { get; private set; }
         public PixelMuxer PixelMuxer { get; private set; }
 
         public bool ShouldNMInterrupt { get; set; }
 
         public PPUMemoryMap MemoryMap { get; private set; }
 
+        /// <summary>
+        /// Gets the externally accessible PPU Registers. These are manipulated via the CPU.
+        /// </summary>
         public PPURegisters Registers { get; private set; }
+
+        /// <summary>
+        /// Gets the internal-only PPU Registers. These are manipulated only via the PPU.
+        /// </summary>
+        public PPUInternalRegisters InternalRegisters { get; } = new PPUInternalRegisters();
 
         /// <summary>
         /// Gets or sets the VRAM Address Increment.
@@ -131,6 +125,8 @@ namespace MICE.PPU.RicohRP2C02
         /// </summary>
         public bool IsFrameEven => this.FrameNumber % 2 == 0;
 
+        public bool IsRenderingEnabled => this.BackgroundHandler.ShowBackground;
+
         public void PowerOn(CancellationToken cancellationToken)
         {
             this.Registers.PPUADDR.AfterWriteAction = (address, value) =>
@@ -141,51 +137,42 @@ namespace MICE.PPU.RicohRP2C02
 
             this.Registers.PPUADDR.ReadByteInsteadAction = (address, value) => this.registerLatch;
 
-            this.Registers.PPUSCROLL.AfterReadAction = (address, value) =>
-            {
-                this.writeHigh = !this.writeHigh;
-            };
+            this.Registers.PPUSCROLL.AfterWriteAction = this.ScrollHandler.PPUScrollWrittenTo;
 
-            this.Registers.PPUSCROLL.AfterReadAction = (address, value) =>
-            {
-                Console.WriteLine($"{this.ScanLine}-{this.Cycle}: Scroll registers written to: {value}");
-            };
-
-            this.Registers.PPUDATA.AfterReadAction = (address, value) => this.ppuAddress += (ushort)this.VRAMAddressIncrement;
+            this.Registers.PPUDATA.AfterReadAction = (address, value) => this.InternalRegisters.v += (ushort)this.VRAMAddressIncrement;
             this.Registers.PPUCTRL.AfterWriteAction = (address, value) =>
             {
                 this.ShouldNMInterrupt = false;
-                this.partialPpuAddress = (ushort)((this.partialPpuAddress & 0xF3FF) | ((value & 0x03) << 10));
+                this.InternalRegisters.t = (ushort)((this.InternalRegisters.t & 0xF3FF) | ((value & 0x03) << 10));
             };
 
             this.Registers.PPUDATA.AfterWriteAction = (address, value) =>
             {
                 this.registerLatch = value;
 
-                this.MemoryMap.Write(this.ppuAddress, value);
-                this.ppuAddress += (ushort)this.VRAMAddressIncrement;
+                this.MemoryMap.Write(this.InternalRegisters.v, value);
+                this.InternalRegisters.v += (ushort)this.VRAMAddressIncrement;
             };
 
             this.Registers.PPUSTATUS.AfterReadAction = (_, value) =>
             {
-                this.writeHigh = true;
-
+                this.InternalRegisters.w = true;
                 this.IsVBlank = false;
             };
 
-            this.Registers.PPUDATA.ReadShortInsteadAction = (_, value) => this.ppuAddress;
+            this.Registers.PPUDATA.ReadShortInsteadAction = (_, value) => this.InternalRegisters.v;
 
             byte bufferedRead = 0;
             this.Registers.PPUDATA.ReadByteInsteadAction = (address, value) =>
             {
-                if (this.ppuAddress >= 0x3F00 && this.ppuAddress <= 0x3FFF)
+                if (this.InternalRegisters.v >= 0x3F00 && this.InternalRegisters.v <= 0x3FFF)
                 {
-                    bufferedRead = this.MemoryMap.ReadByte(this.ppuAddress);
+                    bufferedRead = this.MemoryMap.ReadByte(this.InternalRegisters.v);
                     return bufferedRead;
                 }
 
                 var temp = bufferedRead;
-                bufferedRead = this.MemoryMap.ReadByte(this.ppuAddress);
+                bufferedRead = this.MemoryMap.ReadByte(this.InternalRegisters.v);
 
                 return temp;
             };
@@ -201,10 +188,10 @@ namespace MICE.PPU.RicohRP2C02
 
             this.Registers.OAMADDR.Write(0);
             this.Registers.PPUSCROLL.Write(0);
-           // this.Registers.PPUDATA.Write(0);
+            // this.Registers.PPUDATA.Write(0);
 
-            this.writeHigh = true;
-            this.ppuAddress = 0;
+            this.InternalRegisters.w = true;
+            this.InternalRegisters.v = 0;
 
             this.FrameNumber = 0;
             this.ScanLine = 0;
@@ -234,6 +221,27 @@ namespace MICE.PPU.RicohRP2C02
             if (this.ScanLine == 261)
             {
                 this.HandleFinalScanline();
+            }
+
+            if (this.Cycle > 0 && this.Cycle % 8 == 0)
+            {
+                this.ScrollHandler.IncrementCoarseX();
+            }
+
+            if (this.Cycle == 256)
+            {
+                if (this.IsRenderingEnabled)
+                {
+                    this.ScrollHandler.IncrementCoarseY();
+                }
+            }
+            else if (this.Cycle == 257)
+            {
+                // if rendering is enabled copy all bits related to horizontal position from t to v.
+                if(this.IsRenderingEnabled)
+                {
+                    this.ScrollHandler.CopyHorizontalBits();
+                }
             }
 
             this.Cycle++;
@@ -288,16 +296,26 @@ namespace MICE.PPU.RicohRP2C02
             {
                 // For unknown reason, 2-bytes fetched which are fetched again later.
             }
+
+            if (this.Cycle >= 280 && this.Cycle <= 304)
+            {
+                // If rendering is enabled, at the end of vblank,
+                // shortly after the horizontal bits are copied from t to v at dot 257,
+                // the PPU will repeatedly copy the vertical bits from t to v from dots
+                // 280 to 304, completing the full initialization of v from t
+                this.ScrollHandler.CopyVerticalBits();
+            }
         }
 
         private void HandleVisibleScanlines()
         {
             if (this.Cycle > 0 && this.Cycle <= 256)
             {
-                if (BackgroundHandler.ShowBackground && SpriteHandler.ShowSprites)
+                if (this.IsRenderingEnabled && SpriteHandler.ShowSprites)
                 {
                     var pixelX = this.Cycle - 1;
-                    (byte backgroundPixel, Tile tile) drawnTile = BackgroundHandler.GetBackgroundPixel(pixelX, this.ScanLine, this.ppuAddress);
+                    
+                    (byte backgroundPixel, Tile tile) drawnTile = BackgroundHandler.GetBackgroundPixel(pixelX, this.ScanLine);
                     (byte spritePixel, Sprite sprite) drawnSprite = SpriteHandler.GetSpritePixel(pixelX, this.ScanLine, this.PrimaryOAM);
 
                     byte muxedPixel = PixelMuxer.MuxPixel(drawnSprite, drawnTile);
@@ -354,17 +372,18 @@ namespace MICE.PPU.RicohRP2C02
         {
             this.registerLatch = value;
 
-            if (this.writeHigh)
+            if (this.InternalRegisters.w)
             {
-                this.partialPpuAddress = (ushort)((this.partialPpuAddress & 0x80FF) | ((value & 0x3F) << 8));
+                this.InternalRegisters.t = (ushort)((this.InternalRegisters.t & 0x80FF) | ((value & 0x3F) << 8));
+                this.InternalRegisters.t.SetBit(14, false);
             }
             else
             {
-                this.partialPpuAddress = (ushort)((this.partialPpuAddress & 0xFF00) | value);
-                this.ppuAddress = this.partialPpuAddress;
+                this.InternalRegisters.t = (ushort)((this.InternalRegisters.t & 0xFF00) | value);
+                this.InternalRegisters.v = this.InternalRegisters.t;
             }
 
-            this.writeHigh = !this.writeHigh;
+            this.InternalRegisters.w = !this.InternalRegisters.w;
         }
     }
 }

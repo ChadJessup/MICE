@@ -19,8 +19,11 @@ namespace MICE.PPU.RicohRP2C02.Components
 
         public AttributeTable AttributeTable { get; private set; }
 
-        public Tile GetTileFromPixel(int scrolledX, int scrolledY, int bgOffset, byte[] chrBank, PPURegisters registers, ushort PPUADDR)
+        public Tile GetTileFromPixel(ScrollHandler scrollHandler, int bgOffset, byte[] chrBank, PPUInternalRegisters registers)
         {
+            var scrolledX = scrollHandler.vCoarseXScroll - 1;
+            var scrolledY = scrollHandler.vCoarseYScroll;
+
             var tileX = scrolledX / 8;
             var tileY = scrolledY / 8;
             var sliverY = scrolledX % 8;
@@ -28,27 +31,15 @@ namespace MICE.PPU.RicohRP2C02.Components
 
             var tile = new Tile();
 
-            var v = PPUADDR;
-            if (v != 0x0000)
-            {
-
-            }
-            var test = 0x2000 | (v & 0x0fff);
-            var test2 = 0x23C0 | (v & 0x0C00) | ((v >> 4) & 0x38) | ((v >> 2) & 0x07);
-            if (test != 0x2000 || test2 != 0x23c0)
-            {
-
-            }
-
             tile.PPUAddress = (short)(0x2000 + tileX + (tileY * Constants.NumberOfColumns));
             tile.Nametable = this.WhichNametableAmI();
             tile.Location = (tileX, tileY);
             tile.TileIndex = this.Data[tileX + (tileY * Constants.NumberOfColumns)];
-            tile.TileAddress = (short)(bgOffset + tile.TileIndex * 16);
+            tile.TileAddress = (short)(registers.v & 0x0fff);
 
-            var attrib = this.AttributeTable.GetAttribute(tileX, tileY);
+            var attrib = this.AttributeTable.GetAttribute(registers.v);
             tile.AttributeData = attrib.RawByte;
-            tile.AttributeAddress = (short)(this.LowerIndex + attrib.Address);
+            tile.AttributeAddress = attrib.Address;
 
             var colorIndex = this.GetColorIndex(scrolledX, scrolledY, tile, chrBank);
 
@@ -113,6 +104,6 @@ namespace MICE.PPU.RicohRP2C02.Components
             return this.Data[byteIndexX + (byteIndexY * Constants.NumberOfColumns)];
         }
 
-        private NametableAttribute GetPalette(int x, int y) => this.AttributeTable.GetAttribute(x, y);
+        //private NametableAttribute GetPalette(int x, int y) => this.AttributeTable.GetAttribute(x, y);
     }
 }

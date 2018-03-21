@@ -12,5 +12,12 @@ namespace MICE.Common.Helpers
             ? (byte)(b | (1 << index))
             : (byte)(b & ~(1 << index));
         }
+
+        public static void SetBit(this ushort b, int index, bool value)
+        {
+            b = value
+            ? (ushort)(b | (1 << index))
+            : (ushort)(b & ~(1 << index));
+        }
     }
 }

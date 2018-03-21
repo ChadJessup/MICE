@@ -1,4 +1,5 @@
 ﻿using MICE.Components.CPU;
+using System;
 
 namespace MICE.PPU.RicohRP2C02
 {
@@ -44,7 +45,6 @@ namespace MICE.PPU.RicohRP2C02
         /// PPU read/write address.
         /// This register is memory mapped to the CPU at $2006.
         /// While this is an 8bit register, the CPU double writes to it for 16-bit addressing.
-        /// Note: Some documentation calls this: 'v'?
         /// </summary>
         public Register8Bit PPUADDR = new Register8Bit("PPUADDR");
 
