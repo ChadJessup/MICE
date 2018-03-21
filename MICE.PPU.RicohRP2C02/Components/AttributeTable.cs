@@ -15,14 +15,14 @@ namespace MICE.PPU.RicohRP2C02.Components
         }
 
         public ArraySegment<byte> Data { get; private set; }
-        public NametableAttribute GetAttribute(ushort v)
+        public NametableAttribute GetAttribute(Tile tile, ushort v)
         {
             var offset = (short)((v & 0x0C00) | ((v >> 4) & 0x38) | ((v >> 2) & 0x07));
 //            var attributeX = x / 4;
   //          var attributeY = y / 4;
 
     //        var offset = (attributeY * 8) + attributeX;
-            return new NametableAttribute(this.Data.Array, (short)(this.Data.Offset + offset));
+            return new NametableAttribute(tile.attributeByte, (ushort)(this.Data.Offset + offset));
         }
     }
 }

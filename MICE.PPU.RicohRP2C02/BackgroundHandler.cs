@@ -23,6 +23,17 @@ namespace MICE.PPU.RicohRP2C02
         private Palette imagePalette;
         private readonly IList<byte[]> chrBanks;
 
+        // Having issues, going to reproduce EmuNES's methods for now then break it down if possible.
+        private ulong tileData;
+        private byte nameTableByte;
+        private byte attributeTableByte;
+        private byte lowTileByte;
+        private byte highTileByte;
+        //
+
+        public Tile PreviousTile { get; set; }
+        public Tile CurrentTile { get; set; } = new Tile();
+
         public BackgroundHandler(IMemoryMap ppuMemoryMap, PPURegisters registers, PPUInternalRegisters internalRegisters, ScrollHandler scrollHandler, IMemoryMap cpuMemoryMap, IList<byte[]> chrBanks)
         {
             this.chrBanks = chrBanks;
@@ -33,17 +44,6 @@ namespace MICE.PPU.RicohRP2C02
             this.scrollHandler = scrollHandler;
 
             this.CacheMemorySegments(ppuMemoryMap);
-        }
-
-        // Cache memory segments that are used heavily....
-        private void CacheMemorySegments(IMemoryMap ppuMemoryMap)
-        {
-            this.nameTable0 = ppuMemoryMap.GetMemorySegment<Nametable>("Name Table 0");
-            this.nameTable1 = ppuMemoryMap.GetMemorySegment<Nametable>("Name Table 1");
-            this.nameTable2 = ppuMemoryMap.GetMemorySegment<Nametable>("Name Table 2");
-            this.nameTable3 = ppuMemoryMap.GetMemorySegment<Nametable>("Name Table 3");
-
-            this.imagePalette = ppuMemoryMap.GetMemorySegment<Palette>("Image Palette");
         }
 
         public int BaseNametableAddress => (this.registers.PPUCTRL.GetBit(0) ? 1 : 0) | (this.registers.PPUCTRL.GetBit(1) ? 1 : 0) << 2;
@@ -76,14 +76,67 @@ namespace MICE.PPU.RicohRP2C02
             var nameTable = this.GetTable(this.scrollHandler.vNametable);
 
             // var (scrolledX, scrolledY, nameTable) = this.GetScrolledXYAndNametable(x, y);
+            uint data = FetchTileData() >> ((7 - this.scrollHandler.FineXScroll) * 4);
+            if(data != 0x0 && data != 0x0f)
+            {
 
-            var tile = nameTable.GetTileFromPixel(this.scrollHandler,
-                this.IsBackgroundPatternTableAddress1000 ? 0x1000 : 0x0000,
-                this.chrBanks[0], this.internalRegisters);
+            }
+            var tileByte = (byte)(data & 0x0F);
+
+            var tile = new Tile();
+            tile.PaletteAddress = (ushort)(0x3f00 + 4 * 0 + 0);
+
+            //var tile = nameTable.GetTileFromPixel(x, y, this.scrollHandler, this.PreviousTile,
+            //    this.IsBackgroundPatternTableAddress1000 ? 0x1000 : 0x0000,
+            //    this.chrBanks[0], this.internalRegisters);
 
             var palette = this.ppuMemoryMap.ReadByte(tile.PaletteAddress);
 
             return (palette, tile);
+        }
+
+        public void NextCycle() => tileData <<= 4;
+
+        public void FetchAttributeByte()
+        {
+            var address = (ushort)(0x23C0 | (this.internalRegisters.v & 0x0C00) | ((this.internalRegisters.v >> 4) & 0x38) | ((this.internalRegisters.v >> 2) & 0x07));
+            int shift = ((this.internalRegisters.v >> 4) & 4) | (this.internalRegisters.v & 2);
+            this.attributeTableByte = (byte)(((this.ppuMemoryMap.ReadByte(this.CurrentTile.AttributeAddress) >> shift) & 3) << 2);
+
+            //this.CurrentTile.AttributeAddress = (ushort)(0x23C0 | (this.internalRegisters.v & 0x0C00) | ((this.internalRegisters.v >> 4) & 0x38) | ((this.internalRegisters.v >> 2) & 0x07));
+            //int shift = ((this.internalRegisters.v >> 4) & 4) | (this.internalRegisters.v & 2);
+            //this.CurrentTile.AttributeData = (byte)(((this.ppuMemoryMap.ReadByte(this.CurrentTile.AttributeAddress) >> shift) & 3) << 2);
+        }
+
+        public void FetchNametableByte()
+        {
+            var address = (ushort)(0x2000 | this.internalRegisters.v & 0x0FFF);
+            if (address == 0x2003)
+            {
+
+            }
+            this.nameTableByte = this.ppuMemoryMap.ReadByte(address);
+
+            //this.CurrentTile.Nametable = this.scrollHandler.vNametable;
+            //this.CurrentTile.TileAddress = (ushort)(0x2000 | this.internalRegisters.v & 0x0FFF);
+            //this.CurrentTile.nameTableByte = this.ppuMemoryMap.ReadByte(this.CurrentTile.TileAddress);
+
+            //if(this.CurrentTile.nameTableByte != 0x0)
+            //{
+
+            //}
+        }
+
+        public void FetchHighBGTile()
+        {
+            ushort address = (ushort)(this.BaseNametableAddress + this.nameTableByte * 16 + this.scrollHandler.vFineYScroll + 8);
+            this.highTileByte = this.ppuMemoryMap.ReadByte(address);
+        }
+
+        public void FetchLowBGTile()
+        {
+            ushort address = (ushort)(this.BaseNametableAddress + this.nameTableByte * 16 + this.scrollHandler.vFineYScroll);
+            this.lowTileByte = this.ppuMemoryMap.ReadByte(address);
         }
 
         private (int scrolledX, int scrolledY, Nametable nameTable) GetScrolledXYAndNametable(int x, int y)
@@ -91,6 +144,17 @@ namespace MICE.PPU.RicohRP2C02
             var (scrollX, scrollY) = this.scrollHandler.GetScrollValues();
 
             return (this.scrollHandler.tCoarseXScroll, this.scrollHandler.tCoarseYScroll, this.GetTable(this.scrollHandler.tNametable));
+        }
+
+        // Cache memory segments that are used heavily....
+        private void CacheMemorySegments(IMemoryMap ppuMemoryMap)
+        {
+            this.nameTable0 = ppuMemoryMap.GetMemorySegment<Nametable>("Name Table 0");
+            this.nameTable1 = ppuMemoryMap.GetMemorySegment<Nametable>("Name Table 1");
+            this.nameTable2 = ppuMemoryMap.GetMemorySegment<Nametable>("Name Table 2");
+            this.nameTable3 = ppuMemoryMap.GetMemorySegment<Nametable>("Name Table 3");
+
+            this.imagePalette = ppuMemoryMap.GetMemorySegment<Palette>("Image Palette");
         }
 
         private Nametable GetTable(int nametableId)
@@ -111,32 +175,30 @@ namespace MICE.PPU.RicohRP2C02
             }
         }
 
-        public void FetchAttributeByte()
+        // Temp from EmuNES...
+        public void StoreTileData()
         {
-            ushort address = (ushort)(0x23C0 | (this.internalRegisters.v & 0x0C00) | ((this.internalRegisters.v >> 4) & 0x38) | ((this.internalRegisters.v >> 2) & 0x07));
-            int shift = ((this.internalRegisters.v >> 4) & 4) | (this.internalRegisters.v & 2);
-            var atbyte = (byte)(((this.ppuMemoryMap.ReadByte(address) >> shift) & 3) << 2);
+            uint data = 0;
+
+            for (int i = 0; i < 8; i++)
+            {
+                int p1 = (lowTileByte & 0x80) >> 7;
+                int p2 = (highTileByte & 0x80) >> 6;
+
+                lowTileByte <<= 1;
+                highTileByte <<= 1;
+                data <<= 4;
+
+                data |= (uint)(attributeTableByte | p1 | p2);
+            }
+
+            tileData |= (ulong)(data);
         }
 
-        private byte nameTableByte = 0;
-        public void FetchNametableByte()
+        private uint FetchTileData()
         {
-            ushort address = (ushort)(0x2000 | this.internalRegisters.v & 0x0FFF);
-            this.nameTableByte = this.ppuMemoryMap.ReadByte(address);
+            return (uint)(tileData >> 32);
         }
-
-        public void FetchHighBGTile()
-        {
-            int fineY = (this.internalRegisters.v >> 12) & 7;
-            ushort address = (ushort)(this.BaseNametableAddress + nameTableByte * 16 + fineY + 8);
-            var highTileByte = this.ppuMemoryMap.ReadByte(address);
-        }
-
-        public void FetchLowBGTile()
-        {
-            int fineY = (this.internalRegisters.v >> 12) & 7;
-            ushort address = (ushort)(this.BaseNametableAddress + nameTableByte * 16 + fineY);
-            var lowTileByte = this.ppuMemoryMap.ReadByte(address);
-        }
+        //
     }
 }

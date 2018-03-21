@@ -23,6 +23,11 @@ namespace MICE.PPU.RicohRP2C02
 
         public RicohRP2C02(PPUMemoryMap memoryMap, PPURegisters registers, IMemoryMap cpuMemoryMap, IList<byte[]> chrBanks)
         {
+            this.InternalRegisters = new PPUInternalRegisters
+            {
+                tempPPU = this
+            };
+
             this.Registers = registers;
             this.MemoryMap = memoryMap;
             this.ScrollHandler = new ScrollHandler(this.Registers, this.InternalRegisters);
@@ -63,7 +68,7 @@ namespace MICE.PPU.RicohRP2C02
         /// <summary>
         /// Gets the internal-only PPU Registers. These are manipulated only via the PPU.
         /// </summary>
-        public PPUInternalRegisters InternalRegisters { get; } = new PPUInternalRegisters();
+        public PPUInternalRegisters InternalRegisters { get; private set; }
 
         /// <summary>
         /// Gets or sets the VRAM Address Increment.
@@ -138,11 +143,26 @@ namespace MICE.PPU.RicohRP2C02
 
             this.Registers.PPUADDR.ReadByteInsteadAction = (address, value) => this.registerLatch;
 
-            this.Registers.PPUSCROLL.AfterWriteAction = this.ScrollHandler.PPUScrollWrittenTo;
+            this.Registers.PPUMASK.AfterWriteAction = (address, value) =>
+            {
+                this.registerLatch = value;
+            };
+
+            this.Registers.PPUSCROLL.AfterWriteAction = (address, value) =>
+            {
+                if (value != 0x0)
+                {
+
+                }
+
+                this.ScrollHandler.PPUScrollWrittenTo(address, value);
+            };
 
             this.Registers.PPUDATA.AfterReadAction = (address, value) => this.InternalRegisters.v += (ushort)this.VRAMAddressIncrement;
             this.Registers.PPUCTRL.AfterWriteAction = (address, value) =>
             {
+                this.registerLatch = value;
+
                 this.ShouldNMInterrupt = false;
                 this.InternalRegisters.t = (ushort)((this.InternalRegisters.t & 0xF3FF) | ((value & 0x03) << 10));
             };
@@ -150,6 +170,11 @@ namespace MICE.PPU.RicohRP2C02
             this.Registers.PPUDATA.AfterWriteAction = (_, value) =>
             {
                 this.registerLatch = value;
+
+                if (this.InternalRegisters.v == 0x2000)
+                {
+
+                }
 
                 this.MemoryMap.Write(this.InternalRegisters.v, value);
                 this.InternalRegisters.v += (ushort)this.VRAMAddressIncrement;
@@ -178,6 +203,11 @@ namespace MICE.PPU.RicohRP2C02
                 return temp;
             };
 
+            this.Registers.OAMADDR.AfterWriteAction = (address, value) =>
+            {
+                this.registerLatch = value;
+            };
+
             this.Restart(cancellationToken);
         }
 
@@ -195,17 +225,35 @@ namespace MICE.PPU.RicohRP2C02
             this.InternalRegisters.v = 0;
 
             this.FrameNumber = 0;
-            this.ScanLine = 0;
-            this.Cycle = 0;
+            this.ScanLine = 240;
+            this.Cycle = 340;
         }
 
         public int Step()
         {
+            ++this.Cycle;
+
+            if (this.OnFinalCycleOnLine())
+            {
+                this.ScanLine++;
+                this.Cycle = 0;
+
+                if (this.ScanLine == 262)
+                {
+                    this.HandleFinalScanline();
+                }
+            }
+
+            // Temp
+            if (this.IsRenderingEnabled
+                && (this.ScanLine < 240 || this.ScanLine == 261)
+                && ((this.Cycle >= 1 && this.Cycle <= 256) || (this.Cycle >= 321 && this.Cycle <= 336)))
+            {
+                this.Fetch();
+            }
+
             switch (this.ScanLine)
             {
-                case -1:
-                    this.HandlePrerenderScanline();
-                    break;
                 case var sl when sl >= 0 && sl <= 239:
                     this.HandleVisibleScanlines();
                     break;
@@ -215,43 +263,36 @@ namespace MICE.PPU.RicohRP2C02
                 case var sl when sl >= 241 && sl <= 260:
                     this.HandleVerticalBlankLines();
                     break;
+                case -1:
                 case 261:
-                    this.HandleFinalScanline();
+                    this.HandlePrerenderScanline();
                     break;
             }
 
             switch (this.Cycle)
             {
-                case var c when c > 0 && c % 8 == 0:
+                case var c when this.IsRenderingEnabled && c > 0 && c % 8 == 0:
                     this.ScrollHandler.IncrementCoarseX();
                     break;
-                case var c when c == 256 && this.IsRenderingEnabled:
+                case var c when this.IsRenderingEnabled && c == 256:
                     this.ScrollHandler.IncrementCoarseY();
                     break;
-                case var c when c == 257 && this.IsRenderingEnabled:
+                case var c when this.IsRenderingEnabled && c == 257:
                     this.ScrollHandler.CopyHorizontalBits();
                     break;
-            }
-
-            this.Cycle++;
-
-            if (this.OnFinalCycleOnLine())
-            {
-                this.ScanLine++;
-                this.Cycle = 0;
             }
 
             return 0;
         }
 
         private bool OnFinalCycleOnLine() =>
-            this.BackgroundHandler.ShowBackground && !this.IsFrameEven && this.ScanLine == -1
+            this.BackgroundHandler.ShowBackground && !this.IsFrameEven && this.ScanLine == 261
                 ? this.Cycle == 340
                 : this.Cycle == 341;
 
         private void HandleFinalScanline()
         {
-            this.ScanLine = -1;
+            this.ScanLine = 0;
             this.FrameNumber++;
         }
 
@@ -303,6 +344,11 @@ namespace MICE.PPU.RicohRP2C02
                     (byte spritePixel, Sprite sprite) drawnSprite = SpriteHandler.GetSpritePixel(pixelX, this.ScanLine, this.PrimaryOAM);
 
                     byte muxedPixel = PixelMuxer.MuxPixel(drawnSprite, drawnTile);
+
+                    if (muxedPixel != 0x22)
+                    {
+
+                    }
                     this.ScreenData[(this.ScanLine * Constants.NTSCWidth) + pixelX] = muxedPixel;
 
                     this.HandleSprite0Hit(drawnTile, drawnSprite);
@@ -312,10 +358,17 @@ namespace MICE.PPU.RicohRP2C02
                     SpriteHandler.EvaluateSpritesOnScanline(this.PrimaryOAM, this.ScanLine + 1);
                     break;
             }
+        }
+
+        private void Fetch()
+        {
+            this.BackgroundHandler.NextCycle();
 
             switch (this.Cycle % 8)
             {
                 case 1:
+                    //this.BackgroundHandler.PreviousTile = this.BackgroundHandler.CurrentTile;
+                    //this.BackgroundHandler.CurrentTile = new Tile();
                     this.BackgroundHandler.FetchNametableByte();
                     break;
                 case 3:
@@ -326,9 +379,9 @@ namespace MICE.PPU.RicohRP2C02
                     break;
                 case 7:
                     this.BackgroundHandler.FetchHighBGTile();
-                    this.ScrollHandler.IncrementCoarseX();
                     break;
                 case 0:
+                    this.BackgroundHandler.StoreTileData();
                     break;
             }
         }

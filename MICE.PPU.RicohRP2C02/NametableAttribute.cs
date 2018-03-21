@@ -2,12 +2,12 @@
 {
     public struct NametableAttribute
     {
-        public NametableAttribute(byte[] bytes, short address)
+        public NametableAttribute(byte attributeByte, ushort offset)
         {
-            var rawAttribute = bytes[address];
+            var rawAttribute = offset;
 
-            this.Address = (short)(0x2000 + address);
-            this.RawByte = rawAttribute;
+            this.Address = (ushort)(0x2000 + offset);
+            this.RawByte = attributeByte;
             this.TopLeft = rawAttribute & 0b10000000 | rawAttribute & 0b0100000;
             this.TopRight = rawAttribute & 0b00100000 | rawAttribute & 0b0001000;
 
@@ -15,7 +15,7 @@
             this.BottomRight = rawAttribute & 0b00000010 | rawAttribute & 0b0000001;
         }
 
-        public short Address { get; private set; }
+        public ushort Address { get; private set; }
         public byte RawByte { get; private set; }
         public int TopLeft { get; private set; }
         public int TopRight { get; private set; }
