@@ -2,6 +2,7 @@
 using MICE.Common.Interfaces;
 using MICE.PPU.RicohRP2C02.Components;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading;
 
 namespace MICE.PPU.RicohRP2C02
@@ -131,6 +132,24 @@ namespace MICE.PPU.RicohRP2C02
 
         public bool IsRenderingEnabled => this.BackgroundHandler.ShowBackground;
 
+        public bool IsPreRenderLine => this.ScanLine == 261;
+        public bool IsVisibleLine => this.ScanLine >= 0 && this.ScanLine <= 239;
+        public bool IsVisibleCycle => this.Cycle >= 1 && this.Cycle <= 256;
+        public bool IsPostRenderLine => this.ScanLine >= 240 && this.ScanLine <= 260;
+        public bool IsRenderLine => this.IsVisibleLine || this.IsPreRenderLine;
+
+        public bool IsFetchLine => this.IsRenderLine;
+        public bool IsFetchCycle => (this.Cycle >= 1 && this.Cycle <= 256) || (this.Cycle >= 321 && this.Cycle <= 340);
+        public bool ShouldFetch => this.IsRenderingEnabled && this.IsFetchLine && this.IsFetchCycle;
+
+        public bool ShouldIncrementHorizontal => this.IsRenderingEnabled && this.IsRenderLine && this.IsFetchCycle && this.Cycle % 8 == 0;
+        public bool ShouldIncrementVertical => this.IsRenderingEnabled && this.IsRenderLine && this.Cycle == 256;
+
+        public bool ShouldCopyVertical => this.IsRenderingEnabled && this.IsPreRenderLine && (this.Cycle >= 280 && this.Cycle <= 304);
+        public bool ShouldCopyHorizontalBits => this.IsRenderingEnabled && this.IsRenderLine && this.Cycle == 257;
+
+        public bool ShouldSetVBlank => this.IsPostRenderLine && this.Cycle == 1;
+
         public void PowerOn(CancellationToken cancellationToken)
         {
             this.Registers.PPUADDR.AfterWriteAction = (_, value) =>
@@ -160,6 +179,11 @@ namespace MICE.PPU.RicohRP2C02
 
                 this.MemoryMap.Write(this.InternalRegisters.v, value);
                 this.InternalRegisters.v += (ushort)this.VRAMAddressIncrement;
+
+                if (this.InternalRegisters.v == 0x2358)
+                {
+
+                }
             };
 
             byte bufferedRead = 0;
@@ -199,11 +223,14 @@ namespace MICE.PPU.RicohRP2C02
             // this.Registers.PPUDATA.Write(0);
 
             this.InternalRegisters.w = true;
-            this.InternalRegisters.v = 0;
+            //this.InternalRegisters.v = 0;
 
             this.FrameNumber = 0;
             this.ScanLine = 240;
             this.Cycle = 340;
+
+            //this.ScanLine = -1;
+            //this.Cycle = 0;
         }
 
         public int Step()
@@ -221,43 +248,83 @@ namespace MICE.PPU.RicohRP2C02
                 }
             }
 
-            // Temp
-            if (this.IsRenderingEnabled
-                && (this.ScanLine < 240 || this.ScanLine == 261)
-                && ((this.Cycle >= 1 && this.Cycle <= 256) || (this.Cycle >= 321 && this.Cycle <= 336)))
+            //Debug.WriteLine($"VRAM: 0x{this.InternalRegisters.v:X4}");
+
+            if (this.IsPreRenderLine)
+            {
+                if (this.Cycle == 2)
+                {
+                    this.IsVBlank = false;
+                    this.SpriteHandler.WasSprite0Hit = false;
+                    this.SpriteHandler.WasSpriteOverflow = false;
+                }
+            }
+
+            if (this.ShouldSetVBlank)
+            {
+                this.HandleVerticalBlankLines();
+            }
+
+            if (this.IsRenderingEnabled && this.IsVisibleLine && this.IsVisibleCycle)
+            {
+                this.HandleVisibleScanlines();
+            }
+
+            if (this.ShouldFetch)
             {
                 this.Fetch();
             }
 
-            switch (this.ScanLine)
+            if (this.ShouldCopyVertical)
             {
-                case var sl when sl >= 0 && sl <= 239:
-                    this.HandleVisibleScanlines();
-                    break;
-                case 240:
-                    this.HandlePostRenderScanline();
-                    break;
-                case var sl when sl >= 241 && sl <= 260:
-                    this.HandleVerticalBlankLines();
-                    break;
-                case -1:
-                case 261:
-                    this.HandlePrerenderScanline();
-                    break;
+                this.ScrollHandler.CopyVerticalBits();
             }
 
-            switch (this.Cycle)
+            if (this.ShouldCopyHorizontalBits)
             {
-                case var c when this.IsRenderingEnabled && c > 0 && c % 8 == 0:
-                    this.ScrollHandler.IncrementCoarseX();
-                    break;
-                case var c when this.IsRenderingEnabled && c == 256:
-                    this.ScrollHandler.IncrementCoarseY();
-                    break;
-                case var c when this.IsRenderingEnabled && c == 257:
-                    this.ScrollHandler.CopyHorizontalBits();
-                    break;
+                this.ScrollHandler.CopyHorizontalBits();
             }
+
+            if (this.ShouldIncrementHorizontal)
+            {
+                this.ScrollHandler.IncrementCoarseX();
+            }
+
+            if (this.ShouldIncrementVertical)
+            {
+                this.ScrollHandler.IncrementCoarseY();
+            }
+
+
+            //switch (this.ScanLine)
+            //{
+            //    case -1:
+            //    case 261:
+            //        this.HandlePrerenderScanline();
+            //        break;
+            //    case var sl when sl >= 0 && sl <= 239:
+            //        this.HandleVisibleScanlines();
+            //        break;
+            //    case 240:
+            //        this.HandlePostRenderScanline();
+            //        break;
+            //    case var sl when sl >= 241 && sl <= 260:
+            //        this.HandleVerticalBlankLines();
+            //        break;
+            //}
+
+            //switch (this.Cycle)
+            //{
+            //    case var c when this.IsRenderingEnabled && c > 0 && c % 8 == 0:
+            //        this.ScrollHandler.IncrementCoarseX();
+            //        break;
+            //    case var c when this.IsRenderingEnabled && c == 256:
+            //        this.ScrollHandler.IncrementCoarseY();
+            //        break;
+            //    case var c when this.IsRenderingEnabled && c == 257:
+            //        this.ScrollHandler.CopyHorizontalBits();
+            //        break;
+            //}
 
             return 0;
         }
@@ -280,18 +347,28 @@ namespace MICE.PPU.RicohRP2C02
                 // Idle cycle
                 case 0:
                     break;
-                case var c when c >= 1 && c <= 256:
+                case 1:
+                    this.IsVBlank = false;
+                    this.SpriteHandler.WasSprite0Hit = false;
+                    this.SpriteHandler.WasSpriteOverflow = false;
+                    this.Fetch();
+                    break;
+                case var c when c > 1 && c <= 256:
+                    this.Fetch();
+                    if(c % 8 == 0)
+                    {
+                        this.ScrollHandler.IncrementCoarseX();
+                    }
+                    break;
+                case var c when c == 257:
+                    this.ScrollHandler.CopyHorizontalBits();
                     break;
                 case var c when c >= 280 && c <= 304:
                     this.ScrollHandler.CopyVerticalBits();
                     break;
-            }
-
-            if (this.Cycle == 1)
-            {
-                this.IsVBlank = false;
-                this.SpriteHandler.WasSprite0Hit = false;
-                this.SpriteHandler.WasSpriteOverflow = false;
+                case var c when c >= 321 && c <= 340:
+                    this.Fetch();
+                    break;
             }
 
             // Current scanline data fetch cycles
@@ -322,10 +399,6 @@ namespace MICE.PPU.RicohRP2C02
 
                     byte muxedPixel = PixelMuxer.MuxPixel(drawnSprite, drawnTile);
 
-                    if (muxedPixel != 0x22)
-                    {
-
-                    }
                     this.ScreenData[(this.ScanLine * Constants.NTSCWidth) + pixelX] = muxedPixel;
 
                     this.HandleSprite0Hit(drawnTile, drawnSprite);

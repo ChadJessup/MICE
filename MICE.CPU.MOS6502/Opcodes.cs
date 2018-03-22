@@ -338,6 +338,10 @@ namespace MICE.CPU.MOS6502
         [MOS6502Opcode(0xB1, "LDA", AddressingModes.IndirectY, timing: 5, length: 2)]
         public void LDA(OpcodeContainer container)
         {
+            if (container.Code == 0xAD)
+            {
+
+            }
             var (value, address, samePage) = AddressingMode.GetAddressedValue(CPU, container);
             this.WriteByteToRegister(CPU.Registers.A, value, S: true, Z: true);
 

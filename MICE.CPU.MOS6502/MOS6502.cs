@@ -150,6 +150,8 @@ namespace MICE.CPU.MOS6502
             this.IsZero = false;
             this.WillBreak = false;
 
+            this.Registers.P.Write(0x34);
+
             // TODO: Move the below to NES specific reset logic...APU specifically...
             // Frame IRQ Enabled - APU
             this.memoryMap.Write(0x4017, 0x00);
@@ -178,18 +180,19 @@ namespace MICE.CPU.MOS6502
 
             if (this.WasNMIRequested)
             {
+                this.HandleNMIRequest();
+                this.AreInterruptsDisabled = true;
+                this.WasNMIRequested = false;
+                this.nmiCycleStart = 0;
+
+                return 1;
+
                 if (this.nmiCycleStart == 0)
                 {
                     this.nmiCycleStart = this.CurrentCycle;
                 }
                 else if (this.CurrentCycle - this.nmiCycleStart >= 14)
                 {
-                    this.HandleNMIRequest();
-                    this.AreInterruptsDisabled = true;
-                    this.WasNMIRequested = false;
-                    this.nmiCycleStart = 0;
-
-                    return 7;
                 }
             }
 
@@ -213,13 +216,13 @@ namespace MICE.CPU.MOS6502
                 this.fs.Flush();
             }
 
-            int logStart = 0x000000000003dbc2;
-            int logFor = 0x72FF;
+            int logStart = 0;
+            int logFor = 0x4d22;
             int logCap = logStart + logFor;
 
             if (this.stepCount > logStart && this.stepCount < logCap)
             {
-                this.fs.WriteLine($"{0:D4}:0x{code:X}:0x{this.Registers.PC.Read():X}:{opCode?.Name}:{opCode?.Cycles + opCode?.AddedCycles}-PC:{Registers.PC.Read()}:A:{Registers.A.Read()}:X:{Registers.X.Read()}:Y:{Registers.Y.Read()}:SP:{Registers.SP.Read()}:P:{Convert.ToString(Registers.P.Read(), 2).PadLeft(8, '0')}");
+                this.fs.WriteLine($"{this.stepCount:D4}:0x{code:X}:0x{this.Registers.PC.Read():X}:{opCode?.Name}:{opCode?.Cycles + opCode?.AddedCycles}-PC:{Registers.PC.Read()}:A:{Registers.A.Read()}:X:{Registers.X.Read()}:Y:{Registers.Y.Read()}:SP:{Registers.SP.Read()}:P:{Convert.ToString(Registers.P.Read(), 2).PadLeft(8, '0')}");
                 this.fs.Flush();
             }
 
@@ -238,7 +241,7 @@ namespace MICE.CPU.MOS6502
             this.stepCount++;
             this.ranOpcodeCount++;
 
-            if (this.stepCount == 0x3dbc2)
+            if (this.stepCount == 0x4d21)
             {
 
             }

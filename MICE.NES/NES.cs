@@ -96,11 +96,6 @@ namespace MICE.Nintendo
             var cpuCycles = this.CPU.Step();
             CPU.CurrentCycle += cpuCycles;
 
-            if (CPU.CurrentCycle < 29658)
-            {
-                return;
-            }
-
             for (int i = 0; i < cpuCycles * 3; i++)
             {
                 var ppuCycles = this.PPU.Step();

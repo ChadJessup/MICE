@@ -18,7 +18,7 @@ namespace MICE.PPU.RicohRP2C02
             set
             {
                 this._v = value;
-             //   Debug.WriteLine($"SL: {tempPPU.ScanLine} C: {tempPPU.Cycle} : 0x{this._v:X4}");
+                //Debug.WriteLine($"SL: {tempPPU.ScanLine} C: {tempPPU.Cycle} : 0x{this._v:X4}");
             }
         }
 
