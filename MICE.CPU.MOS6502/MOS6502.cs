@@ -148,7 +148,7 @@ namespace MICE.CPU.MOS6502
             this.IsNegative = false;
             this.IsOverflowed = false;
             this.IsZero = false;
-            this.WillBreak = true;
+            this.WillBreak = false;
 
             // TODO: Move the below to NES specific reset logic...APU specifically...
             // Frame IRQ Enabled - APU
@@ -182,14 +182,14 @@ namespace MICE.CPU.MOS6502
                 {
                     this.nmiCycleStart = this.CurrentCycle;
                 }
-                else if (this.CurrentCycle - this.nmiCycleStart >= 7)
+                else if (this.CurrentCycle - this.nmiCycleStart >= 14)
                 {
                     this.HandleNMIRequest();
                     this.AreInterruptsDisabled = true;
                     this.WasNMIRequested = false;
                     this.nmiCycleStart = 0;
 
-                    return 1;
+                    return 7;
                 }
             }
 

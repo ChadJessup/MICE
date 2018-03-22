@@ -1,7 +1,6 @@
 ﻿using MICE.Common.Helpers;
 using MICE.Common.Interfaces;
 using MICE.PPU.RicohRP2C02.Components;
-using System;
 using System.Collections.Generic;
 using System.Threading;
 
@@ -56,9 +55,8 @@ namespace MICE.PPU.RicohRP2C02
         public ScrollHandler ScrollHandler { get; private set; }
         public PixelMuxer PixelMuxer { get; private set; }
 
-        public bool ShouldNMInterrupt { get; set; }
-
         public PPUMemoryMap MemoryMap { get; private set; }
+        public bool ShouldNMInterrupt { get; set; }
 
         /// <summary>
         /// Gets the externally accessible PPU Registers. These are manipulated via the CPU.
@@ -142,23 +140,10 @@ namespace MICE.PPU.RicohRP2C02
             };
 
             this.Registers.PPUADDR.ReadByteInsteadAction = (address, value) => this.registerLatch;
+            this.Registers.PPUMASK.AfterWriteAction = (address, value) => this.registerLatch = value;
 
-            this.Registers.PPUMASK.AfterWriteAction = (address, value) =>
-            {
-                this.registerLatch = value;
-            };
+            this.Registers.PPUSCROLL.AfterWriteAction = (address, value) => this.ScrollHandler.PPUScrollWrittenTo(address, value);
 
-            this.Registers.PPUSCROLL.AfterWriteAction = (address, value) =>
-            {
-                if (value != 0x0)
-                {
-
-                }
-
-                this.ScrollHandler.PPUScrollWrittenTo(address, value);
-            };
-
-            this.Registers.PPUDATA.AfterReadAction = (address, value) => this.InternalRegisters.v += (ushort)this.VRAMAddressIncrement;
             this.Registers.PPUCTRL.AfterWriteAction = (address, value) =>
             {
                 this.registerLatch = value;
@@ -167,26 +152,15 @@ namespace MICE.PPU.RicohRP2C02
                 this.InternalRegisters.t = (ushort)((this.InternalRegisters.t & 0xF3FF) | ((value & 0x03) << 10));
             };
 
+            this.Registers.PPUDATA.ReadShortInsteadAction = (_, value) => this.InternalRegisters.v;
+            this.Registers.PPUDATA.AfterReadAction = (_, value) => this.InternalRegisters.v += (ushort)this.VRAMAddressIncrement;
             this.Registers.PPUDATA.AfterWriteAction = (_, value) =>
             {
                 this.registerLatch = value;
 
-                if (this.InternalRegisters.v == 0x2000)
-                {
-
-                }
-
                 this.MemoryMap.Write(this.InternalRegisters.v, value);
                 this.InternalRegisters.v += (ushort)this.VRAMAddressIncrement;
             };
-
-            this.Registers.PPUSTATUS.AfterReadAction = (_, value) =>
-            {
-                this.InternalRegisters.w = true;
-                this.IsVBlank = false;
-            };
-
-            this.Registers.PPUDATA.ReadShortInsteadAction = (_, value) => this.InternalRegisters.v;
 
             byte bufferedRead = 0;
             this.Registers.PPUDATA.ReadByteInsteadAction = (_, value) =>
@@ -203,10 +177,13 @@ namespace MICE.PPU.RicohRP2C02
                 return temp;
             };
 
-            this.Registers.OAMADDR.AfterWriteAction = (address, value) =>
+            this.Registers.PPUSTATUS.AfterReadAction = (_, value) =>
             {
-                this.registerLatch = value;
+                this.InternalRegisters.w = true;
+                this.IsVBlank = false;
             };
+
+            this.Registers.OAMADDR.AfterWriteAction = (address, value) => this.registerLatch = value;
 
             this.Restart(cancellationToken);
         }

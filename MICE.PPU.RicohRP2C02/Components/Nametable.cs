@@ -49,6 +49,16 @@ namespace MICE.PPU.RicohRP2C02.Components
             return tile;
         }
 
+        public override void Write(int index, byte value)
+        {
+            base.Write(index, value);
+        }
+
+        public override byte ReadByte(int index)
+        {
+            return base.ReadByte(index);
+        }
+
         private int WhichNametableAmI()
         {
             switch (this.LowerIndex)
