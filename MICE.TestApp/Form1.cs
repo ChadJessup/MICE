@@ -99,8 +99,8 @@ namespace MICE.TestApp
             var cts = new CancellationTokenSource();
             var token = cts.Token;
             var nes = new NES(token);
-            var cartridge = NESLoader.CreateCartridge(@"C:\Emulators\NES\Games\World\Donkey Kong (JU).nes");
-            //var cartridge = NESLoader.CreateCartridge(@"C:\Emulators\NES\Games\Super Mario Bros.nes");
+            //var cartridge = NESLoader.CreateCartridge(@"C:\Emulators\NES\Games\World\Donkey Kong (JU).nes");
+            var cartridge = NESLoader.CreateCartridge(@"C:\Emulators\NES\Games\Super Mario Bros.nes");
 
             // Test ROMS.
             //var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\blargg_nes_cpu_test5\official.nes");

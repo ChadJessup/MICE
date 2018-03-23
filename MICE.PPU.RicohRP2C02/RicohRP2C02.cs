@@ -280,7 +280,7 @@ namespace MICE.PPU.RicohRP2C02
 
             if (this.ShouldIncrementVertical)
             {
-                this.ScrollHandler.IncrementCoarseY2();
+                this.ScrollHandler.IncrementCoarseY();
             }
 
             if (this.ShouldCopyHorizontalBits)

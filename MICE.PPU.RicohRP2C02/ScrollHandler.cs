@@ -51,14 +51,14 @@ namespace MICE.PPU.RicohRP2C02
 
         public int vFineYScroll
         {
-            get => (this.internalRegisters.v & 0b11100000_00000000) >> 12;
-            set => this.internalRegisters.v = (ushort)((this.internalRegisters.v & ~0b11100000_00000000) | (0b11100000_00000000 & (value << 12)));
+            get => (this.internalRegisters.v & 0b11100000_00000000) >> 13;
+            set => this.internalRegisters.v = (ushort)((this.internalRegisters.v & ~0b11100000_00000000) | (0b11100000_00000000 & (value << 13)));
         }
 
         public int tFineYScroll
         {
-            get => (this.internalRegisters.t & 0b11100000_00000000) >> 12;
-            set => this.internalRegisters.t = (ushort)((this.internalRegisters.t & ~0b11100000_00000000) | (0b11100000_00000000 & (value << 12)));
+            get => (this.internalRegisters.t & 0b11100000_00000000) >> 13;
+            set => this.internalRegisters.t = (ushort)((this.internalRegisters.t & ~0b11100000_00000000) | (0b11100000_00000000 & (value << 13)));
         }
 
         public int FineXScroll { get; set; }
