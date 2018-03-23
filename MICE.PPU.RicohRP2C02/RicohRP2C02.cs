@@ -139,7 +139,7 @@ namespace MICE.PPU.RicohRP2C02
         public bool IsRenderLine => this.IsVisibleLine || this.IsPreRenderLine;
 
         public bool IsFetchLine => this.IsRenderLine;
-        public bool IsFetchCycle => (this.Cycle >= 1 && this.Cycle <= 256) || (this.Cycle >= 321 && this.Cycle <= 340);
+        public bool IsFetchCycle => (this.Cycle >= 1 && this.Cycle <= 256) || (this.Cycle >= 321 && this.Cycle <= 336);
         public bool ShouldFetch => this.IsRenderingEnabled && this.IsFetchLine && this.IsFetchCycle;
 
         public bool ShouldIncrementHorizontal => this.IsRenderingEnabled && this.IsRenderLine && this.IsFetchCycle && this.Cycle % 8 == 0;
@@ -236,7 +236,10 @@ namespace MICE.PPU.RicohRP2C02
         public int Step()
         {
             ++this.Cycle;
+            if (this.ScanLine == 0xfb && this.Cycle == 0xd8)
+            {
 
+            }
             if (this.OnFinalCycleOnLine())
             {
                 this.ScanLine++;
@@ -252,7 +255,7 @@ namespace MICE.PPU.RicohRP2C02
 
             if (this.IsPreRenderLine)
             {
-                if (this.Cycle == 2)
+                if (this.Cycle == 1)
                 {
                     this.IsVBlank = false;
                     this.SpriteHandler.WasSprite0Hit = false;
@@ -389,6 +392,10 @@ namespace MICE.PPU.RicohRP2C02
 
         private void HandleVisibleScanlines()
         {
+            if (this.ScanLine == 0x20 && this.Cycle == 0x19)
+            {
+
+            }
             switch (this.Cycle)
             {
                 case var c when c > 0 && c <= 256 && this.IsRenderingEnabled && SpriteHandler.ShowSprites:
@@ -412,6 +419,10 @@ namespace MICE.PPU.RicohRP2C02
 
         private void Fetch()
         {
+            if (this.ScanLine == 0x0105 && this.Cycle == 0x40)
+            {
+
+            }
             this.BackgroundHandler.NextCycle();
 
             switch (this.Cycle % 8)

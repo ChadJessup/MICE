@@ -3,7 +3,7 @@ using System;
 
 namespace MICE.PPU.RicohRP2C02.Components
 {
-    public class Nametable : VRAM
+    public class Nametable : External
     {
         private static class Constants
         {
@@ -14,8 +14,10 @@ namespace MICE.PPU.RicohRP2C02.Components
         public Nametable(int lowerIndex, int upperIndex, string name)
             : base(lowerIndex, upperIndex, name)
         {
-            this.AttributeTable = new AttributeTable(new ArraySegment<byte>(this.Data, this.Data.Length - 64, this.Data.Length - (this.Data.Length - 64)));
+            //this.AttributeTable = new AttributeTable(new ArraySegment<byte>(this.Data, this.Data.Length - 64, this.Data.Length - (this.Data.Length - 64)));
         }
+
+        public byte[] Data { get; set; } = new byte[0x2000];
 
         public AttributeTable AttributeTable { get; private set; }
 
@@ -47,16 +49,6 @@ namespace MICE.PPU.RicohRP2C02.Components
             tile.PaletteAddress = (ushort)(0x3f00 + 4 * paletteId + colorIndex);
 
             return tile;
-        }
-
-        public override void Write(int index, byte value)
-        {
-            base.Write(index, value);
-        }
-
-        public override byte ReadByte(int index)
-        {
-            return base.ReadByte(index);
         }
 
         private int WhichNametableAmI()
@@ -97,7 +89,7 @@ namespace MICE.PPU.RicohRP2C02.Components
             var byteIndexY = y / 8;
 
             // Index into nametable memory, multiplying y by columns so it wraps down.
-            return this.Data[byteIndexX + (byteIndexY * Constants.NumberOfColumns)];
+            return this.ReadByte(byteIndexX + (byteIndexY * Constants.NumberOfColumns));
         }
 
         //private NametableAttribute GetPalette(int x, int y) => this.AttributeTable.GetAttribute(x, y);

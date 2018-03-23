@@ -111,6 +111,10 @@ namespace MICE.Common.Misc
 
         public virtual void Write(int index, byte value)
         {
+            if (index == 0x2340)
+            {
+
+            }
             if (this.memorySegmentCache.TryGetValue(index, out IMemorySegment cachedSegment))
             {
                 cachedSegment.Write(index, value);

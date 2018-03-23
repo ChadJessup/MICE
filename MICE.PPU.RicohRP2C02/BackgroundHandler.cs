@@ -24,6 +24,7 @@ namespace MICE.PPU.RicohRP2C02
         private readonly IList<byte[]> chrBanks;
 
         // Having issues, going to reproduce EmuNES's methods for now then break it down if possible.
+        private ulong previousTileData;
         private ulong tileData;
         private byte nameTableByte;
         private byte attributeTableByte;
@@ -78,10 +79,25 @@ namespace MICE.PPU.RicohRP2C02
 
             var nameTable = this.GetTable(this.scrollHandler.vNametable);
 
+            if (this.tileData != 0x0)
+            {
+
+            }
+
             // var (scrolledX, scrolledY, nameTable) = this.GetScrolledXYAndNametable(x, y);
             uint data = FetchTileData() >> ((7 - this.scrollHandler.FineXScroll) * 4);
 
+            if (data != 0x0)
+            {
+
+            }
+
             var tileByte = (byte)(data & 0x0F);
+
+            if(tileByte != 0x0)
+            {
+
+            }
 
             var colorIndex = tileByte;
 
@@ -122,6 +138,10 @@ namespace MICE.PPU.RicohRP2C02
         {
             var address = (ushort)(0x2000 | this.internalRegisters.v & 0x0FFF);
 
+            if (address >= 0x2800)
+            {
+
+            }
             this.nameTableByte = this.ppuMemoryMap.ReadByte(address);
 
             //this.CurrentTile.Nametable = this.scrollHandler.vNametable;
@@ -209,6 +229,12 @@ namespace MICE.PPU.RicohRP2C02
 
             tileData |= (ulong)(data);
 
+            if (previousTileData != 0x0 && tileData == 0x0)
+            {
+
+            }
+
+            previousTileData = tileData;
             if(tileData != 0x0)
             {
 
