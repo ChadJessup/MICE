@@ -91,7 +91,6 @@ namespace MICE.Nintendo
             this.PPU.MemoryMap.GetMemorySegment<Nametable>("Name Table 3").AttachHandler(this.Cartridge.Mapper);
         }
 
-        [Benchmark]
         public void Step()
         {
             // 1 Step = 1 Frame to the NES, since we're doing frame-based timing here:
@@ -123,11 +122,6 @@ namespace MICE.Nintendo
             // TODO: APU Cycles
         }
 
-        private void SetupOpcodes()
-        {
-            throw new NotImplementedException();
-        }
-
         public async Task PowerOff()
         {
             await Task.CompletedTask;
@@ -138,7 +132,6 @@ namespace MICE.Nintendo
             await Task.CompletedTask;
         }
 
-        [Benchmark]
         public void DMATransfer(int? address, byte value)
         {
             ushort readAddress = (ushort)(value << 8);

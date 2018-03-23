@@ -236,10 +236,7 @@ namespace MICE.PPU.RicohRP2C02
         public int Step()
         {
             ++this.Cycle;
-            if (this.ScanLine == 0xfb && this.Cycle == 0xd8)
-            {
 
-            }
             if (this.OnFinalCycleOnLine())
             {
                 this.ScanLine++;
@@ -250,8 +247,6 @@ namespace MICE.PPU.RicohRP2C02
                     this.HandleFinalScanline();
                 }
             }
-
-            //Debug.WriteLine($"VRAM: 0x{this.InternalRegisters.v:X4}");
 
             if (this.IsPreRenderLine)
             {
@@ -278,16 +273,6 @@ namespace MICE.PPU.RicohRP2C02
                 this.Fetch();
             }
 
-            if (this.ShouldCopyVertical)
-            {
-                this.ScrollHandler.CopyVerticalBits();
-            }
-
-            if (this.ShouldCopyHorizontalBits)
-            {
-                this.ScrollHandler.CopyHorizontalBits();
-            }
-
             if (this.ShouldIncrementHorizontal)
             {
                 this.ScrollHandler.IncrementCoarseX();
@@ -295,39 +280,18 @@ namespace MICE.PPU.RicohRP2C02
 
             if (this.ShouldIncrementVertical)
             {
-                this.ScrollHandler.IncrementCoarseY();
+                this.ScrollHandler.IncrementCoarseY2();
             }
 
+            if (this.ShouldCopyHorizontalBits)
+            {
+                this.ScrollHandler.CopyHorizontalBits();
+            }
 
-            //switch (this.ScanLine)
-            //{
-            //    case -1:
-            //    case 261:
-            //        this.HandlePrerenderScanline();
-            //        break;
-            //    case var sl when sl >= 0 && sl <= 239:
-            //        this.HandleVisibleScanlines();
-            //        break;
-            //    case 240:
-            //        this.HandlePostRenderScanline();
-            //        break;
-            //    case var sl when sl >= 241 && sl <= 260:
-            //        this.HandleVerticalBlankLines();
-            //        break;
-            //}
-
-            //switch (this.Cycle)
-            //{
-            //    case var c when this.IsRenderingEnabled && c > 0 && c % 8 == 0:
-            //        this.ScrollHandler.IncrementCoarseX();
-            //        break;
-            //    case var c when this.IsRenderingEnabled && c == 256:
-            //        this.ScrollHandler.IncrementCoarseY();
-            //        break;
-            //    case var c when this.IsRenderingEnabled && c == 257:
-            //        this.ScrollHandler.CopyHorizontalBits();
-            //        break;
-            //}
+            if (this.ShouldCopyVertical)
+            {
+                this.ScrollHandler.CopyVerticalBits();
+            }
 
             return 0;
         }
@@ -392,10 +356,6 @@ namespace MICE.PPU.RicohRP2C02
 
         private void HandleVisibleScanlines()
         {
-            if (this.ScanLine == 0x20 && this.Cycle == 0x19)
-            {
-
-            }
             switch (this.Cycle)
             {
                 case var c when c > 0 && c <= 256 && this.IsRenderingEnabled && SpriteHandler.ShowSprites:
@@ -419,17 +379,11 @@ namespace MICE.PPU.RicohRP2C02
 
         private void Fetch()
         {
-            if (this.ScanLine == 0x0105 && this.Cycle == 0x40)
-            {
-
-            }
             this.BackgroundHandler.NextCycle();
 
             switch (this.Cycle % 8)
             {
                 case 1:
-                    //this.BackgroundHandler.PreviousTile = this.BackgroundHandler.CurrentTile;
-                    //this.BackgroundHandler.CurrentTile = new Tile();
                     this.BackgroundHandler.FetchNametableByte();
                     break;
                 case 3:
@@ -448,10 +402,6 @@ namespace MICE.PPU.RicohRP2C02
         }
 
         byte[] oam_temp = new byte[8];
-
-        private void HandlePostRenderScanline()
-        {
-        }
 
         private void HandleVerticalBlankLines()
         {

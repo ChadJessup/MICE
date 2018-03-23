@@ -76,6 +76,45 @@ namespace MICE.PPU.RicohRP2C02
             }
         }
 
+        public void IncrementCoarseY2()
+        {
+            // increment vert(v)
+            // if fine Y < 7
+            if ((this.internalRegisters.v & 0x7000) != 0x7000)
+            {
+                // increment fine Y
+                this.internalRegisters.v += 0x1000;
+            }
+            else
+            {
+                // fine Y = 0
+                this.internalRegisters.v &= 0x8FFF;
+                // let y = coarse Y
+                int y = (this.internalRegisters.v & 0x03E0) >> 5;
+
+                if (y == 29)
+                {
+                    // coarse Y = 0
+                    y = 0;
+                    // switch vertical nametable
+                    this.internalRegisters.v ^= 0x0800;
+                }
+                else if (y == 31)
+                {
+                    // coarse Y = 0, nametable not switched
+                    y = 0;
+                }
+                else
+                {
+                    // increment coarse Y
+                    ++y;
+                }
+
+                // put coarse Y back into v
+                this.internalRegisters.v = (ushort)((this.internalRegisters.v & 0xFC1F) | (y << 5));
+            }
+
+        }
         public void IncrementCoarseY()
         {
             if (this.vFineYScroll < 7)
