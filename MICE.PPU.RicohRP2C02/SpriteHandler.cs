@@ -19,7 +19,7 @@ namespace MICE.PPU.RicohRP2C02
         private readonly List<Sprite> currentSprites = new List<Sprite>(Constants.MaxSprites);
         private readonly List<Sprite> currentScanlineSprites = new List<Sprite>(Constants.MaxSprites);
 
-        private int lastScannedScanline = 0;
+        private int lastScannedScanline = int.MinValue;
 
         public SpriteHandler(IMemoryMap ppuMemoryMap, PPURegisters registers, IMemoryMap cpuMemoryMap, IList<byte[]> chrBanks)
         {

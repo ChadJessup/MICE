@@ -23,10 +23,7 @@ namespace MICE.PPU.RicohRP2C02
 
         public RicohRP2C02(PPUMemoryMap memoryMap, PPURegisters registers, IMemoryMap cpuMemoryMap, IList<byte[]> chrBanks)
         {
-            this.InternalRegisters = new PPUInternalRegisters
-            {
-                tempPPU = this
-            };
+            this.InternalRegisters = new PPUInternalRegisters();
 
             this.Registers = registers;
             this.MemoryMap = memoryMap;
@@ -179,11 +176,6 @@ namespace MICE.PPU.RicohRP2C02
 
                 this.MemoryMap.Write(this.InternalRegisters.v, value);
                 this.InternalRegisters.v += (ushort)this.VRAMAddressIncrement;
-
-                if (this.InternalRegisters.v == 0x2358)
-                {
-
-                }
             };
 
             byte bufferedRead = 0;
@@ -266,6 +258,18 @@ namespace MICE.PPU.RicohRP2C02
             if (this.IsRenderingEnabled && this.IsVisibleLine && this.IsVisibleCycle)
             {
                 this.HandleVisibleScanlines();
+            }
+
+            if (this.IsRenderingEnabled && this.Cycle == 257)
+            {
+                if (this.IsVisibleLine)
+                {
+                    this.SpriteHandler.EvaluateSpritesOnScanline(this.PrimaryOAM, this.ScanLine);
+                }
+                else
+                {
+                    this.SpriteHandler.ClearSprites();
+                }
             }
 
             if (this.ShouldFetch)

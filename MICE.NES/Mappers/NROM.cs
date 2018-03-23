@@ -144,11 +144,6 @@ namespace MICE.Nintendo.Mappers
         /// <returns>The data that was read.</returns>
         public override byte ReadByte(int index)
         {
-            if (index == 0x2340 || index == 0x0340)
-            {
-
-            }
-
             foreach (var (segment, bytes) in this.bankLinkage.Where(linkage => linkage.segment.IsIndexInRange(index)))
             {
                 if (index < 0x2000)
@@ -166,11 +161,6 @@ namespace MICE.Nintendo.Mappers
 
         public override void Write(int index, byte value)
         {
-            if (index == 0x2340 || index == 0x340)
-            {
-
-            }
-
             foreach (var (segment, bytes) in this.bankLinkage.Where(linkage => linkage.segment.IsIndexInRange(index)))
             {
                 var arrayOffset = segment.GetOffsetInSegment(index);

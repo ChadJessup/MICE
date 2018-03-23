@@ -1,6 +1,5 @@
 ﻿using MICE.Common;
 using MICE.Common.Interfaces;
-using MICE.Components.Memory;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -12,10 +11,10 @@ namespace MICE.CPU.MOS6502
     {
         public StreamWriter fs;
 
-        private Opcodes Opcodes;
         private readonly IMemoryMap memoryMap;
         private long ranOpcodeCount = 0;
         private long stepCount = 1;
+        private Opcodes Opcodes;
 
         public MOS6502(IMemoryMap memoryMap, StreamWriter sw)
         {
@@ -126,10 +125,7 @@ namespace MICE.CPU.MOS6502
             set => this.Registers.P.SetBit(7, value);
         }
 
-        public void PowerOn(CancellationToken cancellationToken)
-        {
-            this.Reset(cancellationToken);
-        }
+        public void PowerOn(CancellationToken cancellationToken) => this.Reset(cancellationToken);
 
         public void Reset(CancellationToken cancellationToken)
         {
@@ -158,16 +154,9 @@ namespace MICE.CPU.MOS6502
 
             // All channels disabled.
             this.memoryMap.Write(0x4015, 0x00);
-
-            // for (ushort i = 0x4000; i <= 0x400F; i++)
-            // {
-               //  this.memoryMap.Write(i, 00);
-            //}
         }
 
         private long nmiCycleStart = 0;
-
-        private byte[] sram;
 
         /// <summary>
         /// Steps the CPU and returns the amount of Cycles that would have occurred if the CPU were real.
@@ -180,25 +169,21 @@ namespace MICE.CPU.MOS6502
 
             if (this.WasNMIRequested)
             {
-                this.HandleNMIRequest();
-                this.AreInterruptsDisabled = true;
-                this.WasNMIRequested = false;
-                this.nmiCycleStart = 0;
-
-                return 1;
-
                 if (this.nmiCycleStart == 0)
                 {
                     this.nmiCycleStart = this.CurrentCycle;
                 }
                 else if (this.CurrentCycle - this.nmiCycleStart >= 14)
                 {
+                    this.HandleNMIRequest();
+                    this.AreInterruptsDisabled = true;
+                    this.WasNMIRequested = false;
+                    this.nmiCycleStart = 0;
+
+                    return 1;
                 }
             }
 
-            // Grab an Opcode from the PC register:
-
-            // Grab our version of the opcode...
             OpcodeContainer opCode = null;
             byte code = 0;
             try
@@ -207,7 +192,6 @@ namespace MICE.CPU.MOS6502
                 opCode = this.Opcodes[code];
 
                 opCode.Instruction(opCode);
-                sram = this.memoryMap.GetMemorySegment<SRAM>("SRAM").Data;
             }
             catch (Exception e)
             {
@@ -240,11 +224,6 @@ namespace MICE.CPU.MOS6502
 
             this.stepCount++;
             this.ranOpcodeCount++;
-
-            if (this.stepCount == 0x4d21)
-            {
-
-            }
 
             return opCode.Cycles + opCode.AddedCycles;
         }
@@ -305,7 +284,6 @@ namespace MICE.CPU.MOS6502
 
         private void HandleNMIRequest()
         {
-            this.fs.WriteLine($"Handling NMI!");
             // Push PC to stack...
             this.Stack.Push(this.Registers.PC);
 
