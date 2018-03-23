@@ -264,7 +264,7 @@ namespace MICE.PPU.RicohRP2C02
             {
                 if (this.IsVisibleLine)
                 {
-                    this.SpriteHandler.EvaluateSpritesOnScanline(this.PrimaryOAM, this.ScanLine);
+                    this.SpriteHandler.EvaluateSpritesOnScanline(this.PrimaryOAM, this.ScanLine + 1);
                 }
                 else
                 {
@@ -363,22 +363,31 @@ namespace MICE.PPU.RicohRP2C02
             switch (this.Cycle)
             {
                 case var c when c > 0 && c <= 256 && this.IsRenderingEnabled && SpriteHandler.ShowSprites:
-                    var pixelX = this.Cycle - 1;
-
-                    (byte backgroundPixel, Tile tile) drawnTile = BackgroundHandler.GetBackgroundPixel(pixelX, this.ScanLine);
-                    (byte spritePixel, Sprite sprite) drawnSprite = SpriteHandler.GetSpritePixel(pixelX, this.ScanLine, this.PrimaryOAM);
-
-                    byte muxedPixel = PixelMuxer.MuxPixel(drawnSprite, drawnTile);
-
-                    this.ScreenData[(this.ScanLine * Constants.NTSCWidth) + pixelX] = muxedPixel;
-
-                    this.HandleSprite0Hit(drawnTile, drawnSprite);
-                    break;
-                case var c when c >= 257 && c <= 320:
-                    // this.Registers.OAMADDR.Write(00);
-                    SpriteHandler.EvaluateSpritesOnScanline(this.PrimaryOAM, this.ScanLine + 1);
+                    this.DrawPixel(this.Cycle - 1, this.ScanLine);
                     break;
             }
+        }
+
+        private void DrawPixel(int x, int y)
+        {
+            if (x == 0 && y == 0x0)
+            {
+
+            }
+
+            (byte backgroundPixel, Tile tile) drawnTile = BackgroundHandler.GetBackgroundPixel(x, y);
+            (byte spritePixel, Sprite sprite) drawnSprite = SpriteHandler.GetSpritePixel(x, y, this.PrimaryOAM);
+
+            byte muxedPixel = PixelMuxer.MuxPixel(drawnSprite, drawnTile);
+
+            if (muxedPixel != 0x0f)
+            {
+
+            }
+
+            this.ScreenData[(y * Constants.NTSCWidth) + x] = muxedPixel;
+
+            this.HandleSprite0Hit(drawnTile, drawnSprite);
         }
 
         private void Fetch()

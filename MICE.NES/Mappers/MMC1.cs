@@ -2,6 +2,7 @@
 using MICE.Common.Interfaces;
 using MICE.Components.CPU;
 using MICE.Nintendo.Loaders;
+using MICE.PPU.RicohRP2C02.Components;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,7 +14,7 @@ namespace MICE.Nintendo.Mappers
     {
         private List<(IMemorySegment segment, byte[] bytes)> bankLinkage = new List<(IMemorySegment segment, byte[] bytes)>();
 
-        //private byte[] currentProgramRAMBank;
+        private List<Nametable> nametables = new List<Nametable>();
 
         // PRG bank(internal, $E000-$FFFF)
         private byte[] currentProgramROMBank8000;
@@ -51,6 +52,12 @@ namespace MICE.Nintendo.Mappers
             if (!this.cartridge.CharacterRomBanks.Any())
             {
                 this.cartridge.CharacterRomBanks.Add(new byte[0x2000]);
+            }
+
+            if (memorySegment.LowerIndex >= 0x2000 && memorySegment.LowerIndex <= 0x2C00)
+            {
+                this.MapNametable(memorySegment);
+                return;
             }
 
             switch (memorySegment)
@@ -185,6 +192,68 @@ namespace MICE.Nintendo.Mappers
             var incomingValue = Convert.ToString(value, 2).PadLeft(8, '0');
             var existingValue = Convert.ToString(this.LoadRegister.Read(), 2).PadLeft(8, '0');
             Console.WriteLine($"Incoming: {incomingValue} Register: {existingValue}");
+        }
+
+        private void MapNametable(IMemorySegment memorySegment)
+        {
+            var nametable = (memorySegment as Nametable);
+            if (nametable == null)
+            {
+                throw new InvalidOperationException("NROM was given a non-Nametable memory segment in the range of a Nametable to map: " + memorySegment);
+            }
+
+            this.nametables.Add(nametable);
+
+            if (this.cartridge.MirroringMode == MirroringMode.SingleScreen)
+            {
+                nametable.Data = this.nametables.First().Data;
+            }
+            else if (this.cartridge.MirroringMode == MirroringMode.Horizontal)
+            {
+                switch (nametable.LowerIndex)
+                {
+                    case 0x2000:
+                        var other2000 = this.nametables.FirstOrDefault(nt => nt.LowerIndex == 0x2400) ?? nametable;
+                        nametable.Data = other2000.Data;
+                        break;
+                    case 0x2400:
+                        var other2400 = this.nametables.FirstOrDefault(nt => nt.LowerIndex == 0x2000) ?? nametable;
+                        nametable.Data = other2400.Data;
+                        break;
+                    case 0x2800:
+                        var other2800 = this.nametables.FirstOrDefault(nt => nt.LowerIndex == 0x2C00) ?? nametable;
+                        nametable.Data = other2800.Data;
+                        break;
+                    case 0x2C00:
+                        var other2C00 = this.nametables.FirstOrDefault(nt => nt.LowerIndex == 0x2800) ?? nametable;
+                        nametable.Data = other2C00.Data;
+                        break;
+                }
+            }
+            else if (this.cartridge.MirroringMode == MirroringMode.Vertical)
+            {
+                switch (nametable.LowerIndex)
+                {
+                    case 0x2000:
+                        var other2000 = this.nametables.FirstOrDefault(nt => nt.LowerIndex == 0x2800) ?? nametable;
+                        nametable.Data = other2000.Data;
+                        break;
+                    case 0x2400:
+                        var other2400 = this.nametables.FirstOrDefault(nt => nt.LowerIndex == 0x2C00) ?? nametable;
+                        nametable.Data = other2400.Data;
+                        break;
+                    case 0x2800:
+                        var other2800 = this.nametables.FirstOrDefault(nt => nt.LowerIndex == 0x2000) ?? nametable;
+                        nametable.Data = other2800.Data;
+                        break;
+                    case 0x2C00:
+                        var other2C00 = this.nametables.FirstOrDefault(nt => nt.LowerIndex == 0x2400) ?? nametable;
+                        nametable.Data = other2C00.Data;
+                        break;
+                }
+            }
+
+            this.bankLinkage.Add((memorySegment, nametable.Data));
         }
 
         private void SwapProgramBank(byte value)

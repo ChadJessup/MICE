@@ -19,8 +19,6 @@ namespace MICE.PPU.RicohRP2C02
         private readonly List<Sprite> currentSprites = new List<Sprite>(Constants.MaxSprites);
         private readonly List<Sprite> currentScanlineSprites = new List<Sprite>(Constants.MaxSprites);
 
-        private int lastScannedScanline = int.MinValue;
-
         public SpriteHandler(IMemoryMap ppuMemoryMap, PPURegisters registers, IMemoryMap cpuMemoryMap, IList<byte[]> chrBanks)
         {
             this.chrBanks = chrBanks;
@@ -77,12 +75,6 @@ namespace MICE.PPU.RicohRP2C02
         public void EvaluateSpritesOnScanline(OAM oam, int scanline)
         {
             // Don't need to scan the same scanline more than once with current algorithm.
-            if (this.lastScannedScanline == scanline)
-            {
-                return;
-            }
-
-            this.lastScannedScanline = scanline;
             this.currentScanlineSprites.Clear();
 
             this.CurrentScanlineSpriteCount = 0;
