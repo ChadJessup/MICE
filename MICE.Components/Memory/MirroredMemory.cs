@@ -25,15 +25,10 @@ namespace MICE.Components.Memory
 
             foreach (var memorySegment in this.memoryMapper)
             {
-                if(this.mirroredRange.IsOverlapped(this.Range))
+                if (this.mirroredRange.IsOverlapped(memorySegment.Range) || this.mirroredRange.Equals(memorySegment.Range))
                 {
                     this.realMemorySegments.Add(memorySegment);
                 }
-
-                //if (this.mirroredLowerIndex >= memorySegment.Range.Min && memorySegment.Range.Max <= this.mirroredUpperIndex)
-                //{
-                //   this.realMemorySegments.Add(memorySegment);
-                //}
             }
 
             if (!this.realMemorySegments.Any())
