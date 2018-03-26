@@ -83,9 +83,16 @@ namespace MICE.PPU.RicohRP2C02
             var tile = new Tile();
 
             byte paletteId = 0;
+
+            // Transparent background.
+            if (tileByte % 4 == 0)
+            {
+                colorIndex = 0;
+            }
+
             if (colorIndex != 0)
             {
-                paletteId = (byte)((tile.AttributeData >> 0) & 3);
+                paletteId = (byte)((this.attributeTableByte >> 0) & 3);
             }
 
             tile.PaletteAddress = (ushort)(0x3f00 + 4 * paletteId + colorIndex);
