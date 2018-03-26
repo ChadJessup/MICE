@@ -54,7 +54,7 @@ namespace MICE.Nintendo.Mappers
                 this.cartridge.CharacterRomBanks.Add(new byte[0x2000]);
             }
 
-            if (memorySegment.LowerIndex >= 0x2000 && memorySegment.LowerIndex <= 0x2C00)
+            if (memorySegment.Range.Min >= 0x2000 && memorySegment.Range.Min <= 0x2C00)
             {
                 this.MapNametable(memorySegment);
                 return;
@@ -62,13 +62,13 @@ namespace MICE.Nintendo.Mappers
 
             switch (memorySegment)
             {
-                case var ms when ms.LowerIndex == 0x6000:
+                case var ms when ms.Range.Min == 0x6000:
                     break;
-                case var ms when ms.LowerIndex == 0x8000:
+                case var ms when ms.Range.Min == 0x8000:
                     this.bankLinkage.Add((memorySegment, this.cartridge.ProgramROMBanks[0]));
                     this.currentProgramROMBank8000 = this.cartridge.ProgramROMBanks[0];
                     break;
-                case var ms when ms.LowerIndex == 0xC000:
+                case var ms when ms.Range.Min == 0xC000:
                     var whichBank = this.cartridge.ProgramROMBanks.Count == 1
                         ? this.cartridge.ProgramROMBanks[0]
                         : this.cartridge.ProgramROMBanks[1];
@@ -76,16 +76,16 @@ namespace MICE.Nintendo.Mappers
                     this.bankLinkage.Add((memorySegment, whichBank));
                     this.currentProgramROMBankC000 = whichBank;
                     break;
-                case var ms when ms.LowerIndex == 0x0000:
+                case var ms when ms.Range.Min == 0x0000:
                     this.bankLinkage.Add((memorySegment, this.cartridge.CharacterRomBanks[0]));
                     this.currentCharacterROMBank0000 = this.cartridge.CharacterRomBanks[0];
                     break;
-                case var ms when ms.LowerIndex == 0x1000:
+                case var ms when ms.Range.Min == 0x1000:
                     this.bankLinkage.Add((memorySegment, this.cartridge.CharacterRomBanks.Last()));
                     this.currentCharacterROMBank1000 = this.cartridge.CharacterRomBanks.Last();
                     break;
                 default:
-                    throw new InvalidOperationException($"Unexpected memory segment in MMC1 when mapping memory segments (0x{memorySegment.LowerIndex:X4}).");
+                    throw new InvalidOperationException($"Unexpected memory segment in MMC1 when mapping memory segments (0x{memorySegment.Range.Min:X4}).");
             }
         }
 
@@ -210,44 +210,44 @@ namespace MICE.Nintendo.Mappers
             }
             else if (this.cartridge.MirroringMode == MirroringMode.Horizontal)
             {
-                switch (nametable.LowerIndex)
+                switch (nametable.Range.Min)
                 {
                     case 0x2000:
-                        var other2000 = this.nametables.FirstOrDefault(nt => nt.LowerIndex == 0x2400) ?? nametable;
+                        var other2000 = this.nametables.FirstOrDefault(nt => nt.Range.Min == 0x2400) ?? nametable;
                         nametable.Data = other2000.Data;
                         break;
                     case 0x2400:
-                        var other2400 = this.nametables.FirstOrDefault(nt => nt.LowerIndex == 0x2000) ?? nametable;
+                        var other2400 = this.nametables.FirstOrDefault(nt => nt.Range.Min == 0x2000) ?? nametable;
                         nametable.Data = other2400.Data;
                         break;
                     case 0x2800:
-                        var other2800 = this.nametables.FirstOrDefault(nt => nt.LowerIndex == 0x2C00) ?? nametable;
+                        var other2800 = this.nametables.FirstOrDefault(nt => nt.Range.Min == 0x2C00) ?? nametable;
                         nametable.Data = other2800.Data;
                         break;
                     case 0x2C00:
-                        var other2C00 = this.nametables.FirstOrDefault(nt => nt.LowerIndex == 0x2800) ?? nametable;
+                        var other2C00 = this.nametables.FirstOrDefault(nt => nt.Range.Min == 0x2800) ?? nametable;
                         nametable.Data = other2C00.Data;
                         break;
                 }
             }
             else if (this.cartridge.MirroringMode == MirroringMode.Vertical)
             {
-                switch (nametable.LowerIndex)
+                switch (nametable.Range.Min)
                 {
                     case 0x2000:
-                        var other2000 = this.nametables.FirstOrDefault(nt => nt.LowerIndex == 0x2800) ?? nametable;
+                        var other2000 = this.nametables.FirstOrDefault(nt => nt.Range.Min == 0x2800) ?? nametable;
                         nametable.Data = other2000.Data;
                         break;
                     case 0x2400:
-                        var other2400 = this.nametables.FirstOrDefault(nt => nt.LowerIndex == 0x2C00) ?? nametable;
+                        var other2400 = this.nametables.FirstOrDefault(nt => nt.Range.Min == 0x2C00) ?? nametable;
                         nametable.Data = other2400.Data;
                         break;
                     case 0x2800:
-                        var other2800 = this.nametables.FirstOrDefault(nt => nt.LowerIndex == 0x2000) ?? nametable;
+                        var other2800 = this.nametables.FirstOrDefault(nt => nt.Range.Min == 0x2000) ?? nametable;
                         nametable.Data = other2800.Data;
                         break;
                     case 0x2C00:
-                        var other2C00 = this.nametables.FirstOrDefault(nt => nt.LowerIndex == 0x2400) ?? nametable;
+                        var other2C00 = this.nametables.FirstOrDefault(nt => nt.Range.Min == 0x2400) ?? nametable;
                         nametable.Data = other2C00.Data;
                         break;
                 }

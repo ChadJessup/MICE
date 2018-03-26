@@ -8,29 +8,32 @@ namespace MICE.Components.Memory
 {
     public class MirroredMemory : MemorySegment
     {
-        private readonly int mirroredLowerIndex;
-        private readonly int mirroredUpperIndex;
         private readonly MemoryMapper memoryMapper;
         private readonly int moduloValue;
         private List<IMemorySegment> realMemorySegments = new List<IMemorySegment>();
         private Dictionary<int, IMemorySegment> cachedMemorySegments = new Dictionary<int, IMemorySegment>();
+        private Range<int> mirroredRange;
 
         public MirroredMemory(int lowerIndex, int upperIndex, int mirroredLowerIndex, int mirroredUpperIndex, MemoryMapper memoryMapper, string name)
-            : base(lowerIndex, upperIndex, name)
+            : base(new Range<int>(lowerIndex, upperIndex), name)
         {
-            this.mirroredLowerIndex = mirroredLowerIndex;
-            this.mirroredUpperIndex = mirroredUpperIndex;
+            this.mirroredRange = new Range<int>(mirroredLowerIndex, mirroredUpperIndex);
 
-            this.moduloValue = this.mirroredUpperIndex - this.mirroredLowerIndex;
+            this.moduloValue = this.mirroredRange.Max - this.mirroredRange.Min;
 
             this.memoryMapper = memoryMapper;
 
             foreach (var memorySegment in this.memoryMapper)
             {
-                if (this.mirroredLowerIndex >= memorySegment.LowerIndex && memorySegment.UpperIndex <= this.mirroredUpperIndex)
+                if(this.mirroredRange.IsOverlapped(this.Range))
                 {
                     this.realMemorySegments.Add(memorySegment);
                 }
+
+                //if (this.mirroredLowerIndex >= memorySegment.Range.Min && memorySegment.Range.Max <= this.mirroredUpperIndex)
+                //{
+                //   this.realMemorySegments.Add(memorySegment);
+                //}
             }
 
             if (!this.realMemorySegments.Any())
@@ -41,7 +44,7 @@ namespace MICE.Components.Memory
 
         public override byte ReadByte(int index)
         {
-            var newIndex = (index - this.LowerIndex) + this.mirroredLowerIndex;
+            var newIndex = (index - this.Range.Min) + this.mirroredRange.Min;
 
             // Still in our own mirrored memory (can repeatedly loop)...
             if (this.IsIndexInRange(newIndex))
@@ -62,7 +65,7 @@ namespace MICE.Components.Memory
 
         public override void Write(int index, byte value)
         {
-            var newIndex = (index - this.LowerIndex) + this.mirroredLowerIndex;
+            var newIndex = (index - this.Range.Min) + this.mirroredRange.Min;
 
             // Still in our own mirrored memory (can repeatedly loop)...
             if (this.IsIndexInRange(newIndex))
@@ -91,7 +94,7 @@ namespace MICE.Components.Memory
 
         public override void CopyBytes(ushort startAddress, Array destination, int destinationIndex, int length)
         {
-            var newIndex = (startAddress - this.LowerIndex) + this.mirroredLowerIndex;
+            var newIndex = (startAddress - this.Range.Min) + this.mirroredRange.Min;
 
             // Still in our own mirrored memory (can repeatedly loop)...
             if (this.IsIndexInRange(newIndex))

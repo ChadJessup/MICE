@@ -1,4 +1,5 @@
 ﻿using MICE.Common.Interfaces;
+using MICE.Common.Misc;
 using System;
 
 namespace MICE.Components.Memory
@@ -6,7 +7,7 @@ namespace MICE.Components.Memory
     public class RAM : BinaryMemorySegment, IRAM
     {
         public RAM(int lowerIndex, int upperIndex, string name, Action<int, byte> afterWriteAction = null, Action<int, byte> afterReadAction = null)
-            : base(lowerIndex, upperIndex, name, afterWriteAction, afterReadAction)
+            : base(new Range<int>(lowerIndex, upperIndex), name, afterWriteAction, afterReadAction)
         {
         }
         public override byte ReadByte(int index)

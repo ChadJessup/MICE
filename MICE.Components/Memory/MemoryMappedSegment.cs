@@ -1,29 +1,24 @@
 ﻿using MICE.Common.Interfaces;
+using MICE.Common.Misc;
 using System;
 
 namespace MICE.Components.Memory
 {
     public abstract class MemoryMappedSegment : IMemorySegment
     {
-        public int LowerIndex { get; private set; }
-        public int UpperIndex { get; private set; }
         public string Name { get; private set; }
+        public Range<int> Range { get; }
 
         public MemoryMappedSegment(int lowerIndex, int upperIndex, string name = "")
         {
-            if (lowerIndex > upperIndex)
-            {
-                throw new InvalidOperationException($"{Name} The upper index ({upperIndex}) must be greater than the lower index ({lowerIndex})");
-            }
+            this.Range = new Range<int>(lowerIndex, upperIndex);
 
-            this.LowerIndex = lowerIndex;
-            this.UpperIndex = upperIndex;
             this.Name = name;
         }
 
-        public bool ContainsIndex(int index) => index >= this.LowerIndex || index <= this.UpperIndex;
-        public virtual bool IsIndexInRange(int index) => index >= this.LowerIndex && index <= this.UpperIndex;
-        public virtual (int min, int max) GetRange() => (min: this.LowerIndex, max: this.UpperIndex);
+        public bool ContainsIndex(int index) => index >= this.Range.Min || index <= this.Range.Max;
+        public virtual bool IsIndexInRange(int index) => index >= this.Range.Min && index <= this.Range.Max;
+        public virtual Range<int> GetRange() => this.Range;
 
         public abstract int GetOffsetInSegment(int index);
 

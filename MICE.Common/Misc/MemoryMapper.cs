@@ -28,8 +28,8 @@ namespace MICE.Common.Misc
 
         public void Add(IMemorySegment item)
         {
-            var existingSegment = this.memorySegments.FirstOrDefault(seg => seg.IsIndexInRange(item.LowerIndex))
-                ?? this.memorySegments.FirstOrDefault(seg => seg.IsIndexInRange(item.UpperIndex));
+            var existingSegment = this.memorySegments.FirstOrDefault(seg => seg.IsIndexInRange(item.Range.Min))
+                ?? this.memorySegments.FirstOrDefault(seg => seg.IsIndexInRange(item.Range.Max));
 
             if (existingSegment != null)
             {
@@ -43,14 +43,14 @@ namespace MICE.Common.Misc
                 throw new InvalidOperationException($"Cannot add memory segment {item.Name}, there is already a segment with that name.");
             }
 
-            if (item.LowerIndex < this.minimumRange)
+            if (item.Range.Min < this.minimumRange)
             {
-                this.minimumRange = item.LowerIndex;
+                this.minimumRange = item.Range.Min;
             }
 
-            if (item.UpperIndex > this.maximumRange)
+            if (item.Range.Max > this.maximumRange)
             {
-                this.maximumRange = item.UpperIndex;
+                this.maximumRange = item.Range.Max;
             }
 
             this.memorySegments.Add(item);

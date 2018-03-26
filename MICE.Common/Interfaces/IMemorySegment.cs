@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MICE.Common.Misc;
+using System;
 
 namespace MICE.Common.Interfaces
 {
@@ -7,15 +8,14 @@ namespace MICE.Common.Interfaces
     /// </summary>
     public interface IMemorySegment
     {
-        int LowerIndex { get; }
-        int UpperIndex { get; }
+        Range<int> Range { get; }
         string Name { get; }
 
         bool IsIndexInRange(int index);
         bool ContainsIndex(int index);
         int GetOffsetInSegment(int index);
 
-        (int min, int max) GetRange();
+        Range<int> GetRange();
         byte ReadByte(int index);
         ushort ReadShort(int index);
 

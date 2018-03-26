@@ -53,7 +53,7 @@ namespace MICE.PPU.RicohRP2C02.Components
 
         private int WhichNametableAmI()
         {
-            switch (this.LowerIndex)
+            switch (this.Range.Min)
             {
                 case 0x2000:
                     return 0;
@@ -64,7 +64,7 @@ namespace MICE.PPU.RicohRP2C02.Components
                 case 0x2C00:
                     return 3;
                 default:
-                    throw new InvalidOperationException($"Unknown nametable starting address: {this.LowerIndex}");
+                    throw new InvalidOperationException($"Unknown nametable starting address: {this.Range.Min}");
             }
         }
 

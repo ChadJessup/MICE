@@ -26,11 +26,11 @@ namespace MICE.Nintendo.Mappers
                 this.cartridge.CharacterRomBanks.Add(new byte[2000]);
             }
 
-            if (memorySegment.LowerIndex == 0x8000)
+            if (memorySegment.Range.Min == 0x8000)
             {
                 this.bankLinkage.Add((memorySegment, this.cartridge.ProgramROMBanks[0]));
             }
-            else if (memorySegment.LowerIndex == 0xC000)
+            else if (memorySegment.Range.Min == 0xC000)
             {
                 var whichBank = this.cartridge.ProgramROMBanks.Count == 1
                     ? this.cartridge.ProgramROMBanks[0]
@@ -38,11 +38,11 @@ namespace MICE.Nintendo.Mappers
 
                 this.bankLinkage.Add((memorySegment, whichBank));
             }
-            else if (memorySegment.LowerIndex == 0x0000)
+            else if (memorySegment.Range.Min == 0x0000)
             {
                 this.bankLinkage.Add((memorySegment, this.cartridge.CharacterRomBanks[0]));
             }
-            else if (memorySegment.LowerIndex == 0x1000)
+            else if (memorySegment.Range.Min == 0x1000)
             {
                 var whichBank = this.cartridge.CharacterRomBanks.Count == 1
                     ? this.cartridge.CharacterRomBanks[0]
@@ -51,7 +51,7 @@ namespace MICE.Nintendo.Mappers
                 this.bankLinkage.Add((memorySegment, whichBank));
             }
 
-            if (memorySegment.LowerIndex >= 0x2000 && memorySegment.LowerIndex <= 0x2C00)
+            if (memorySegment.Range.Min >= 0x2000 && memorySegment.Range.Min <= 0x2C00)
             {
                 this.MapNametable(memorySegment);
             }
@@ -73,44 +73,44 @@ namespace MICE.Nintendo.Mappers
             }
             else if (this.cartridge.MirroringMode == MirroringMode.Horizontal)
             {
-                switch (nametable.LowerIndex)
+                switch (nametable.Range.Min)
                 {
                     case 0x2000:
-                        var other2000 = this.nametables.FirstOrDefault(nt => nt.LowerIndex == 0x2400) ?? nametable;
+                        var other2000 = this.nametables.FirstOrDefault(nt => nt.Range.Min == 0x2400) ?? nametable;
                         nametable.Data = other2000.Data;
                         break;
                     case 0x2400:
-                        var other2400 = this.nametables.FirstOrDefault(nt => nt.LowerIndex == 0x2000) ?? nametable;
+                        var other2400 = this.nametables.FirstOrDefault(nt => nt.Range.Min == 0x2000) ?? nametable;
                         nametable.Data = other2400.Data;
                         break;
                     case 0x2800:
-                        var other2800 = this.nametables.FirstOrDefault(nt => nt.LowerIndex == 0x2C00) ?? nametable;
+                        var other2800 = this.nametables.FirstOrDefault(nt => nt.Range.Min == 0x2C00) ?? nametable;
                         nametable.Data = other2800.Data;
                         break;
                     case 0x2C00:
-                        var other2C00 = this.nametables.FirstOrDefault(nt => nt.LowerIndex == 0x2800) ?? nametable;
+                        var other2C00 = this.nametables.FirstOrDefault(nt => nt.Range.Min == 0x2800) ?? nametable;
                         nametable.Data = other2C00.Data;
                         break;
                 }
             }
             else if (this.cartridge.MirroringMode == MirroringMode.Vertical)
             {
-                switch (nametable.LowerIndex)
+                switch (nametable.Range.Min)
                 {
                     case 0x2000:
-                        var other2000 = this.nametables.FirstOrDefault(nt => nt.LowerIndex == 0x2800) ?? nametable;
+                        var other2000 = this.nametables.FirstOrDefault(nt => nt.Range.Min == 0x2800) ?? nametable;
                         nametable.Data = other2000.Data;
                         break;
                     case 0x2400:
-                        var other2400 = this.nametables.FirstOrDefault(nt => nt.LowerIndex == 0x2C00) ?? nametable;
+                        var other2400 = this.nametables.FirstOrDefault(nt => nt.Range.Min == 0x2C00) ?? nametable;
                         nametable.Data = other2400.Data;
                         break;
                     case 0x2800:
-                        var other2800 = this.nametables.FirstOrDefault(nt => nt.LowerIndex == 0x2000) ?? nametable;
+                        var other2800 = this.nametables.FirstOrDefault(nt => nt.Range.Min == 0x2000) ?? nametable;
                         nametable.Data = other2800.Data;
                         break;
                     case 0x2C00:
-                        var other2C00 = this.nametables.FirstOrDefault(nt => nt.LowerIndex == 0x2400) ?? nametable;
+                        var other2C00 = this.nametables.FirstOrDefault(nt => nt.Range.Min == 0x2400) ?? nametable;
                         nametable.Data = other2C00.Data;
                         break;
                 }

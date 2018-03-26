@@ -1,4 +1,5 @@
 ﻿using MICE.Common.Interfaces;
+using MICE.Common.Misc;
 using MICE.Components.CPU;
 using MICE.Components.Memory;
 using System;
@@ -18,7 +19,7 @@ namespace MICE.CPU.MOS6502
 
         private StreamWriter fs;
         public Stack(int lowerIndex, int upperIndex, string name, StreamWriter fs)
-            : base(lowerIndex, upperIndex, name)
+            : base(new Range<int>(lowerIndex, upperIndex), name)
         {
             this.fs = fs;
             // Set the capactiy to the size of the memory segment as setup in the CPU Memory Map.
