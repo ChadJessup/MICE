@@ -100,10 +100,15 @@ namespace MICE.PPU.RicohRP2C02.Handlers
 
             if (colorIndex != 0)
             {
-                paletteId = (byte)((this.attributeTableByte >> 0) & 3);
+                paletteId = (byte)(this.attributeTableByte & 0b00000011);
             }
 
-            var testPaletteId = this.attribute.GetPaletteId(x, y);
+            if (paletteId != this.attribute.TopLeft)
+            {
+
+            }
+
+            var testPaletteId = this.attribute.TopLeft;//.GetPaletteId(x, y);
 
             if (paletteId != testPaletteId)
             {

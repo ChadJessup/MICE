@@ -19,14 +19,15 @@ namespace MICE.PPU.RicohRP2C02.Components
 
         public int GetPaletteId(int x, int y)
         {
-            var indexedX = x % 8;
-            var indexedY = y % 8;
+            var indexedX = (x / 32) % 16;
+            var indexedY = (y / 32) % 16;
 
             if (indexedX == 0 && indexedY == 0)
             {
                 return this.TopLeft;
             }
 
+            // http://web.mit.edu/6.111/www/f2004/projects/dkm_report.pdf
             if (indexedX == 0 && indexedY == 1)
             {
                 return this.BottomLeft;
@@ -37,7 +38,12 @@ namespace MICE.PPU.RicohRP2C02.Components
                 return this.TopRight;
             }
 
-            return this.BottomRight;
+            if (indexedX == 1 && indexedY == 1)
+            {
+                return this.BottomRight;
+            }
+
+            return this.TopLeft;
         }
     }
 }
