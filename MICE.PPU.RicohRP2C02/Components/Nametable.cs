@@ -1,4 +1,5 @@
 ﻿using MICE.Components.Memory;
+using MICE.PPU.RicohRP2C02.Handlers;
 using System;
 
 namespace MICE.PPU.RicohRP2C02.Components

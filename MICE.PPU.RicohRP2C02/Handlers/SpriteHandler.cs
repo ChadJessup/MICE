@@ -2,7 +2,7 @@
 using MICE.PPU.RicohRP2C02.Components;
 using System.Collections.Generic;
 
-namespace MICE.PPU.RicohRP2C02
+namespace MICE.PPU.RicohRP2C02.Handlers
 {
     public class SpriteHandler
     {

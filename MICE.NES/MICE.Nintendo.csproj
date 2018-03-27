@@ -19,8 +19,4 @@
     <Folder Include="Components\" />
   </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="BenchmarkDotNet.Core" Version="0.10.13" />
-  </ItemGroup>
-
 </Project>

@@ -1,5 +1,4 @@
-﻿using BenchmarkDotNet.Attributes;
-using MICE.Common.Interfaces;
+﻿using MICE.Common.Interfaces;
 using MICE.Components.Bus;
 using MICE.Components.Memory;
 using MICE.CPU.MOS6502;

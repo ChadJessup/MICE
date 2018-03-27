@@ -9,5 +9,7 @@ namespace MICE.PPU.RicohRP2C02.Components
             : base(lowerIndex, upperIndex, name)
         {
         }
+
+        public byte GetColor(int index) => this.Data[index];
     }
 }

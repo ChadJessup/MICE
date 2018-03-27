@@ -1,6 +1,7 @@
 ﻿using MICE.Common.Helpers;
 using MICE.Common.Interfaces;
 using MICE.PPU.RicohRP2C02.Components;
+using MICE.PPU.RicohRP2C02.Handlers;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
@@ -29,7 +30,8 @@ namespace MICE.PPU.RicohRP2C02
             this.MemoryMap = memoryMap;
             this.ScrollHandler = new ScrollHandler(this.Registers, this.InternalRegisters);
 
-            this.BackgroundHandler = new BackgroundHandler(this.MemoryMap, this.Registers, this.InternalRegisters, this.ScrollHandler, cpuMemoryMap, chrBanks);
+            this.PaletteHandler = new PaletteHandler(this.MemoryMap);
+            this.BackgroundHandler = new BackgroundHandler(this.MemoryMap, this.Registers, this.InternalRegisters, this.ScrollHandler, this.PaletteHandler, cpuMemoryMap, chrBanks);
             this.SpriteHandler = new SpriteHandler(this.MemoryMap, this.Registers, cpuMemoryMap, chrBanks);
             this.PixelMuxer = new PixelMuxer(this.Registers);
         }
@@ -49,6 +51,7 @@ namespace MICE.PPU.RicohRP2C02
         public OAM SecondaryOAM { get; } = new OAM(32);
 
         public BackgroundHandler BackgroundHandler { get; private set; }
+        public PaletteHandler PaletteHandler { get; private set; }
         public SpriteHandler SpriteHandler { get; private set; }
         public ScrollHandler ScrollHandler { get; private set; }
         public PixelMuxer PixelMuxer { get; private set; }

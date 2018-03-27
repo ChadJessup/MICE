@@ -26,6 +26,7 @@ namespace MICE.TestApp
             this.bitmap = new Bitmap(256, 240, PixelFormat.Format8bppIndexed);
             ColorPalette palette = this.bitmap.Palette;
 
+            // TODO: Move this to PaletteHandler
             palette.Entries[0x0] = Color.FromArgb(84, 84, 84);
             palette.Entries[0x1] = Color.FromArgb(0, 30, 116);
             palette.Entries[0x2] = Color.FromArgb(8, 16, 144);
