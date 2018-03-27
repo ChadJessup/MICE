@@ -27,19 +27,15 @@ namespace MICE.PPU.RicohRP2C02
             this.Add(new MirroredMemory(0X3000, 0x3EFF, 0x2000, 0x2FFF, this, "Mirrored Name Tables"));
 
             // Palettes
-            this.Add(new Palette(0x3F00, 0x3F00, "Universal background color"));
+            this.Add(new Palette(0x3F00, 0x3F03, "Background palette 0"));
+            this.Add(new Palette(0x3F04, 0x3F07, "Background palette 1"));
+            this.Add(new Palette(0x3F08, 0x3F0B, "Background palette 2"));
+            this.Add(new Palette(0x3F0C, 0x3F0F, "Background palette 3"));
+
             this.Add(new MirroredMemory(0x3F10, 0x3F10, 0x3F00, 0x3F00, this, "Mirrored Universal background color byte"));
-
-            this.Add(new Palette(0x3F01, 0x3F04, "Background palette 0"));
             this.Add(new MirroredMemory(0x3F14, 0x3F14, 0x3F04, 0x3F04, this, "Mirrored Background palette 0 byte"));
-
-            this.Add(new Palette(0x3F05, 0x3F08, "Background palette 1"));
             this.Add(new MirroredMemory(0x3F18, 0x3F18, 0x3F08, 0x3F08, this, "Mirrored Background palette 1 byte"));
-
-            this.Add(new Palette(0x3F09, 0x3F0C, "Background palette 2"));
             this.Add(new MirroredMemory(0x3F1C, 0x3F1C, 0x3F0C, 0x3F0C, this, "Mirrored Background palette 2 byte"));
-
-            this.Add(new Palette(0x3F0D, 0x3F0F, "Background palette 3"));
 
             this.Add(new Palette(0x3F11, 0x3F13, "Sprite palette 0"));
             this.Add(new Palette(0x3F15, 0x3F17, "Sprite palette 1"));

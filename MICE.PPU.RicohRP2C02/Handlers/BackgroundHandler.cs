@@ -1,5 +1,6 @@
 ﻿using MICE.Common.Interfaces;
 using MICE.PPU.RicohRP2C02.Components;
+using System;
 using System.Collections.Generic;
 
 namespace MICE.PPU.RicohRP2C02.Handlers
@@ -67,7 +68,21 @@ namespace MICE.PPU.RicohRP2C02.Handlers
                 return (0, null);
             }
 
-            uint data = FetchTileData() >> ((7 - this.scrollHandler.FineXScroll) * 4);
+            var tileX = x / 8;
+            var tileY = y / 8;
+
+            if (tileX == 25 && tileY == 12)
+            {
+
+            }
+
+            if (tileX == 26 && tileY == 12)
+            {
+
+            }
+
+            var rawTileData = (uint)(tileData >> 32);
+            uint data = rawTileData >> ((7 - this.scrollHandler.FineXScroll) * 4);
 
             var tileByte = (byte)(data & 0x0F);
 
@@ -88,17 +103,31 @@ namespace MICE.PPU.RicohRP2C02.Handlers
                 paletteId = (byte)((this.attributeTableByte >> 0) & 3);
             }
 
-            tile.PaletteAddress = (ushort)(0x3f00 + 4 * paletteId + colorIndex);
+            var testPaletteId = this.attribute.GetPaletteId(x, y);
 
-            var paletteTest = this.paletteHandler.GetBackgroundColor(paletteId, colorIndex);
-            var palette = this.ppuMemoryMap.ReadByte(tile.PaletteAddress);
-
-            if (paletteTest != palette)
+            if (paletteId != testPaletteId)
             {
 
             }
 
-            return (palette, tile);
+            tile.PaletteAddress = (ushort)(0x3f00 + 4 * paletteId + colorIndex);
+
+            try
+            {
+                var paletteTest = this.paletteHandler.GetBackgroundColor(testPaletteId, colorIndex);
+                var palette = this.ppuMemoryMap.ReadByte(tile.PaletteAddress);
+
+                if (paletteTest != palette)
+                {
+
+                }
+
+                return (paletteTest, tile);
+            }
+            catch (Exception e)
+            {
+                return (0, tile);
+            }
         }
 
         public void NextCycle() => tileData <<= 4;
@@ -160,8 +189,6 @@ namespace MICE.PPU.RicohRP2C02.Handlers
 
             tileData |= (ulong)(data);
         }
-
-        private uint FetchTileData() => (uint)(tileData >> 32);
         //
     }
 }

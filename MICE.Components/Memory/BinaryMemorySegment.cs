@@ -8,10 +8,11 @@ namespace MICE.Components.Memory
         public BinaryMemorySegment(Range<int> range, string name, Action<int, byte> afterWriteAction = null, Action<int, byte> afterReadAction = null)
             : base(range, name)
         {
-            var length = Math.Max(1, this.Range.Max - this.Range.Min);
+            var length = this.Range.Max - this.Range.Min;
 
             this.AfterReadAction = afterReadAction;
             this.AfterWriteAction = afterWriteAction;
+
 
             // TODO: fix this in getoffsetinsegment by overriding it...
             this.Data = new byte[length + 1];

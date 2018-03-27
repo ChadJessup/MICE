@@ -10,6 +10,7 @@ namespace MICE.Components.Memory
             : base(new Range<int>(lowerIndex, upperIndex), name, afterWriteAction, afterReadAction)
         {
         }
+
         public override byte ReadByte(int index)
         {
             // TODO: clear this up when input/audio come in for NES code.
