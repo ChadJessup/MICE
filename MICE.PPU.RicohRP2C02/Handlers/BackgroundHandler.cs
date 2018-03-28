@@ -127,7 +127,7 @@ namespace MICE.PPU.RicohRP2C02.Handlers
 
                 }
 
-                return (paletteTest, tile);
+                return (palette, tile);
             }
             catch (Exception e)
             {
@@ -138,15 +138,6 @@ namespace MICE.PPU.RicohRP2C02.Handlers
         public void NextCycle() => tileData <<= 4;
 
         private NametableAttribute attribute;
-        public void FetchAttributeByte()
-        {
-            var address = (ushort)(0x23C0 | (this.internalRegisters.v & 0x0C00) | ((this.internalRegisters.v >> 4) & 0x38) | ((this.internalRegisters.v >> 2) & 0x07));
-            int shift = ((this.internalRegisters.v >> 4) & 4) | (this.internalRegisters.v & 2);
-
-            var value = this.ppuMemoryMap.ReadByte(address);
-            this.attributeTableByte = (byte)(((value >> shift) & 3) << 2);
-            this.attribute = new NametableAttribute(value, address);
-        }
 
         public void FetchNametableByte()
         {
@@ -155,14 +146,14 @@ namespace MICE.PPU.RicohRP2C02.Handlers
             this.nameTableByte = this.ppuMemoryMap.ReadByte(address);
         }
 
-        public void FetchHighBGTile()
+        public void FetchAttributeByte()
         {
-            var baseAddress = this.IsBackgroundPatternTableAddress1000
-                ? 0x1000
-                : 0x1000;
+            var address = (ushort)(0x23C0 | (this.internalRegisters.v & 0x0C00) | ((this.internalRegisters.v >> 4) & 0x38) | ((this.internalRegisters.v >> 2) & 0x07));
+            int shift = ((this.internalRegisters.v >> 4) & 0b00000100) | (this.internalRegisters.v & 0b00000010);
 
-            ushort address = (ushort)(baseAddress + (this.nameTableByte * 16) + this.scrollHandler.vFineYScroll + 8);
-            this.highTileByte = this.ppuMemoryMap.ReadByte(address);
+            var value = this.ppuMemoryMap.ReadByte(address);
+            this.attributeTableByte = (byte)(((value >> shift) & 0b00000011) << 2);
+            this.attribute = new NametableAttribute(value, address);
         }
 
         public void FetchLowBGTile()
@@ -173,6 +164,16 @@ namespace MICE.PPU.RicohRP2C02.Handlers
 
             ushort address = (ushort)(baseAddress + (this.nameTableByte * 16) + this.scrollHandler.vFineYScroll);
             this.lowTileByte = this.ppuMemoryMap.ReadByte(address);
+        }
+
+        public void FetchHighBGTile()
+        {
+            var baseAddress = this.IsBackgroundPatternTableAddress1000
+                ? 0x1000
+                : 0x1000;
+
+            ushort address = (ushort)(baseAddress + (this.nameTableByte * 16) + this.scrollHandler.vFineYScroll + 8);
+            this.highTileByte = this.ppuMemoryMap.ReadByte(address);
         }
 
         // Temp from EmuNES...

@@ -15,10 +15,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MICE.CPU.MOS6502", "MICE.CP
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MICE.PPU.RicohRP2C02", "MICE.PPU.RicohRP2C02\MICE.PPU.RicohRP2C02.csproj", "{1C6429E4-5DF1-4789-948C-8F076E3ABA4E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MICE.WPF", "MICE.WPF\MICE.WPF.csproj", "{3ECEE913-E41E-4303-A39B-42AB6643C408}"
+EndProject
 Global
-	GlobalSection(Performance) = preSolution
-		HasPerformanceSessions = true
-	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
@@ -48,12 +47,19 @@ Global
 		{1C6429E4-5DF1-4789-948C-8F076E3ABA4E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1C6429E4-5DF1-4789-948C-8F076E3ABA4E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1C6429E4-5DF1-4789-948C-8F076E3ABA4E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3ECEE913-E41E-4303-A39B-42AB6643C408}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3ECEE913-E41E-4303-A39B-42AB6643C408}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3ECEE913-E41E-4303-A39B-42AB6643C408}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3ECEE913-E41E-4303-A39B-42AB6643C408}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {4E411B99-DC47-4BC5-B7F1-FFE93268C599}
+	EndGlobalSection
+	GlobalSection(Performance) = preSolution
+		HasPerformanceSessions = true
 	EndGlobalSection
 	GlobalSection(Performance) = preSolution
 		HasPerformanceSessions = true
