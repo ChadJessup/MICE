@@ -195,9 +195,9 @@ namespace MICE.CPU.MOS6502
             }
             catch (Exception e)
             {
-                this.fs.WriteLine($"{this.stepCount:D4}:0x{code:X}:0x{this.Registers.PC.Read():X}:{opCode?.Name}:{opCode?.Cycles + opCode?.AddedCycles}-PC:{Registers.PC.Read()}:A:{Registers.A.Read()}:X:{Registers.X.Read()}:Y:{Registers.Y.Read()}:SP:{Registers.SP.Read()}:P:{Convert.ToString(Registers.P.Read(), 2).PadLeft(8, '0')}");
-                this.fs.WriteLine($"Exception thrown from opcode attempt: {opCode}{Environment.NewLine}{e.Message}");
-                this.fs.Flush();
+  //              this.fs.WriteLine($"{this.stepCount:D4}:0x{code:X}:0x{this.Registers.PC.Read():X}:{opCode?.Name}:{opCode?.Cycles + opCode?.AddedCycles}-PC:{Registers.PC.Read()}:A:{Registers.A.Read()}:X:{Registers.X.Read()}:Y:{Registers.Y.Read()}:SP:{Registers.SP.Read()}:P:{Convert.ToString(Registers.P.Read(), 2).PadLeft(8, '0')}");
+ //               this.fs.WriteLine($"Exception thrown from opcode attempt: {opCode}{Environment.NewLine}{e.Message}");
+  //              this.fs.Flush();
             }
 
             int logStart = 0;
@@ -206,19 +206,19 @@ namespace MICE.CPU.MOS6502
 
             if (this.stepCount > logStart && this.stepCount < logCap)
             {
-                this.fs.WriteLine($"{this.stepCount:D4}:0x{code:X}:0x{this.Registers.PC.Read():X}:{opCode?.Name}:{opCode?.Cycles + opCode?.AddedCycles}-PC:{Registers.PC.Read()}:A:{Registers.A.Read()}:X:{Registers.X.Read()}:Y:{Registers.Y.Read()}:SP:{Registers.SP.Read()}:P:{Convert.ToString(Registers.P.Read(), 2).PadLeft(8, '0')}");
-                this.fs.Flush();
+//                this.fs.WriteLine($"{this.stepCount:D4}:0x{code:X}:0x{this.Registers.PC.Read():X}:{opCode?.Name}:{opCode?.Cycles + opCode?.AddedCycles}-PC:{Registers.PC.Read()}:A:{Registers.A.Read()}:X:{Registers.X.Read()}:Y:{Registers.Y.Read()}:SP:{Registers.SP.Read()}:P:{Convert.ToString(Registers.P.Read(), 2).PadLeft(8, '0')}");
+  //              this.fs.Flush();
             }
 
             if (this.stepCount >= logCap)
             {
-                this.fs.Flush();
+    //            this.fs.Flush();
                 //throw new InvalidOperationException("Quitting in release mode.");
             }
 
             if (opCode.ShouldVerifyResults && (oldPC + opCode.PCDelta != this.Registers.PC))
             {
-                this.fs.Flush();
+    //            this.fs.Flush();
                 throw new InvalidOperationException($"Program Counter was not what was expected after executing instruction: {opCode.Name} (0x{opCode.Code:X}).{Environment.NewLine}Was: 0x{oldPC:X}{Environment.NewLine}Is: 0x{this.Registers.PC.Read():X}{Environment.NewLine}Expected: 0x{oldPC + opCode.PCDelta:X}");
             }
 

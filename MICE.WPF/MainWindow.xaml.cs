@@ -37,6 +37,8 @@ namespace MICE.WPF
             {
                 Properties.Settings.Default.LastDirectory = System.IO.Path.GetDirectoryName(openFileDialog.FileName);
                 Properties.Settings.Default.Save();
+
+                this.viewport.LoadCartridge(openFileDialog.FileName);
             }
         }
 

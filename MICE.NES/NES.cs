@@ -24,7 +24,7 @@ namespace MICE.Nintendo
                 File.Delete(this.debugPath);
             }
 
-            this.sw = File.AppendText(this.debugPath);
+         //   this.sw = File.AppendText(this.debugPath);
 
             this.cancellationToken = cancellationToken;
         }

@@ -6,5 +6,5 @@
              xmlns:local="clr-namespace:MICE.WPF"
              mc:Ignorable="d"
              d:DesignHeight="450" d:DesignWidth="800">
-    <Image />
+    <Image x:Name="image" Width="256" Height="240" />
 </UserControl>

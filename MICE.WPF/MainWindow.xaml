@@ -23,6 +23,6 @@
                 <MenuItem Header="_Memory Viewer" />
             </MenuItem>
         </Menu>
-    <local:EmulatorViewPort></local:EmulatorViewPort>
+    <local:EmulatorViewPort x:Name="viewport"></local:EmulatorViewPort>
     </DockPanel>
 </Window>
