@@ -125,9 +125,17 @@ namespace MICE.CPU.MOS6502
             set => this.Registers.P.SetBit(7, value);
         }
 
-        public void PowerOn(CancellationToken cancellationToken) => this.Reset(cancellationToken);
+        public bool IsPowered { get; private set; }
 
-        public void Reset(CancellationToken cancellationToken)
+        public void PowerOn()
+        {
+            this.IsPowered = true;
+            this.Reset();
+        }
+
+        public void PowerOff() => this.IsPowered = false;
+
+        public void Reset()
         {
             this.Opcodes = new Opcodes(this, this.fs);
             this.Registers = new Registers();

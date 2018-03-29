@@ -31,5 +31,47 @@ namespace MICE.WPF.Commands
             }
         );
 
+        public static readonly RoutedUICommand PauseCommand = new RoutedUICommand
+        (
+            text: "Pause",
+            name: "Pause",
+            ownerType: typeof(StaticCommands),
+            inputGestures: new InputGestureCollection()
+            {
+                new KeyGesture(Key.Escape)
+            }
+        );
+
+        public static readonly RoutedUICommand SoftResetCommand = new RoutedUICommand
+        (
+            text: "Soft Reset",
+            name: "Soft Reset",
+            ownerType: typeof(StaticCommands),
+            inputGestures: new InputGestureCollection()
+            {
+                new KeyGesture(Key.R, ModifierKeys.Control)
+            }
+        );
+
+        public static readonly RoutedUICommand HardResetCommand = new RoutedUICommand
+        (
+            text: "Hard Reset",
+            name: "Hard Reset",
+            ownerType: typeof(StaticCommands),
+            inputGestures: new InputGestureCollection()
+            {
+                new KeyGesture(Key.T, ModifierKeys.Control)
+            }
+        );
+
+        public static readonly RoutedUICommand PowerOffCommand = new RoutedUICommand
+        (
+            text: "Power Off",
+            name: "Power Off",
+            ownerType: typeof(StaticCommands),
+            inputGestures: new InputGestureCollection()
+            {
+            }
+        );
     }
 }

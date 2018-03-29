@@ -1,14 +1,12 @@
-﻿using MICE.Nintendo;
-using MICE.Nintendo.Loaders;
+﻿using MICE.Common.Helpers;
+using MICE.WPF.ViewModels;
 using System;
-using System.Runtime.InteropServices;
-using System.Threading;
-using System.Threading.Tasks;
+using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
-using System.Linq;
 using System.Windows.Media.Imaging;
+using System.Windows.Threading;
 
 namespace MICE.WPF
 {
@@ -18,13 +16,74 @@ namespace MICE.WPF
     public partial class EmulatorViewPort : UserControl
     {
         private readonly WriteableBitmap bitmap;
-        private NES nes;
+        private readonly DispatcherTimer dispatcherTimer = new DispatcherTimer();
+        private readonly byte[] blankScreen = new byte[256 * 240];
 
         public EmulatorViewPort()
         {
+            this.InitializeComponent();
+
+            this.blankScreen.Clear(0x00);
+
+            this.DataContext = new NESViewModel();
+            this.NESVM = (this.DataContext as NESViewModel);
+
             this.bitmap = new WriteableBitmap(256, 240, 96, 96, PixelFormats.Indexed8, this.GetPalette());
 
-            InitializeComponent();
+            this.dispatcherTimer.Tick += new EventHandler(this.TimerTick);
+            this.dispatcherTimer.Interval = new TimeSpan(0, 0, 0, 0, 60 / 1000);
+
+            this.image.Source = this.bitmap;
+
+            this.NESVM.PropertyChanged += this.OnNESPropertyChanged;
+        }
+
+        private void OnNESPropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            var nesVM = (sender as NESViewModel);
+
+            switch (e.PropertyName)
+            {
+                case nameof(nesVM.IsPoweredOn):
+                    if (nesVM.IsPoweredOn)
+                    {
+                        this.dispatcherTimer.Start();
+                    }
+                    else
+                    {
+                        this.ClearScreen();
+                        this.dispatcherTimer.Stop();
+                    }
+                    break;
+                case nameof(nesVM.IsPaused):
+                    if (nesVM.IsPaused)
+                    {
+                        this.dispatcherTimer.Stop();
+                    }
+                    else
+                    {
+                        this.dispatcherTimer.Start();
+                    }
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        private void ClearScreen() => this.Draw(this.blankScreen);
+
+        public NESViewModel NESVM { get; private set; }
+
+        private Int32Rect bitmapRectangle = new Int32Rect(0, 0, 256, 240);
+        private int stride = 256;// * (this.bitmap.Format.BitsPerPixel + 7) / 8;
+
+        private void TimerTick(object sender, EventArgs e) => this.Draw(this.NESVM.ScreenData);
+
+        private void Draw(byte[] screenData)
+        {
+            this.bitmap.Lock();
+            this.bitmap.WritePixels(bitmapRectangle, screenData, this.stride, 0, 0);
+            this.bitmap.Unlock();
         }
 
         private BitmapPalette GetPalette()
@@ -98,62 +157,6 @@ namespace MICE.WPF
             };
 
             return new BitmapPalette(colors);
-        }
-
-        public void LoadCartridge(string fileName)
-        {
-            var cts = new CancellationTokenSource();
-            var token = cts.Token;
-            this.nes = new NES(token);
-            var cartridge = NESLoader.CreateCartridge(fileName);
-
-            this.nes.LoadCartridge(cartridge);
-
-            this.nes.PowerOn();
-            this.image.Source = this.bitmap;
-
-            Task.Factory.StartNew(
-                () => nes.Run(),
-                token,
-                TaskCreationOptions.LongRunning,
-                TaskScheduler.Current);
-
-            var uiDispatcher = Application.Current.Dispatcher;
-
-            Task.Factory.StartNew(() =>
-            {
-                DateTime lastTime = DateTime.Now;
-                long lastFrame = 0;
-                double fps = 0;
-                double improveBy = 0;
-
-                while (!token.IsCancellationRequested)
-                {
-                    if ((DateTime.Now - lastTime).TotalSeconds >= 1)
-                    {
-                        fps = nes.CurrentFrame - lastFrame;
-                        lastFrame = nes.CurrentFrame;
-                        improveBy = 60 / fps;
-                        lastTime = DateTime.Now;
-                    }
-
-                    // Basic 60 fps lock...not good, but I don't care atm.
-                    Task.Delay(16);
-                    uiDispatcher.Invoke(() => this.Draw(nes.Screen));
-                }
-            },
-            token,
-            TaskCreationOptions.LongRunning,
-            TaskScheduler.Current);
-        }
-
-        private Int32Rect bitmapRectangle = new Int32Rect(0, 0, 256, 240);
-        private int stride = 256;// * (this.bitmap.Format.BitsPerPixel + 7) / 8;
-        private void Draw(byte[] screen)
-        {
-            this.bitmap.Lock();
-            this.bitmap.WritePixels(bitmapRectangle, screen, stride, 0, 0);
-            this.bitmap.Unlock();
         }
     }
 }

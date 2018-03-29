@@ -129,7 +129,7 @@ namespace MICE.PPU.RicohRP2C02.Handlers
 
                 return (palette, tile);
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 return (0, tile);
             }

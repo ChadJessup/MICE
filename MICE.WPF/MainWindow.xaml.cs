@@ -1,4 +1,5 @@
-﻿using Microsoft.Win32;
+﻿using MICE.WPF.ViewModels;
+using Microsoft.Win32;
 using System;
 using System.Windows;
 using System.Windows.Input;
@@ -12,7 +13,9 @@ namespace MICE.WPF
     {
         public MainWindow()
         {
-            InitializeComponent();
+            this.InitializeComponent();
+
+            this.DataContext = new MainWindowViewModel(this.viewport.NESVM);
         }
 
         private void ExitCommandExecuted(object sender, ExecutedRoutedEventArgs e) => Application.Current.Shutdown();
@@ -38,10 +41,21 @@ namespace MICE.WPF
                 Properties.Settings.Default.LastDirectory = System.IO.Path.GetDirectoryName(openFileDialog.FileName);
                 Properties.Settings.Default.Save();
 
-                this.viewport.LoadCartridge(openFileDialog.FileName);
+                (this.viewport.DataContext as NESViewModel).LoadCartridge(openFileDialog.FileName);
             }
         }
 
+        private void HardResetCommandExecuted(object sender, ExecutedRoutedEventArgs e)
+        {
+            this.viewport.NESVM.PowerOff();
+            this.viewport.NESVM.PowerOn();
+        }
+
+        private void PauseCommandExecuted(object sender, ExecutedRoutedEventArgs e) => this.viewport.NESVM.Pause(!this.viewport.NESVM.IsPaused);
+        private void SoftResetCommandExecuted(object sender, ExecutedRoutedEventArgs e) => this.viewport.NESVM.Reset();
+        private void PowerOffCommandExecuted(object sender, ExecutedRoutedEventArgs e) => this.viewport.NESVM.PowerOff();
+
+        private void IsSystemRunning(object sender, CanExecuteRoutedEventArgs e) => e.CanExecute = (this.viewport.DataContext as NESViewModel).IsPoweredOn;
         private void AlwaysTrue(object sender, CanExecuteRoutedEventArgs e) => e.CanExecute = true;
     }
 }

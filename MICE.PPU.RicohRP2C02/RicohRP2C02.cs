@@ -2,9 +2,8 @@
 using MICE.Common.Interfaces;
 using MICE.PPU.RicohRP2C02.Components;
 using MICE.PPU.RicohRP2C02.Handlers;
+using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Threading;
 
 namespace MICE.PPU.RicohRP2C02
 {
@@ -35,6 +34,8 @@ namespace MICE.PPU.RicohRP2C02
             this.SpriteHandler = new SpriteHandler(this.MemoryMap, this.Registers, cpuMemoryMap, chrBanks);
             this.PixelMuxer = new PixelMuxer(this.Registers);
         }
+
+        public bool IsPowered { get; private set; }
 
         public byte[] ScreenData { get; private set; } = new byte[256 * 240];
 
@@ -125,6 +126,14 @@ namespace MICE.PPU.RicohRP2C02
         /// </summary>
         public long FrameNumber { get; private set; }
 
+        public void ClearOutput()
+        {
+            for (int i = 0; i < this.ScreenData.Length; i++)
+            {
+                this.ScreenData[i] = 0x0F;
+            }
+        }
+
         /// <summary>
         /// Gets a value indicating if the Frame is even or odd.
         /// </summary>
@@ -150,7 +159,7 @@ namespace MICE.PPU.RicohRP2C02
 
         public bool ShouldSetVBlank => this.IsPostRenderLine && this.Cycle == 1;
 
-        public void PowerOn(CancellationToken cancellationToken)
+        public void PowerOn()
         {
             this.Registers.PPUADDR.AfterWriteAction = (_, value) =>
             {
@@ -204,10 +213,11 @@ namespace MICE.PPU.RicohRP2C02
 
             this.Registers.OAMADDR.AfterWriteAction = (address, value) => this.registerLatch = value;
 
-            this.Restart(cancellationToken);
+            this.IsPowered = true;
+            this.Restart();
         }
 
-        public void Restart(CancellationToken cancellationToken)
+        public void Restart()
         {
             this.Registers.PPUCTRL.Write(0);
             this.Registers.PPUMASK.Write(0);
@@ -223,6 +233,8 @@ namespace MICE.PPU.RicohRP2C02
             this.FrameNumber = 0;
             this.ScanLine = 240;
             this.Cycle = 340;
+
+            this.ClearOutput();
 
             //this.ScanLine = -1;
             //this.Cycle = 0;
@@ -329,7 +341,7 @@ namespace MICE.PPU.RicohRP2C02
                     break;
                 case var c when c > 1 && c <= 256:
                     this.Fetch();
-                    if(c % 8 == 0)
+                    if (c % 8 == 0)
                     {
                         this.ScrollHandler.IncrementCoarseX();
                     }
@@ -463,6 +475,10 @@ namespace MICE.PPU.RicohRP2C02
             }
 
             this.InternalRegisters.w = !this.InternalRegisters.w;
+        }
+
+        public void PowerOff()
+        {
         }
     }
 }

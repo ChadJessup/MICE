@@ -61,6 +61,16 @@ namespace MICE.CPU.MOS6502
                 : ((byte)0x00, addressWithY, AreSamePage(addressWithY, baseAddress));
         }
 
+        public static (byte value, ushort address, bool? samePage) GetIndirectX(MOS6502 CPU, bool getValue = true)
+        {
+            var incompleteXAddress = CPU.ReadNextByte(incrementPC: false);
+            var baseAddress = CPU.ReadShortAt(incompleteXAddress, incrementPC: false);
+            var addressWithX = (ushort)(baseAddress + CPU.Registers.X);
+
+            return getValue
+                ? (CPU.ReadByteAt(addressWithX), addressWithX, AreSamePage(addressWithX, baseAddress))
+                : ((byte)0x00, addressWithX, AreSamePage(addressWithX, baseAddress));
+        }
 
         public static (byte value, ushort address, bool? samePage) GetAbsoluteX(MOS6502 CPU, bool getValue = true)
         {
@@ -102,6 +112,8 @@ namespace MICE.CPU.MOS6502
                 case AddressingModes.Indirect:
                     return AddressingMode.GetIndirect(CPU, getValue);
                 case AddressingModes.IndirectY:
+                    return AddressingMode.GetIndirectY(CPU, getValue);
+                case AddressingModes.IndirectX:
                     return AddressingMode.GetIndirectY(CPU, getValue);
                 case AddressingModes.Immediate:
                     return AddressingMode.GetImmediate(CPU, getValue);

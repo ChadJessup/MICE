@@ -8,6 +8,6 @@ namespace MICE.Common.Interfaces
     public interface ICPU : IMicroprocessor
     {
         Endianness Endianness { get; }
-        void Reset(CancellationToken cancellationToken);
+        void Reset();
     }
 }

@@ -97,9 +97,7 @@ namespace MICE.TestApp
 
         private void Go()
         {
-            var cts = new CancellationTokenSource();
-            var token = cts.Token;
-            var nes = new NES(token);
+            var nes = new NES();
             var cartridge = NESLoader.CreateCartridge(@"C:\Emulators\NES\Games\World\Donkey Kong (JU).nes");
             //var cartridge = NESLoader.CreateCartridge(@"C:\Emulators\NES\Games\Super Mario Bros.nes");
             //var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\full_palette\full_palette.nes");
@@ -126,7 +124,7 @@ namespace MICE.TestApp
 
             Task.Factory.StartNew(
                 () => nes.Run(),
-                token,
+                CancellationToken.None,
                 TaskCreationOptions.LongRunning,
                 TaskScheduler.Current);
 
@@ -139,7 +137,7 @@ namespace MICE.TestApp
                 double fps = 0;
                 double improveBy = 0;
 
-                while (!token.IsCancellationRequested)
+                while (!nes.IsPaused && nes.IsPoweredOn)
                 {
                     if ((DateTime.Now - lastTime).TotalSeconds >= 1)
                     {
@@ -155,7 +153,7 @@ namespace MICE.TestApp
                     this.Draw(nes.Screen);
                 }
             },
-            token,
+            CancellationToken.None,
             TaskCreationOptions.LongRunning,
             TaskScheduler.Current);
         }

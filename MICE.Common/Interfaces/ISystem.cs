@@ -9,9 +9,13 @@ namespace MICE.Common.Interfaces
     {
         string Name { get; }
 
+        bool IsPoweredOn { get; }
+        bool IsPaused { get; }
+
+        void Pause(bool isPaused);
         void PowerOn();
-        Task PowerOff();
-        Task Reset();
+        void PowerOff();
+        void Reset();
         Task Run();
         void Step();
     }

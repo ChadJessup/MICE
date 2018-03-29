@@ -19,5 +19,13 @@ namespace MICE.Common.Helpers
             ? (ushort)(b | (1 << index))
             : (ushort)(b & ~(1 << index));
         }
+
+        public static void Clear(this byte[] bytes, byte value)
+        {
+            for (int i = 0; i < bytes.Length; i++)
+            {
+                bytes[i] = value;
+            }
+        }
     }
 }

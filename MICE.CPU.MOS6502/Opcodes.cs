@@ -144,6 +144,8 @@ namespace MICE.CPU.MOS6502
 
         [MOS6502Opcode(0x6A, "ROR", AddressingModes.Accumulator, timing: 2, length: 1)]
         [MOS6502Opcode(0x66, "ROR", AddressingModes.ZeroPage, timing: 5, length: 2)]
+        [MOS6502Opcode(0x76, "ROR", AddressingModes.ZeroPageX, timing: 6, length: 2)]
+        [MOS6502Opcode(0x6E, "ROR", AddressingModes.Absolute, timing: 6, length: 3)]
         [MOS6502Opcode(0x7E, "ROR", AddressingModes.AbsoluteX, timing: 7, length: 3)]
         public void ROR(OpcodeContainer container)
         {
@@ -250,6 +252,7 @@ namespace MICE.CPU.MOS6502
 
         [MOS6502Opcode(0x49, "EOR", AddressingModes.Immediate, timing: 2, length: 2)]
         [MOS6502Opcode(0x45, "EOR", AddressingModes.ZeroPage, timing: 3, length: 2)]
+        [MOS6502Opcode(0x55, "EOR", AddressingModes.ZeroPageX, timing: 4, length: 2)]
         [MOS6502Opcode(0x4D, "EOR", AddressingModes.Absolute, timing: 4, length: 3)]
         [MOS6502Opcode(0x5D, "EOR", AddressingModes.AbsoluteX, timing: 4, length: 3)]
         public void EOR(OpcodeContainer container)

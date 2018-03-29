@@ -7,17 +7,13 @@ using MICE.PPU.RicohRP2C02;
 using MICE.PPU.RicohRP2C02.Components;
 using System;
 using System.IO;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace MICE.Nintendo
 {
     public class NES : ISystem
     {
-        private CancellationToken cancellationToken;
-        public long CurrentFrame { get; private set; } = 0;
-
-        public NES(CancellationToken cancellationToken)
+        public NES()
         {
             if (File.Exists(this.debugPath))
             {
@@ -25,11 +21,11 @@ namespace MICE.Nintendo
             }
 
          //   this.sw = File.AppendText(this.debugPath);
-
-            this.cancellationToken = cancellationToken;
         }
 
         public string Name { get; } = "Nintendo Entertainment System";
+        public long CurrentFrame { get; private set; } = 0;
+
         private string debugPath = @"c:\emulators\nes\debug-mice.txt";
 
         public StreamWriter sw;
@@ -46,8 +42,11 @@ namespace MICE.Nintendo
         public Ricoh2A03 CPU { get; private set; }
         public byte[] Screen { get; private set; } = new byte[256 * 240];
 
-        // Hook them up...
+        public bool IsPoweredOn => (this.CPU?.IsPowered ?? false) && (this.PPU?.IsPowered ?? false);
 
+        public bool IsPaused { get; private set; } = false;
+
+        // Hook them up...
         public void PowerOn()
         {
             if (this.Cartridge == null)
@@ -65,8 +64,10 @@ namespace MICE.Nintendo
 
             this.CPU = new Ricoh2A03(this.CPUMemoryMap, this.sw);
 
-            this.CPU.PowerOn(this.cancellationToken);
-            this.PPU.PowerOn(this.cancellationToken);
+            this.CPU.PowerOn();
+            this.PPU.PowerOn();
+
+            this.IsPaused = false;
         }
 
         private void MapToCartridge()
@@ -90,18 +91,26 @@ namespace MICE.Nintendo
             this.PPU.MemoryMap.GetMemorySegment<Nametable>("Name Table 3").AttachHandler(this.Cartridge.Mapper);
         }
 
+        private long ppuTotalCycles = 0;
+
         public void Step()
         {
             // 1 Step = 1 Frame to the NES, since we're doing frame-based timing here:
             // 1 System step = 1 CPU step + (3 PPU steps * CPU Cycles in Step) + (2 Audio steps * 1 CPU cycle).
             // Cycles are based on which instructions the CPU ran.
+            var cycleEvent = new NintendoStepArgs();
 
-            var cpuCycles = this.CPU.Step();
-            CPU.CurrentCycle += cpuCycles;
+            cycleEvent.CPUStepsOccurred = this.CPU.Step();
+            CPU.CurrentCycle += cycleEvent.CPUStepsOccurred;
 
-            for (int i = 0; i < cpuCycles * 3; i++)
+            cycleEvent.TotalCPUSteps = CPU.CurrentCycle;
+
+            for (int i = 0; i < cycleEvent.CPUStepsOccurred * 3; i++)
             {
-                var ppuCycles = this.PPU.Step();
+                cycleEvent.PPUStepsOccurred = this.PPU.Step();
+                this.ppuTotalCycles += cycleEvent.PPUStepsOccurred;
+
+                cycleEvent.TotalPPUSteps = this.ppuTotalCycles;
 
                 if (this.PPU.ShouldNMInterrupt)
                 {
@@ -118,16 +127,21 @@ namespace MICE.Nintendo
             }
 
             // TODO: APU Cycles
+
+            this.StepCompleted?.Invoke(this, cycleEvent);
         }
 
-        public async Task PowerOff()
+        public void PowerOff()
         {
-            await Task.CompletedTask;
+            this.CPU.PowerOff();
+            this.PPU.PowerOff();
+            this.PPU.ClearOutput();
         }
 
-        public async Task Reset()
+        public void Reset()
         {
-            await Task.CompletedTask;
+            this.PowerOn();
+            this.Run();
         }
 
         public void DMATransfer(int? address, byte value)
@@ -138,16 +152,19 @@ namespace MICE.Nintendo
             this.CPUMemoryMap.BulkTransfer(readAddress, this.PPU.PrimaryOAM.Data, this.PPU.Registers.OAMADDR, 256);
         }
 
-        public Task Run() => Task.Factory.StartNew(() =>
+        public Task Run()
         {
-            while (!this.cancellationToken.IsCancellationRequested)
+            return Task.Factory.StartNew(() =>
             {
-                this.Step();
+                while (!this.IsPaused && this.IsPoweredOn)
+                {
+                    this.Step();
 
-                // TODO: Get RAW Screen data from PPU.
-                // TODO: Audio.
-            }
-        });
+                    // TODO: Get RAW Screen data from PPU.
+                    // TODO: Audio.
+                }
+            });
+        }
 
         /// <summary>
         /// Loads an <seealso cref="NESCartridge"/> into the NES system.
@@ -156,6 +173,21 @@ namespace MICE.Nintendo
         public void LoadCartridge(NESCartridge cartridge)
         {
             this.Cartridge = cartridge;
+            this.CartridgeLoaded?.Invoke(this, new CartridgeLoadedArgs(this.Cartridge));
         }
+
+        public void Pause(bool isPaused = true)
+        {
+            this.IsPaused = isPaused;
+
+            if (!this.IsPaused)
+            {
+                this.Run();
+            }
+        }
+
+        public EventHandler<NintendoStepArgs> StepCompleted { get; set; }
+        public EventHandler<FrameCompleteArgs> FrameFinished { get; set; }
+        public EventHandler<CartridgeLoadedArgs> CartridgeLoaded { get; set; }
     }
 }

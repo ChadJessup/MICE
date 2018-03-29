@@ -4,13 +4,22 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:commands="clr-namespace:MICE.WPF.Commands"
+        xmlns:diag="clr-namespace:System.Diagnostics;assembly=WindowsBase"
         xmlns:local="clr-namespace:MICE.WPF"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="MainWindow" Height="350" Width="300">
     <Window.CommandBindings>
         <CommandBinding Command="commands:StaticCommands.ExitCommand" CanExecute="AlwaysTrue" Executed="ExitCommandExecuted" />
         <CommandBinding Command="commands:StaticCommands.OpenCommand" CanExecute="AlwaysTrue" Executed="OpenCommandExecuted" />
+
+        <CommandBinding Command="commands:StaticCommands.PauseCommand" CanExecute="IsSystemRunning" Executed="PauseCommandExecuted" />
+        <CommandBinding Command="commands:StaticCommands.SoftResetCommand" CanExecute="IsSystemRunning" Executed="SoftResetCommandExecuted" />
+        <CommandBinding Command="commands:StaticCommands.HardResetCommand" CanExecute="IsSystemRunning" Executed="HardResetCommandExecuted" />
+        <CommandBinding Command="commands:StaticCommands.PowerOffCommand" CanExecute="IsSystemRunning" Executed="PowerOffCommandExecuted" />
     </Window.CommandBindings>
+    <Window.Resources>
+        <local:DebugDataBindingConverter x:Key="DebugBinding"/>
+    </Window.Resources>
 
     <DockPanel>
         <Menu DockPanel.Dock="Top">
@@ -19,10 +28,27 @@
                 <Separator />
                 <MenuItem Command="commands:StaticCommands.ExitCommand" />
             </MenuItem>
+            <MenuItem Header="_Game">
+                <MenuItem Command="commands:StaticCommands.PauseCommand" IsCheckable="true" IsChecked="{Binding Path=viewport.DataContext.IsPaused}" />
+                <MenuItem Command="commands:StaticCommands.SoftResetCommand" />
+                <MenuItem Command="commands:StaticCommands.HardResetCommand" />
+                <Separator />
+                <MenuItem Command="commands:StaticCommands.PowerOffCommand" />
+            </MenuItem>
             <MenuItem Header="_Tools">
                 <MenuItem Header="_Memory Viewer" />
             </MenuItem>
         </Menu>
-    <local:EmulatorViewPort x:Name="viewport"></local:EmulatorViewPort>
+        <StatusBar DockPanel.Dock="Bottom">
+            <StatusBarItem>
+                <Label Content="{Binding StatusBar}" />
+            </StatusBarItem>
+            <StatusBarItem>
+                <Separator />
+            </StatusBarItem>
+        </StatusBar>
+
+        <local:EmulatorViewPort x:Name="viewport"></local:EmulatorViewPort>
+
     </DockPanel>
 </Window>

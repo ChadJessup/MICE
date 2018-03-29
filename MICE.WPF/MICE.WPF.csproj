@@ -72,6 +72,8 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="ViewModels\MainWindowViewModel.cs" />
+    <Compile Include="ViewModels\NESViewModel.cs" />
     <Page Include="EmulatorViewPort.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -121,6 +123,10 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\MICE.Common\MICE.Common.csproj">
+      <Project>{6F9D83F1-ABC5-4FEE-A358-28F3BD5309A4}</Project>
+      <Name>MICE.Common</Name>
+    </ProjectReference>
     <ProjectReference Include="..\MICE.NES\MICE.Nintendo.csproj">
       <Project>{30E26A15-7C9F-4602-811E-96D6E27F189C}</Project>
       <Name>MICE.Nintendo</Name>
