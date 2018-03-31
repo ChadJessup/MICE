@@ -25,5 +25,7 @@ namespace MICE.Common.Interfaces
 
         Action<int, byte> AfterReadAction { get; }
         Action<int, byte> AfterWriteAction { get; }
+
+        byte[] GetBytes();
     }
 }

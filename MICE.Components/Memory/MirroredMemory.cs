@@ -87,6 +87,7 @@ namespace MICE.Components.Memory
             }
         }
 
+
         public override void CopyBytes(ushort startAddress, Array destination, int destinationIndex, int length)
         {
             var newIndex = (startAddress - this.Range.Min) + this.mirroredRange.Min;
@@ -108,6 +109,7 @@ namespace MICE.Components.Memory
             foundMemorySegment.CopyBytes(startAddress, destination, destinationIndex, length);
         }
 
+        public override byte[] GetBytes() => throw new NotImplementedException();
         public override ushort ReadShort(int index) => throw new NotImplementedException();
         public override void Write(int index, ushort value) => throw new NotImplementedException();
     }

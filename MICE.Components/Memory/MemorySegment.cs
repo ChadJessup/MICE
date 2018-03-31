@@ -22,6 +22,7 @@ namespace MICE.Components.Memory
         public virtual int GetOffsetInSegment(int index) => Math.Max(0, index - this.Range.Min);
         public virtual Range<int> GetRange() => this.Range;
 
+        public abstract byte[] GetBytes();
         public abstract byte ReadByte(int index);
         public abstract ushort ReadShort(int index);
 
@@ -29,7 +30,6 @@ namespace MICE.Components.Memory
         public abstract void Write(int index, ushort value);
 
         public abstract void CopyBytes(ushort startAddress, Array destination, int destinationIndex, int length);
-
 
         public Action<int, byte> AfterReadAction { get; set; }
         public Action<int, byte> AfterWriteAction { get; set; }

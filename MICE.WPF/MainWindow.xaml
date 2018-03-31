@@ -16,6 +16,8 @@
         <CommandBinding Command="commands:StaticCommands.SoftResetCommand" CanExecute="IsSystemRunning" Executed="SoftResetCommandExecuted" />
         <CommandBinding Command="commands:StaticCommands.HardResetCommand" CanExecute="IsSystemRunning" Executed="HardResetCommandExecuted" />
         <CommandBinding Command="commands:StaticCommands.PowerOffCommand" CanExecute="IsSystemRunning" Executed="PowerOffCommandExecuted" />
+
+        <CommandBinding Command="commands:StaticCommands.ShowMemoryViewerCommand" CanExecute="IsSystemRunning" Executed="ShowMemoryViewerCommandExecuted" />
     </Window.CommandBindings>
     <Window.Resources>
         <local:DebugDataBindingConverter x:Key="DebugBinding"/>
@@ -36,7 +38,7 @@
                 <MenuItem Command="commands:StaticCommands.PowerOffCommand" />
             </MenuItem>
             <MenuItem Header="_Tools">
-                <MenuItem Header="_Memory Viewer" />
+                <MenuItem Command="commands:StaticCommands.ShowMemoryViewerCommand" IsCheckable="True" IsChecked="{Binding Path=IsMemoryViewerOpen}"/>
             </MenuItem>
         </Menu>
         <StatusBar DockPanel.Dock="Bottom">

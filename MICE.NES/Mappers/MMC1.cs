@@ -150,16 +150,10 @@ namespace MICE.Nintendo.Mappers
             switch (address)
             {
                 case var _ when address < 0x2000:
+                    this.WriteMemory(address, value);
                     break;
-                case var _ when address >= 0x8000 && address <= 0x9FFF:
+                case var _ when address >= 0x8000 && address <= 0xFFFF:
                     this.HandleLoadRegister(address, value);
-                    break;
-                case var _ when address >= 0xA000 && address <= 0xBFFF:
-                    break;
-                case var _ when address >= 0xC000 && address <= 0xDFFF:
-                    break;
-                case var _ when address >= 0xE000 && address <= 0xFFFF:
-                    this.SetProgramRomBank(value);
                     break;
                 default:
                     throw new InvalidOperationException($"Unexpected address (0x{address:X4}) requested in MMC1 Mapper");
@@ -293,9 +287,17 @@ namespace MICE.Nintendo.Mappers
 
         private void SetCharacterRomBank(int romBankNumber, byte value)
         {
+            var bank0 = (byte)(value & 0x0F);
+            var bank1 = (byte)(value | 0x01);
+
             switch (this.CharacterRomBankMode)
             {
                 case CharacterROMBankMode.Switch8kb:
+                    if (romBankNumber == 0)
+                    {
+                        this.currentCharacterROMBank0000 = this.cartridge.CharacterRomBanks[bank0];
+                        this.currentCharacterROMBank1000 = this.cartridge.CharacterRomBanks[bank0];
+                    }
                     break;
                 case CharacterROMBankMode.SwitchTwo4kb:
                     break;
@@ -356,6 +358,26 @@ namespace MICE.Nintendo.Mappers
         {
             this.LoadRegister.Write(0);
             this.loadRegisterWriteCount = 0;
+        }
+
+        private void WriteMemory(int address, byte value)
+        {
+            if (address < 0x2000)
+            {
+                var bank = address / 0x1000;
+                var offset = address % 0x1000;
+
+                if (bank == 0)
+                {
+                    this.currentCharacterROMBank0000[offset] = value;
+                }
+                else
+                {
+                    this.currentCharacterROMBank1000[offset] = value;
+                }
+            }
+
+            return;
         }
 
         protected enum CharacterROMBankMode

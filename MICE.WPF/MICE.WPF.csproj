@@ -72,7 +72,11 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="MemoryViewerWindow.xaml.cs">
+      <DependentUpon>MemoryViewerWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="ViewModels\MainWindowViewModel.cs" />
+    <Compile Include="ViewModels\MemoryViewerViewModel.cs" />
     <Compile Include="ViewModels\NESViewModel.cs" />
     <Page Include="EmulatorViewPort.xaml">
       <SubType>Designer</SubType>
@@ -94,6 +98,10 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Page Include="MemoryViewerWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs">
@@ -130,6 +138,14 @@
     <ProjectReference Include="..\MICE.NES\MICE.Nintendo.csproj">
       <Project>{30E26A15-7C9F-4602-811E-96D6E27F189C}</Project>
       <Name>MICE.Nintendo</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\MICE.PPU.RicohRP2C02\MICE.PPU.RicohRP2C02.csproj">
+      <Project>{1C6429E4-5DF1-4789-948C-8F076E3ABA4E}</Project>
+      <Name>MICE.PPU.RicohRP2C02</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\WpfHexEditorControl\WPFHexaEditor\WpfHexaEditor.NET47.csproj">
+      <Project>{cf6ac02d-02fa-4ee9-a507-bd94f489972e}</Project>
+      <Name>WpfHexaEditor.NET47</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

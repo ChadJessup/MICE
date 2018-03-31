@@ -16,6 +16,8 @@ namespace MICE.Components.Memory
             this.Name = name;
         }
 
+        public byte[] GetBytes() => new byte[] { 0x0 };
+
         public bool ContainsIndex(int index) => index >= this.Range.Min || index <= this.Range.Max;
         public virtual bool IsIndexInRange(int index) => index >= this.Range.Min && index <= this.Range.Max;
         public virtual Range<int> GetRange() => this.Range;

@@ -23,9 +23,8 @@ namespace MICE.Components.Memory
         public override ushort ReadShort(int index) => this.mapper.ReadShort(index);
         public override void Write(int index, byte value) => this.mapper.Write(index, value);
         public override void Write(int index, ushort value) => this.mapper.Write(index, value);
-        public override void CopyBytes(ushort startAddress, Array destination, int destinationIndex, int length)
-        {
-            throw new NotImplementedException();
-        }
+
+        public override byte[] GetBytes() => throw new NotImplementedException();
+        public override void CopyBytes(ushort startAddress, Array destination, int destinationIndex, int length) => throw new NotImplementedException();
     }
 }

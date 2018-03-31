@@ -184,5 +184,8 @@ namespace MICE.PPU.RicohRP2C02.Handlers
 
             this.internalRegisters.w = !this.internalRegisters.w;
         }
+
+        public override string ToString()
+            => $"CourseX: {this.vCoarseXScroll} FineX: {this.vFineYScroll} CourseY: {this.vCoarseYScroll} FineY: {this.vFineYScroll}";
     }
 }

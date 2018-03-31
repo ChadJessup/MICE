@@ -11,6 +11,7 @@ namespace MICE.Components.Memory
         {
         }
 
+        public override byte[] GetBytes() => throw new NotImplementedException();
         public override byte ReadByte(int index) => throw new NotImplementedException();
         public override ushort ReadShort(int index) => throw new NotImplementedException();
         public override void Write(int index, byte value) => throw new NotImplementedException();

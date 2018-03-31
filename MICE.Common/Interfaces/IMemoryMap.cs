@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace MICE.Common.Interfaces
 {
@@ -11,6 +12,7 @@ namespace MICE.Common.Interfaces
         byte ReadByte(int index);
         void Write(int index, byte value);
         T GetMemorySegment<T>(string segmentName) where T : IMemorySegment;
+        IEnumerable<IMemorySegment> GetMemorySegments();
         void BulkTransfer(ushort startAddress, Array destinationArray, int destinationIndex, int size);
     }
 }

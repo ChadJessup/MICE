@@ -16,6 +16,7 @@ namespace MICE.Nintendo.Mappers
             this.cartridge = cartridge;
         }
 
+        public override byte[] GetBytes() => new byte[] { 0x0 };
         public abstract void AddMemorySegment(IMemorySegment memorySegment);
     }
 }

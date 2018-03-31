@@ -20,6 +20,8 @@ namespace MICE.Components.Memory
 
         public byte[] Data { get; set; }
 
+        public override byte[] GetBytes() => this.Data;
+
         public override byte ReadByte(int index)
         {
             var value = this.Data[this.GetOffsetInSegment(index)];

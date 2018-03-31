@@ -73,5 +73,15 @@ namespace MICE.WPF.Commands
             {
             }
         );
+
+        public static readonly RoutedUICommand ShowMemoryViewerCommand = new RoutedUICommand
+        (
+            text: "Memory Viewer",
+            name: "Memory Viewer",
+            ownerType: typeof(StaticCommands),
+            inputGestures: new InputGestureCollection()
+            {
+            }
+        );
     }
 }

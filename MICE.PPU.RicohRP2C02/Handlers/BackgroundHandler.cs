@@ -19,7 +19,7 @@ namespace MICE.PPU.RicohRP2C02.Handlers
         // Having issues, going to reproduce EmuNES's methods for now then break it down if possible.
         private ulong tileData;
         private byte nameTableByte;
-        private byte attributeTableByte;
+        // private byte attributeTableByte;
         private byte lowTileByte;
         private byte highTileByte;
         //
@@ -68,19 +68,6 @@ namespace MICE.PPU.RicohRP2C02.Handlers
                 return (0, null);
             }
 
-            var tileX = x / 8;
-            var tileY = y / 8;
-
-            if (tileX == 25 && tileY == 12)
-            {
-
-            }
-
-            if (tileX == 26 && tileY == 12)
-            {
-
-            }
-
             var rawTileData = (uint)(tileData >> 32);
             uint data = rawTileData >> ((7 - this.scrollHandler.FineXScroll) * 4);
 
@@ -90,42 +77,20 @@ namespace MICE.PPU.RicohRP2C02.Handlers
 
             var tile = new Tile();
 
-            byte paletteId = 0;
-
             // Transparent background.
             if (tileByte % 4 == 0)
             {
                 colorIndex = 0;
             }
 
-            if (colorIndex != 0)
-            {
-                paletteId = (byte)(this.attributeTableByte & 0b00000011);
-            }
-
-            if (paletteId != this.attribute.TopLeft)
-            {
-
-            }
-
-            var testPaletteId = this.attribute.TopLeft;//.GetPaletteId(x, y);
-
-            if (paletteId != testPaletteId)
-            {
-
-            }
+            var paletteId = this.attribute.GetPaletteOffset();
 
             tile.PaletteAddress = (ushort)(0x3f00 + 4 * paletteId + colorIndex);
 
             try
             {
-                var paletteTest = this.paletteHandler.GetBackgroundColor(testPaletteId, colorIndex);
-                var palette = this.ppuMemoryMap.ReadByte(tile.PaletteAddress);
-
-                if (paletteTest != palette)
-                {
-
-                }
+                var palette = this.paletteHandler.GetBackgroundColor(paletteId, colorIndex);
+               // var palette = this.ppuMemoryMap.ReadByte(tile.PaletteAddress);
 
                 return (palette, tile);
             }
@@ -152,8 +117,8 @@ namespace MICE.PPU.RicohRP2C02.Handlers
             int shift = ((this.internalRegisters.v >> 4) & 0b00000100) | (this.internalRegisters.v & 0b00000010);
 
             var value = this.ppuMemoryMap.ReadByte(address);
-            this.attributeTableByte = (byte)(((value >> shift) & 0b00000011) << 2);
-            this.attribute = new NametableAttribute(value, address);
+            // this.attributeTableByte = (byte)(((value >> shift) & 0b00000011) << 2);
+            this.attribute = new NametableAttribute(value, this.internalRegisters.v);
         }
 
         public void FetchLowBGTile()
@@ -190,7 +155,7 @@ namespace MICE.PPU.RicohRP2C02.Handlers
                 highTileByte <<= 1;
                 data <<= 4;
 
-                data |= (uint)(attributeTableByte | p1 | p2);
+                data |= (uint)(this.attribute.AttributeTableByte | p1 | p2);
             }
 
             tileData |= (ulong)(data);

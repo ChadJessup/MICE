@@ -142,5 +142,7 @@ namespace MICE.Common.Misc
 
             segments.First().CopyBytes(startAddress, destinationArray, destinationIndex, size);
         }
+
+        public IEnumerable<IMemorySegment> GetMemorySegments() => this.memorySegments;
     }
 }
