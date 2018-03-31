@@ -122,6 +122,8 @@ namespace MICE.Nintendo
 
             if (this.PPU.FrameNumber > this.CurrentFrame)
             {
+                Console.WriteLine($"Finished Frame: {this.CurrentFrame}");
+
                 this.CurrentFrame = this.PPU.FrameNumber;
                 Array.Copy(this.PPU.ScreenData, this.Screen, this.PPU.ScreenData.Length);
             }

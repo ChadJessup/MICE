@@ -1,5 +1,6 @@
 ﻿using MICE.Common;
 using MICE.Common.Interfaces;
+using MICE.Components.Memory;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -166,6 +167,7 @@ namespace MICE.CPU.MOS6502
 
         private long nmiCycleStart = 0;
 
+        private RAM memory = null;
         /// <summary>
         /// Steps the CPU and returns the amount of Cycles that would have occurred if the CPU were real.
         /// The cycles can be used by other components as a timing mechanism.
@@ -173,6 +175,11 @@ namespace MICE.CPU.MOS6502
         /// <returns>The amount of cycles that have passed in this step.</returns>
         public int Step()
         {
+            if (this.memory == null)
+            {
+                this.memory = this.memoryMap.GetMemorySegment<RAM>("RAM");
+            }
+
             ushort oldPC = this.Registers.PC;
 
             if (this.WasNMIRequested)
@@ -200,6 +207,8 @@ namespace MICE.CPU.MOS6502
                 opCode = this.Opcodes[code];
 
                 opCode.Instruction(opCode);
+
+                //Console.WriteLine(this.stepCount);
             }
             catch (Exception e)
             {
@@ -208,21 +217,22 @@ namespace MICE.CPU.MOS6502
   //              this.fs.Flush();
             }
 
-            int logStart = 0;
-            int logFor = 0x4d22;
-            int logCap = logStart + logFor;
+//            int logStart = 19724;
+//            int logFor = int.MaxValue;
+//            int logCap = logStart + logFor;
 
-            if (this.stepCount > logStart && this.stepCount < logCap)
-            {
-//                this.fs.WriteLine($"{this.stepCount:D4}:0x{code:X}:0x{this.Registers.PC.Read():X}:{opCode?.Name}:{opCode?.Cycles + opCode?.AddedCycles}-PC:{Registers.PC.Read()}:A:{Registers.A.Read()}:X:{Registers.X.Read()}:Y:{Registers.Y.Read()}:SP:{Registers.SP.Read()}:P:{Convert.ToString(Registers.P.Read(), 2).PadLeft(8, '0')}");
-  //              this.fs.Flush();
-            }
+//           // Console.WriteLine($"{this.stepCount}:0x{code:X}:0x{this.Registers.PC.Read():X}:{opCode?.Name}:{opCode?.Cycles + opCode?.AddedCycles}-PC:{Registers.PC.Read()}:A:{Registers.A.Read():D4}:X:{Registers.X.Read():D4}:Y:{Registers.Y.Read():D4}:SP:{Registers.SP.Read():D4}:P:{Convert.ToString(Registers.P.Read(), 2).PadLeft(8, '0')}");
+////            if (this.stepCount > logStart && this.stepCount < logCap)
+//            {
+//                //                this.fs.WriteLine($"{this.stepCount}:0x{code:X}:0x{this.Registers.PC.Read():X}:{opCode?.Name}:{opCode?.Cycles + opCode?.AddedCycles}-PC:{Registers.PC.Read()}:A:{Registers.A.Read()}:X:{Registers.X.Read()}:Y:{Registers.Y.Read()}:SP:{Registers.SP.Read()}:P:{Convert.ToString(Registers.P.Read(), 2).PadLeft(8, '0')}");
+//                //              this.fs.Flush();
+//            }
 
-            if (this.stepCount >= logCap)
-            {
-    //            this.fs.Flush();
-                //throw new InvalidOperationException("Quitting in release mode.");
-            }
+//            if (this.stepCount >= logCap)
+//            {
+//    //            this.fs.Flush();
+//                //throw new InvalidOperationException("Quitting in release mode.");
+//            }
 
             if (opCode.ShouldVerifyResults && (oldPC + opCode.PCDelta != this.Registers.PC))
             {

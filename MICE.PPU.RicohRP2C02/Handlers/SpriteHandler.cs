@@ -18,13 +18,15 @@ namespace MICE.PPU.RicohRP2C02.Handlers
         private readonly IList<byte[]> chrBanks;
         private readonly List<Sprite> currentSprites = new List<Sprite>(Constants.MaxSprites);
         private readonly List<Sprite> currentScanlineSprites = new List<Sprite>(Constants.MaxSprites);
+        private readonly PaletteHandler paletteHandler;
 
-        public SpriteHandler(IMemoryMap ppuMemoryMap, PPURegisters registers, IMemoryMap cpuMemoryMap, IList<byte[]> chrBanks)
+        public SpriteHandler(IMemoryMap ppuMemoryMap, PPURegisters registers, PaletteHandler paletteHandler, IMemoryMap cpuMemoryMap, IList<byte[]> chrBanks)
         {
             this.chrBanks = chrBanks;
             this.registers = registers;
             this.cpuMemoryMap = cpuMemoryMap;
             this.ppuMemoryMap = ppuMemoryMap;
+            this.paletteHandler = paletteHandler;
         }
 
         public int CurrentScanlineSpriteCount { get; private set; }
@@ -95,6 +97,11 @@ namespace MICE.PPU.RicohRP2C02.Handlers
                         oam[indexMultiple + 2], // attributes
                         oam[indexMultiple + 3]  // x position
                     );
+
+                if (!newSprite.IsBehindBackground)
+                {
+
+                }
 
                 if (newSprite.IsOnScanline(scanline, offset))
                 {

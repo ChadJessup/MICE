@@ -128,20 +128,18 @@ namespace MICE.Nintendo.Mappers
                     // TODO: not sure if this is the right bank to map to for this range atm...
                     return this.currentProgramROMBank8000[address & 0x3FFF];
                 default:
+                    foreach (var (segment, bytes) in this.bankLinkage.Where(linkage => linkage.segment.IsIndexInRange(address)))
+                    {
+                        var arrayOffset = segment.GetOffsetInSegment(address);
+
+                        var value = bytes[arrayOffset];
+                        return value;
+                    }
+
                     throw new InvalidOperationException($"Unexpected address (0x{address:X4}) requested in MMC1 Mapper");
             }
 
-            /*
-            foreach (var (segment, bytes) in this.bankLinkage.Where(linkage => linkage.segment.IsIndexInRange(index)))
-            {
-                var arrayOffset = segment.GetOffsetInSegment(index);
-
-                var value = bytes[arrayOffset];
-                return value;
-            }
-
-            throw new InvalidOperationException($"Invalid memory range and/or size (byte) was requested to be read from in NROM Mapper: 0x{index:X4}");
-            */
+            throw new InvalidOperationException($"Invalid memory range and/or size (byte) was requested to be read from in NROM Mapper: 0x{address:X4}");
         }
 
         public override void Write(int address, byte value)
@@ -156,6 +154,14 @@ namespace MICE.Nintendo.Mappers
                     this.HandleLoadRegister(address, value);
                     break;
                 default:
+                    foreach (var (segment, bytes) in this.bankLinkage.Where(linkage => linkage.segment.IsIndexInRange(address)))
+                    {
+                        var arrayOffset = segment.GetOffsetInSegment(address);
+                        bytes[arrayOffset] = value;
+
+                        return;
+                    }
+
                     throw new InvalidOperationException($"Unexpected address (0x{address:X4}) requested in MMC1 Mapper");
             }
         }

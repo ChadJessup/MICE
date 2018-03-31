@@ -31,7 +31,7 @@ namespace MICE.PPU.RicohRP2C02
 
             this.PaletteHandler = new PaletteHandler(this.MemoryMap);
             this.BackgroundHandler = new BackgroundHandler(this.MemoryMap, this.Registers, this.InternalRegisters, this.ScrollHandler, this.PaletteHandler, cpuMemoryMap, chrBanks);
-            this.SpriteHandler = new SpriteHandler(this.MemoryMap, this.Registers, cpuMemoryMap, chrBanks);
+            this.SpriteHandler = new SpriteHandler(this.MemoryMap, this.Registers, this.PaletteHandler, cpuMemoryMap, chrBanks);
             this.PixelMuxer = new PixelMuxer(this.Registers);
         }
 
@@ -385,20 +385,10 @@ namespace MICE.PPU.RicohRP2C02
 
         private void DrawPixel(int x, int y)
         {
-            if (x == 0 && y == 0x0)
-            {
-
-            }
-
             (byte backgroundPixel, Tile tile) drawnTile = BackgroundHandler.GetBackgroundPixel(x, y);
             (byte spritePixel, Sprite sprite) drawnSprite = SpriteHandler.GetSpritePixel(x, y, this.PrimaryOAM);
 
             byte muxedPixel = PixelMuxer.MuxPixel(drawnSprite, drawnTile);
-
-            if (muxedPixel != 0x0f)
-            {
-
-            }
 
             this.ScreenData[(y * Constants.NTSCWidth) + x] = muxedPixel;
 

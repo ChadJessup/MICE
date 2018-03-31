@@ -565,20 +565,26 @@ namespace MICE.CPU.MOS6502
         public void INY(OpcodeContainer container)
         {
             byte y = CPU.Registers.Y;
+
             CPU.Registers.Y.Write(++y);
+
+            if (y == 0)
+            {
+
+            }
 
             this.HandleNegative(CPU.Registers.Y);
             this.HandleZero(CPU.Registers.Y);
+
+            //this.WriteByteToRegister(CPU.Registers.Y, ++y, S: true, Z: true);
         }
 
         [MOS6502Opcode(0xE8, "INX", AddressingModes.Implied, timing: 2, length: 1)]
         public void INX(OpcodeContainer container)
         {
             byte x = CPU.Registers.X;
-            CPU.Registers.X.Write(++x);
 
-            this.HandleNegative(CPU.Registers.X);
-            this.HandleZero(CPU.Registers.X);
+            this.WriteByteToRegister(CPU.Registers.X, ++x, S: true, Z: true);
         }
 
         [MOS6502Opcode(0x8A, "TXA", AddressingModes.Immediate, timing: 2, length: 1)]
@@ -640,10 +646,10 @@ namespace MICE.CPU.MOS6502
 
             var oldAccumulator = CPU.Registers.A.Read();
             var result = CPU.Registers.A - value - 1 + (CPU.IsCarry ? 1 : 0);
-            CPU.IsCarry = result < 0x100;
 
             this.WriteByteToRegister(CPU.Registers.A, (byte)result, S: true, Z: true);
 
+            this.HandleCarry(result);
             this.HandlePageBoundaryCrossed(container, isSamePage);
             this.HandleOverflow(oldAccumulator, value, (byte)result);
 
@@ -652,6 +658,8 @@ namespace MICE.CPU.MOS6502
                 container.AddedCycles++;
             }
         }
+
+        private void HandleCarry(int value) => CPU.IsCarry = (value & 0b10000000) == 0x80;
 
         #endregion
 
