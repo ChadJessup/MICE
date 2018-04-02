@@ -24,7 +24,11 @@ namespace MICE.Common.Misc
         public bool ContainsRange(int index) => index >= this.minimumRange && index <= this.maximumRange;
 
         public (int min, int max) GetMaxRange() => (min: this.minimumRange, max: this.maximumRange);
-        public IEnumerable<IMemorySegment> GetSegmentsInRange(int min, int max) => this.memorySegments.Where(seg => seg.IsIndexInRange(min) || seg.IsIndexInRange(max));
+        public IEnumerable<IMemorySegment> GetSegmentsInRange(int min, int max)
+        {
+            var range = new Range<int>(min, max);
+            return this.memorySegments.Where(seg => seg.Range.IsOverlapped(range));
+        }
 
         public void Add(IMemorySegment item)
         {
@@ -68,23 +72,7 @@ namespace MICE.Common.Misc
         public IEnumerator<IMemorySegment> GetEnumerator() => this.memorySegments.GetEnumerator();
         public void CopyTo(IMemorySegment[] array, int arrayIndex) => this.memorySegments.CopyTo(array, arrayIndex);
 
-        public virtual ushort ReadShort(int index)
-        {
-            return (ushort)(this.ReadByte(index + 1) << 8 | this.ReadByte(index));
-
-            if (this.memorySegmentCache.TryGetValue(index, out IMemorySegment cachedSegment))
-            {
-                return cachedSegment.ReadShort(index);
-            }
-
-            foreach (var segment in this.memorySegments.Where(seg => seg.IsIndexInRange(index)))
-            {
-                this.memorySegmentCache.Add(index, segment);
-                return segment.ReadShort(index);
-            }
-
-            throw new InvalidOperationException($"Address was requested that hasn't been mapped (0x{index:X})");
-        }
+        public virtual ushort ReadShort(int index) => (ushort)(this.ReadByte(index + 1) << 8 | this.ReadByte(index));
 
         public virtual byte ReadByte(int index)
         {

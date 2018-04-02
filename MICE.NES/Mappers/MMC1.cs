@@ -71,7 +71,7 @@ namespace MICE.Nintendo.Mappers
                 case var ms when ms.Range.Min == 0xC000:
                     var whichBank = this.cartridge.ProgramROMBanks.Count == 1
                         ? this.cartridge.ProgramROMBanks[0]
-                        : this.cartridge.ProgramROMBanks[1];
+                        : this.cartridge.ProgramROMBanks.Last();
 
                     this.bankLinkage.Add((memorySegment, whichBank));
                     this.currentProgramROMBankC000 = whichBank;
@@ -97,12 +97,6 @@ namespace MICE.Nintendo.Mappers
         /// <returns>The data that was read.</returns>
         public override ushort ReadShort(int index)
         {
-            foreach (var (segment, bytes) in this.bankLinkage.Where(linkage => linkage.segment.IsIndexInRange(index)))
-            {
-                var arrayOffset = segment.GetOffsetInSegment(index);
-                return BitConverter.ToUInt16(bytes, arrayOffset);
-            }
-
             throw new InvalidOperationException($"Invalid memory range and/or size (ushort) was requested to be read from in NROM Mapper: 0x{index:X4}");
         }
 
@@ -114,19 +108,20 @@ namespace MICE.Nintendo.Mappers
         /// <returns>The data that was read.</returns>
         public override byte ReadByte(int address)
         {
-            var offset = this.GetOffsetInSegment(address);
-
             switch (address)
             {
-                case var _ when address >= 0x8000 && address <= 0x9FFF:
-                    return this.currentProgramROMBank8000[address & 0x3FFF];
-                case var _ when address >= 0xA000 && address <= 0xBFFF:
-                    return this.currentCharacterROMBank0000[offset];
-                case var _ when address >= 0xC000 && address <= 0xDFFF:
-                    return this.currentCharacterROMBank1000[offset];
+                case var _ when address >= 0x6000 && address <= 0x7FFF:
+                    return this.cartridge.SRAM[address - 0x6000];
+                case var _ when address >= 0x8000 && address <= 0xBFFF:
+                    return this.currentProgramROMBank8000[address - 0x8000];
+                case var _ when address >= 0xC000 && address <= 0xFFFF:
+                    return this.currentProgramROMBankC000[address - 0xC000];
+                case var _ when address >= 0x0000 && address <= 0x0FFF:
+                    return this.currentCharacterROMBank0000[address - 0x0000];
+                case var _ when address >= 0x1000 && address <= 0x1FFF:
+                    return this.currentCharacterROMBank1000[address - 0x1000];
                 case var _ when address >= 0xE000 && address <= 0xFFFF:
-                    // TODO: not sure if this is the right bank to map to for this range atm...
-                    return this.currentProgramROMBank8000[address & 0x3FFF];
+                    return this.currentProgramROMBank8000[address - 0xE000];
                 default:
                     foreach (var (segment, bytes) in this.bankLinkage.Where(linkage => linkage.segment.IsIndexInRange(address)))
                     {
@@ -149,6 +144,9 @@ namespace MICE.Nintendo.Mappers
             {
                 case var _ when address < 0x2000:
                     this.WriteMemory(address, value);
+                    break;
+                case var _ when address >= 0x6000 && address <= 0x7FFF:
+                    this.cartridge.SRAM[address - 0x6000] = value;
                     break;
                 case var _ when address >= 0x8000 && address <= 0xFFFF:
                     this.HandleLoadRegister(address, value);

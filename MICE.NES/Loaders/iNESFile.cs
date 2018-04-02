@@ -19,7 +19,7 @@ namespace MICE.Nintendo.Loaders
 
             public const uint FileSignature = 0x1A53454E;
 
-            public const int SizeOfSRAM = 0x7fff - 0x6000;
+            public const int SizeOfSRAM = 0x8000 - 0x6000;
             public const int LocationOfSRAM = 0x6000;
 
             public const int SizeOfTrainer = 0x71ff - 0x7000;
@@ -118,6 +118,7 @@ namespace MICE.Nintendo.Loaders
             {
                 this.Trainer = new ArraySegment<byte>(bytes, Constants.LocationOfTrainer, Constants.SizeOfTrainer).ToArray();
             }
+
             if (this.HasBatteryBackedRAM)
             {
                 // TODO: We'll want to load in a file here at a later time
@@ -153,6 +154,7 @@ namespace MICE.Nintendo.Loaders
                 MirroringMode = this.MirroringMode,
                 ProgramRAMBanks = this.RAMBanks,
                 ProgramROMBanks = this.ROMBanks,
+                SRAM = this.SRAM,
             };
 
             cartridge.InitializeMapper(this.MemoryMapperId);

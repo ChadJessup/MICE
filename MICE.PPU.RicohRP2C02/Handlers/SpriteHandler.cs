@@ -9,20 +9,18 @@ namespace MICE.PPU.RicohRP2C02.Handlers
         private static class Constants
         {
             public const int MaxSprites = 64;
-            public const int MaxSpritesOnScreen = 8;
+            public const int MaxSpritesOnLine = 8;
         }
 
         private readonly IMemoryMap ppuMemoryMap;
         private readonly IMemoryMap cpuMemoryMap;
         private readonly PPURegisters registers;
-        private readonly IList<byte[]> chrBanks;
         private readonly List<Sprite> currentSprites = new List<Sprite>(Constants.MaxSprites);
         private readonly List<Sprite> currentScanlineSprites = new List<Sprite>(Constants.MaxSprites);
         private readonly PaletteHandler paletteHandler;
 
-        public SpriteHandler(IMemoryMap ppuMemoryMap, PPURegisters registers, PaletteHandler paletteHandler, IMemoryMap cpuMemoryMap, IList<byte[]> chrBanks)
+        public SpriteHandler(IMemoryMap ppuMemoryMap, PPURegisters registers, PaletteHandler paletteHandler, IMemoryMap cpuMemoryMap)
         {
-            this.chrBanks = chrBanks;
             this.registers = registers;
             this.cpuMemoryMap = cpuMemoryMap;
             this.ppuMemoryMap = ppuMemoryMap;
@@ -74,49 +72,73 @@ namespace MICE.PPU.RicohRP2C02.Handlers
             set => this.registers.PPUSTATUS.SetBit(6, value);
         }
 
-        public void EvaluateSpritesOnScanline(OAM oam, int scanline)
+        public void EvaluateSpritesOnScanline(OAM oam, int scanline, int cycle)
         {
-            // Don't need to scan the same scanline more than once with current algorithm.
             this.currentScanlineSprites.Clear();
 
             this.CurrentScanlineSpriteCount = 0;
 
-            int offset = this.IsSmallSprites ? 8 : 16;
+            var spriteHeight = this.IsSmallSprites ? 8 : 16;
 
             for (byte index = 0; index < Constants.MaxSprites; index++)
             {
-                var indexMultiple = index * 4;
+                var spriteY = oam[index * 4];
+                var spriteRow = scanline - spriteY;
 
-                Sprite newSprite = new Sprite
-                    (
-                        index,
-                        this.IsSmallSprites,
-                        this.IsSpritePatternTableAddress1000,
-                        oam[indexMultiple + 0], // y position
-                        oam[indexMultiple + 1], // tile index
-                        oam[indexMultiple + 2], // attributes
-                        oam[indexMultiple + 3]  // x position
-                    );
+                if (spriteRow < 0 || spriteRow >= spriteHeight)
+                {
+                    continue;
+                }
 
-                if (!newSprite.IsBehindBackground)
+                if (scanline >= 192 && scanline <= 200)
                 {
 
                 }
 
-                if (newSprite.IsOnScanline(scanline, offset))
-                {
-                    this.CurrentScanlineSpriteCount++;
-                    this.currentScanlineSprites.Add(newSprite);
-                }
+                var newSprite = new Sprite(index, this.IsSmallSprites, this.IsSpritePatternTableAddress1000, oam);
+                newSprite.GatherPattern(spriteRow, this.ppuMemoryMap);
 
-                if (!this.currentSprites.Contains(newSprite))
-                {
-                    this.currentSprites.Add(newSprite);
-                }
+                this.CurrentScanlineSpriteCount++;
+                this.currentScanlineSprites.Add(newSprite);
             }
         }
 
         public (byte, Sprite) GetSpritePixel(int x, int y, OAM primaryOAM)
+        {
+            if (y == 192)
+            {
+
+            }
+
+            if (x <= 8 && !this.DrawLeft8SpritePixels)
+            {
+                return (0, null);
+            }
+
+            for (int index = 0; index < this.CurrentScanlineSpriteCount; ++index)
+            {
+                var sprite = this.currentScanlineSprites[index];
+
+                if (!sprite.IsVisible(x))
+                {
+                    continue;
+                }
+
+                if (!sprite.IsBehindBackground)
+                {
+
+                }
+
+                sprite.SetFinalPixel(x, y, this.ppuMemoryMap);
+
+                var finalPixel = this.paletteHandler.GetSpriteColor(sprite);
+                return (finalPixel, sprite);
+            }
+
+            return (0, null);
+        }
+
+        public (byte, Sprite) GetSpritePixel2(int x, int y, OAM primaryOAM)
         {
             if (x <= 8 && !this.DrawLeft8SpritePixels)
             {
@@ -127,12 +149,14 @@ namespace MICE.PPU.RicohRP2C02.Handlers
             {
                 var sprite = this.currentScanlineSprites[index];
 
-                if (!sprite.IsVisible(x, y))
+                if (!sprite.IsVisible(x))
                 {
                     continue;
                 }
 
-                var finalPixel = sprite.GetFinalPixel(x, y, this.chrBanks[0], this.ppuMemoryMap);
+                sprite.SetFinalPixel(x, y, this.ppuMemoryMap);
+
+                var finalPixel = this.paletteHandler.GetSpriteColor(sprite);
                 return (finalPixel, sprite);
             }
 
@@ -143,6 +167,49 @@ namespace MICE.PPU.RicohRP2C02.Handlers
         {
             this.currentScanlineSprites.Clear();
             this.currentSprites.Clear();
+        }
+
+        public void EvaluateSpritesOnScanline2(OAM primaryOAM, OAM secondaryOAM, int scanLine)
+        {
+            // Following steps and naming at: http://wiki.nesdev.com/w/index.php/PPU_sprite_evaluation
+            // Most OAM reads are OAM[4 * n + m]
+            // n = Sprite (0-63)
+            // m = Byte of sprite (0-3)
+            var n = 0;
+            var m = 0;
+
+            var secondaryOAMIndex = 0;
+            var foundSprites = 0;
+
+            var spriteHeight = this.IsSmallSprites ? 8 : 16;
+
+            for (; n < Constants.MaxSprites; n++, m = 0)
+            {
+                byte spriteY = primaryOAM[4 * n + m++];
+
+                if (foundSprites <= 8)
+                {
+                    // I think NESDev is wrong here?...would cause issues. 0 in-range sprites would take up
+                    // entire secondary OAM twice-over, methinks?
+                   // secondaryOAM[secondaryOAMIndex++] = spriteY;
+                }
+
+                int spriteRow = scanLine - spriteY;
+
+                if (spriteRow < 0 || spriteRow >= spriteHeight)
+                {
+                    continue;
+                }
+
+                foundSprites++;
+                if (foundSprites <= 8)
+                {
+                    secondaryOAM[secondaryOAMIndex++] = spriteY;
+                    secondaryOAM[secondaryOAMIndex++] = primaryOAM[4 * n + m++];
+                    secondaryOAM[secondaryOAMIndex++] = primaryOAM[4 * n + m++];
+                    secondaryOAM[secondaryOAMIndex++] = primaryOAM[4 * n + m++];
+                }
+            }
         }
     }
 }

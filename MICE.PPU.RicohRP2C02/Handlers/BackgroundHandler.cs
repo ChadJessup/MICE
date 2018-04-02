@@ -14,8 +14,6 @@ namespace MICE.PPU.RicohRP2C02.Handlers
         private readonly IMemoryMap ppuMemoryMap;
         private readonly IMemoryMap cpuMemoryMap;
 
-        private readonly IList<byte[]> chrBanks;
-
         // Having issues, going to reproduce EmuNES's methods for now then break it down if possible.
         private ulong tileData;
         private byte nameTableByte;
@@ -27,9 +25,8 @@ namespace MICE.PPU.RicohRP2C02.Handlers
         public Tile PreviousTile { get; set; }
         public Tile CurrentTile { get; set; } = new Tile();
 
-        public BackgroundHandler(IMemoryMap ppuMemoryMap, PPURegisters registers, PPUInternalRegisters internalRegisters, ScrollHandler scrollHandler, PaletteHandler paletteHandler, IMemoryMap cpuMemoryMap, IList<byte[]> chrBanks)
+        public BackgroundHandler(IMemoryMap ppuMemoryMap, PPURegisters registers, PPUInternalRegisters internalRegisters, ScrollHandler scrollHandler, PaletteHandler paletteHandler, IMemoryMap cpuMemoryMap)
         {
-            this.chrBanks = chrBanks;
             this.registers = registers;
             this.ppuMemoryMap = ppuMemoryMap;
             this.cpuMemoryMap = cpuMemoryMap;
@@ -82,6 +79,8 @@ namespace MICE.PPU.RicohRP2C02.Handlers
             {
                 colorIndex = 0;
             }
+
+            tile.TileByte = tileByte;
 
             var paletteId = this.attribute.GetPaletteOffset();
 

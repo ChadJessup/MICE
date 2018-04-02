@@ -15,8 +15,4 @@
     <ProjectReference Include="..\MICE.PPU.RicohRP2C02\MICE.PPU.RicohRP2C02.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Components\" />
-  </ItemGroup>
-
 </Project>

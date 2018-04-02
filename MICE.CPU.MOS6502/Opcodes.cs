@@ -377,12 +377,13 @@ namespace MICE.CPU.MOS6502
 
         #region STore
 
-        [MOS6502Opcode(0x95, "STA", AddressingModes.ZeroPageX, timing: 4, length: 2)]
-        [MOS6502Opcode(0x91, "STA", AddressingModes.IndirectY, timing: 6, length: 2)]
         [MOS6502Opcode(0x85, "STA", AddressingModes.ZeroPage, timing: 3, length: 2)]
+        [MOS6502Opcode(0x95, "STA", AddressingModes.ZeroPageX, timing: 4, length: 2)]
         [MOS6502Opcode(0x8D, "STA", AddressingModes.Absolute, timing: 4, length: 3)]
-        [MOS6502Opcode(0x99, "STA", AddressingModes.AbsoluteY, timing: 5, length: 3)]
         [MOS6502Opcode(0x9D, "STA", AddressingModes.AbsoluteX, timing: 5, length: 3)]
+        [MOS6502Opcode(0x99, "STA", AddressingModes.AbsoluteY, timing: 5, length: 3)]
+        [MOS6502Opcode(0x81, "STA", AddressingModes.IndirectX, timing: 6, length: 2)]
+        [MOS6502Opcode(0x91, "STA", AddressingModes.IndirectY, timing: 6, length: 2)]
         public void STA(OpcodeContainer container)
         {
             var (value, address, isSamePage) = AddressingMode.GetAddressedValue(CPU, container, getValue: false);

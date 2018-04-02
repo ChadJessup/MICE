@@ -1,15 +1,18 @@
-﻿using System;
-using MICE.Common.Helpers;
+﻿using MICE.Common.Helpers;
 using MICE.Common.Interfaces;
+using System;
 
 namespace MICE.PPU.RicohRP2C02.Components
 {
     // https://wiki.nesdev.com/w/index.php/PPU_OAM
     public class Sprite : IEquatable<Sprite>
     {
-        private byte yPosition;
+        private byte spriteY;
+        private byte spriteX;
         private byte attributes;
-        private byte xPosition;
+
+        private byte lowBits;
+        private byte highBits;
 
         /// <summary>
         /// Initializes a new instance of the Sprite class.
@@ -17,20 +20,19 @@ namespace MICE.PPU.RicohRP2C02.Components
         /// <param name="spriteIndex">The OAM index of this sprite.</param>
         /// <param name="isSmallSprite">Whether or not this sprite is small (8x8) or large (8x16).</param>
         /// <param name="isSpritePattern1000">Offset of the sprite in memory.</param>
-        /// <param name="yPosition">The screen based Y coordinate byte.</param>
-        /// <param name="tileIndex">The tile index byte, which maps into character/tile memory.</param>
-        /// <param name="attribute">The attribute byte of this sprite.</param>
-        /// <param name="xPosition">The screen based X coordinate byte.</param>
-        public Sprite(int spriteIndex, bool isSmallSprite, bool isSpritePattern1000, byte yPosition, byte tileIndex, byte attribute, byte xPosition)
+        /// <param name="oam">The OAM Memory.</param>
+        public Sprite(byte spriteIndex, bool isSmallSprite, bool isSpritePattern1000, OAM oam)
         {
-            this.SpriteIndex = spriteIndex;
-            this.yPosition = yPosition;
-            this.TileIndex = tileIndex;
-            this.attributes = attribute;
-            this.xPosition = xPosition;
+            var indexMultiple = spriteIndex * 4;
+
+            this.spriteY = oam[indexMultiple + 0];
+            this.TileIndex = oam[indexMultiple + 1];
+            this.attributes = oam[indexMultiple + 2];
+            this.spriteX = oam[indexMultiple + 3];
 
             this.IsSmallSprite = isSmallSprite;
-            this.TileAddress = (ushort)(isSpritePattern1000 ? 0x1000 : 0x0000 + this.TileIndex * 16);
+
+            this.TileAddress = (ushort)((isSpritePattern1000 ? 0x1000 : 0x0000) + this.TileIndex * 16);
         }
 
         /// <summary>
@@ -55,7 +57,7 @@ namespace MICE.PPU.RicohRP2C02.Components
         /// Gets the screen position of this Sprite;
         /// Note: This might change each frame.
         /// </summary>
-        public (int X, int Y) Position => (X: this.xPosition, Y: this.yPosition);
+        public (int X, int Y) Position => (X: this.spriteX, Y: this.spriteY);
 
         /// <summary>
         /// Gets the palette address of this sprite.
@@ -67,7 +69,7 @@ namespace MICE.PPU.RicohRP2C02.Components
         /// Gets the palette number of this sprite.
         /// Note: This might change each frame.
         /// </summary>
-        public byte PaletteNumber => (byte)(this.attributes & 3);
+        public byte PaletteNumber => (byte)(this.attributes & 0b00000011);
 
         /// <summary>
         /// Gets a value indicating if this sprite should be behind the background.
@@ -100,19 +102,26 @@ namespace MICE.PPU.RicohRP2C02.Components
         public int Width { get; } = 8;
         public int Height => this.IsSmallSprite ? 8 : 16;
 
+        public byte ColorIndex { get; private set; }
+
+        public void GatherPattern(int spriteRow, IMemoryMap memoryMap)
+        {
+            spriteRow = this.IsFlippedVertically
+                ? 7 - spriteRow
+                : spriteRow;
+
+            this.lowBits = memoryMap.ReadByte(this.TileAddress + spriteRow);
+            this.highBits = memoryMap.ReadByte(this.TileAddress + 8 + spriteRow);
+        }
+
         /// <summary>
-        /// Gets a value indicating whether or not this Sprite is visible for a particular X,Y on the screen.
+        /// Gets a value indicating whether or not this Sprite is visible for a particular X cycle on a scanline.
+        /// Note: Y coordinate (scanline number) was already verified during sprite evaluation stage.
         /// </summary>
         /// <param name="x">The Screen-based X coordinate.</param>
-        /// <param name="y">The Screen-based Y coordinate.</param>
-        /// <returns>True if visible for a particular Screen based X,Y coordinate.</returns>
-        public bool IsVisible(int x, int y)
+        /// <returns>True if visible for a particular Screen based X coordinate.</returns>
+        public bool IsVisible(int x)
         {
-            if (this.Position.Y == 0 || this.Position.Y >= 240)
-            {
-                return false;
-            }
-
             if (x - this.Position.X >= 8 || x < this.Position.X)
             {
                 return false;
@@ -122,43 +131,24 @@ namespace MICE.PPU.RicohRP2C02.Components
         }
 
         /// <summary>
-        /// Gets the final pixel for a particular X,Y coordinate on the screen.
+        /// Gets the pixel details for a particular X,Y coordinate on the screen.
         /// </summary>
         /// <param name="x">The screen-based X coordinate.</param>
         /// <param name="y">The screen-based Y coordinate.</param>
-        /// <param name="characterBank">The character bank that would contain pixel details.</param>
         /// <param name="ppuMemoryMap">The PPU memory bank that would contain pixel details.</param>
-        /// <returns>The final colored pixel to the muxed to the screen.</returns>
-        public byte GetFinalPixel(int x, int y, byte[] characterBank, IMemoryMap ppuMemoryMap)
+        /// <returns>The pixel details that contain the final palette details that need to be muxed to the screen.</returns>
+        public void SetFinalPixel(int x, int y, IMemoryMap ppuMemoryMap)
         {
-            int tx = x - this.Position.X;
-            int ty = y - this.Position.Y;
+            int offsetX = x - this.Position.X;
+            int screenX = this.IsFlippedHorizontally ? 7 - offsetX : offsetX;
 
-            int screenX = this.IsFlippedHorizontally ? 7 - tx : tx;
-            int screenY = this.IsFlippedVertically ? 7 - ty : ty;
-
-            byte colorIndex = this.GetColorIndex(screenX, (ushort)(this.TileAddress + screenY), characterBank);
-
-            if (colorIndex == 0)
-            {
-                return 0;
-            }
-
-            this.PaletteAddress = (ushort)(0x3f10 + 4 * this.PaletteNumber + colorIndex);
-
-            return ppuMemoryMap.ReadByte(this.PaletteAddress);
+            this.ColorIndex = this.GetColorIndex(screenX);
         }
 
-        private byte GetColorIndex(int i, ushort address, byte[] patterns)
+        private byte GetColorIndex(int x)
         {
-            var lowBitsOffset = address;
-            var highBitsOffset = (ushort)(lowBitsOffset + 8);
-
-            byte lowBits = patterns[lowBitsOffset];
-            byte highBits = patterns[highBitsOffset];
-
-            byte lowBit = (byte)((lowBits >> (7 - i)) & 1);
-            byte highBit = (byte)((highBits >> (7 - i)) & 1);
+            byte lowBit = (byte)((this.lowBits >> (7 - x)) & 1);
+            byte highBit = (byte)((this.highBits >> (7 - x)) & 1);
 
             return (byte)(lowBit + highBit * 2);
         }

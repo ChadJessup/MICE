@@ -2,8 +2,6 @@
 using MICE.Common.Interfaces;
 using MICE.PPU.RicohRP2C02.Components;
 using MICE.PPU.RicohRP2C02.Handlers;
-using System;
-using System.Collections.Generic;
 
 namespace MICE.PPU.RicohRP2C02
 {
@@ -21,7 +19,7 @@ namespace MICE.PPU.RicohRP2C02
 
         private byte registerLatch;
 
-        public RicohRP2C02(PPUMemoryMap memoryMap, PPURegisters registers, IMemoryMap cpuMemoryMap, IList<byte[]> chrBanks)
+        public RicohRP2C02(PPUMemoryMap memoryMap, PPURegisters registers, IMemoryMap cpuMemoryMap)
         {
             this.InternalRegisters = new PPUInternalRegisters();
 
@@ -30,8 +28,8 @@ namespace MICE.PPU.RicohRP2C02
             this.ScrollHandler = new ScrollHandler(this.Registers, this.InternalRegisters);
 
             this.PaletteHandler = new PaletteHandler(this.MemoryMap);
-            this.BackgroundHandler = new BackgroundHandler(this.MemoryMap, this.Registers, this.InternalRegisters, this.ScrollHandler, this.PaletteHandler, cpuMemoryMap, chrBanks);
-            this.SpriteHandler = new SpriteHandler(this.MemoryMap, this.Registers, this.PaletteHandler, cpuMemoryMap, chrBanks);
+            this.BackgroundHandler = new BackgroundHandler(this.MemoryMap, this.Registers, this.InternalRegisters, this.ScrollHandler, this.PaletteHandler, cpuMemoryMap);
+            this.SpriteHandler = new SpriteHandler(this.MemoryMap, this.Registers, this.PaletteHandler, cpuMemoryMap);
             this.PixelMuxer = new PixelMuxer(this.Registers);
         }
 
@@ -275,16 +273,23 @@ namespace MICE.PPU.RicohRP2C02
                 this.HandleVisibleScanlines();
             }
 
-            if (this.IsRenderingEnabled && this.Cycle == 257)
+            if (this.ScanLine <= 240 && this.Cycle >= 257 && this.Cycle <= 320)
             {
-                if (this.IsVisibleLine)
+                this.Registers.OAMADDR.Write(0);
+            }
+
+            if (this.IsVisibleLine)
+            {
+                if (this.Cycle == 64)
                 {
-                    this.SpriteHandler.EvaluateSpritesOnScanline(this.PrimaryOAM, this.ScanLine + 1);
+                    this.SecondaryOAM.Data.Clear(0xFF);
                 }
-                else
-                {
-                    this.SpriteHandler.ClearSprites();
-                }
+            }
+
+            if (this.Cycle == 257 && this.IsVisibleLine && (this.BackgroundHandler.ShowBackground || this.SpriteHandler.ShowSprites))
+            {
+                //this.SpriteHandler.EvaluateSpritesOnScanline2(this.PrimaryOAM, this.SecondaryOAM, this.ScanLine);
+                this.SpriteHandler.EvaluateSpritesOnScanline(this.PrimaryOAM, this.ScanLine, this.Cycle);
             }
 
             if (this.ShouldFetch)
@@ -392,7 +397,10 @@ namespace MICE.PPU.RicohRP2C02
 
             this.ScreenData[(y * Constants.NTSCWidth) + x] = muxedPixel;
 
-            this.HandleSprite0Hit(drawnTile, drawnSprite);
+            if (drawnTile.tile.TileByte % 4 != 0 && drawnSprite.spritePixel % 4 != 0)
+            {
+                this.HandleSprite0Hit(drawnTile, drawnSprite);
+            }
         }
 
         private void Fetch()
@@ -447,6 +455,11 @@ namespace MICE.PPU.RicohRP2C02
                 drawnSprite.sprite?.IsSpriteZero ?? false
                 && (drawnTile.backgroundPixel != 0x00
                 && drawnSprite.spritePixel != 0x00);
+
+            //if (this.SpriteHandler.WasSprite0Hit)
+            //{
+
+            //}
         }
 
         private void UpdatePPUAddress(byte value)

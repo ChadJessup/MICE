@@ -20,6 +20,7 @@ namespace MICE.PPU.RicohRP2C02.Components
         public ushort PaletteAddress { get; set; }
 
         public NametableAttribute Attribute { get; private set; }
+        public byte TileByte { get; set; }
 
         public byte nameTableByte = 0;
         public byte attributeByte = 0;

@@ -128,6 +128,8 @@ namespace MICE.CPU.MOS6502
 
         public bool IsPowered { get; private set; }
 
+        public OpcodeContainer CurrentOpcode { get; private set; }
+
         public void PowerOn()
         {
             this.IsPowered = true;
@@ -168,6 +170,7 @@ namespace MICE.CPU.MOS6502
         private long nmiCycleStart = 0;
 
         private RAM memory = null;
+
         /// <summary>
         /// Steps the CPU and returns the amount of Cycles that would have occurred if the CPU were real.
         /// The cycles can be used by other components as a timing mechanism.
@@ -199,14 +202,13 @@ namespace MICE.CPU.MOS6502
                 }
             }
 
-            OpcodeContainer opCode = null;
             byte code = 0;
             try
             {
                 code = this.ReadNextByte();
-                opCode = this.Opcodes[code];
+                this.CurrentOpcode = this.Opcodes[code];
 
-                opCode.Instruction(opCode);
+                this.CurrentOpcode.Instruction(this.CurrentOpcode);
 
                 //Console.WriteLine(this.stepCount);
             }
@@ -234,16 +236,20 @@ namespace MICE.CPU.MOS6502
 //                //throw new InvalidOperationException("Quitting in release mode.");
 //            }
 
-            if (opCode.ShouldVerifyResults && (oldPC + opCode.PCDelta != this.Registers.PC))
+            if (this.CurrentOpcode.ShouldVerifyResults && (oldPC + this.CurrentOpcode.PCDelta != this.Registers.PC))
             {
     //            this.fs.Flush();
-                throw new InvalidOperationException($"Program Counter was not what was expected after executing instruction: {opCode.Name} (0x{opCode.Code:X}).{Environment.NewLine}Was: 0x{oldPC:X}{Environment.NewLine}Is: 0x{this.Registers.PC.Read():X}{Environment.NewLine}Expected: 0x{oldPC + opCode.PCDelta:X}");
+                throw new InvalidOperationException($"Program Counter was not what was expected after executing instruction: {this.CurrentOpcode.Name} (0x{this.CurrentOpcode.Code:X}).{Environment.NewLine}Was: 0x{oldPC:X}{Environment.NewLine}Is: 0x{this.Registers.PC.Read():X}{Environment.NewLine}Expected: 0x{oldPC + this.CurrentOpcode.PCDelta:X}");
             }
 
             this.stepCount++;
             this.ranOpcodeCount++;
 
-            return opCode.Cycles + opCode.AddedCycles;
+            if (this.stepCount == 0x00000000000e38ed)
+            {
+
+            }
+            return this.CurrentOpcode.Cycles + this.CurrentOpcode.AddedCycles;
         }
 
         public void WriteByteAt(ushort address, byte value, bool incrementPC = true)

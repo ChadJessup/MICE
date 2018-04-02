@@ -1,13 +1,13 @@
-﻿using System;
+﻿using MICE.Common.Interfaces;
+using MICE.PPU.RicohRP2C02.Components;
 using System.Collections.Generic;
 using System.Linq;
-using MICE.PPU.RicohRP2C02.Components;
 
 namespace MICE.PPU.RicohRP2C02.Handlers
 {
     public class PaletteHandler
     {
-        private List<Palette> palettes = new List<Palette>();
+        private List<IMemorySegment> palettes = new List<IMemorySegment>();
         private Palette BackgroundPalette0;
 
         public PaletteHandler(PPUMemoryMap memoryMap)
@@ -15,16 +15,7 @@ namespace MICE.PPU.RicohRP2C02.Handlers
             var memorySegments = memoryMap.GetSegmentsInRange(0x3F00, 0x3FFF);
 
             this.BackgroundPalette0 = memoryMap.GetMemorySegment<Palette>("Background palette 0");
-            this.palettes.Add(this.BackgroundPalette0);
-
-            this.palettes.Add(memoryMap.GetMemorySegment<Palette>("Background palette 1"));
-            this.palettes.Add(memoryMap.GetMemorySegment<Palette>("Background palette 2"));
-            this.palettes.Add(memoryMap.GetMemorySegment<Palette>("Background palette 3"));
-
-            this.palettes.Add(memoryMap.GetMemorySegment<Palette>("Sprite palette 0"));
-            this.palettes.Add(memoryMap.GetMemorySegment<Palette>("Sprite palette 1"));
-            this.palettes.Add(memoryMap.GetMemorySegment<Palette>("Sprite palette 2"));
-            this.palettes.Add(memoryMap.GetMemorySegment<Palette>("Sprite palette 3"));
+            this.palettes.AddRange(memoryMap.GetSegmentsInRange(0x3F00, 0x3F1F));
         }
 
         public byte GetBackgroundColor(int paletteId, byte colorIndex)
@@ -37,8 +28,19 @@ namespace MICE.PPU.RicohRP2C02.Handlers
             }
 
             var palette = this.palettes.First(p => p.IsIndexInRange(address));
+            return palette.ReadByte(address);
+        }
 
-            return palette.GetColor(colorIndex % 4);
+        public byte GetSpriteColor(Sprite sprite)
+        {
+            if (sprite.ColorIndex == 0)
+            {
+                return 0;
+            }
+            sprite.PaletteAddress = (ushort)(0x3f10 + 4 * sprite.PaletteNumber + sprite.ColorIndex);
+
+            var palette = this.palettes.First(p => p.IsIndexInRange(sprite.PaletteAddress));
+            return palette.ReadByte(sprite.PaletteAddress);
         }
     }
 }

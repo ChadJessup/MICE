@@ -56,7 +56,7 @@ namespace MICE.Nintendo
 
             var ppuRegisters = new PPURegisters();
             this.CPUMemoryMap = new NESMemoryMap(ppuRegisters, this.sw);
-            this.PPU = new RicohRP2C02(new PPUMemoryMap(this.sw), ppuRegisters, this.CPUMemoryMap, this.Cartridge.CharacterRomBanks);
+            this.PPU = new RicohRP2C02(new PPUMemoryMap(this.sw), ppuRegisters, this.CPUMemoryMap);
 
             this.PPU.Registers.OAMDMA.AfterWriteAction = this.DMATransfer;
 
@@ -72,10 +72,7 @@ namespace MICE.Nintendo
 
         private void MapToCartridge()
         {
-            // Little confused here...https://wiki.nesdev.com/w/index.php/CPU_memory_map
-            // states "battery backed save OR Work RAM.  The 01-Implied test cartridge, has no SRAM, but writes to it...
-            // so if cartridge doesn't have ram let's just put some memory there anyways!
-            this.CPUMemoryMap.GetMemorySegment<SRAM>("SRAM").Data = this.Cartridge.SRAM ?? new byte[0x7fff - 0x6000];
+            this.CPUMemoryMap.GetMemorySegment<SRAM>("SRAM").AttachHandler(this.Cartridge.Mapper);
 
             // Various parts of a cartridge are mapped into the NES's CPU memory map.
             this.CPUMemoryMap.GetMemorySegment<External>("PRG-ROM Lower Bank").AttachHandler(this.Cartridge.Mapper);
@@ -122,7 +119,7 @@ namespace MICE.Nintendo
 
             if (this.PPU.FrameNumber > this.CurrentFrame)
             {
-                Console.WriteLine($"Finished Frame: {this.CurrentFrame}");
+                //Console.WriteLine($"Finished Frame: {this.CurrentFrame}");
 
                 this.CurrentFrame = this.PPU.FrameNumber;
                 Array.Copy(this.PPU.ScreenData, this.Screen, this.PPU.ScreenData.Length);
@@ -151,6 +148,11 @@ namespace MICE.Nintendo
             ushort readAddress = (ushort)(value << 8);
             //this.sw.WriteLine("DMA Just Happened!");
 
+            this.CPU.CurrentOpcode.AddedCycles +=
+                (this.CPU.CurrentCycle % 2) == 1
+                ? 514
+                : 513;
+
             this.CPUMemoryMap.BulkTransfer(readAddress, this.PPU.PrimaryOAM.Data, this.PPU.Registers.OAMADDR, 256);
         }
 
@@ -160,7 +162,13 @@ namespace MICE.Nintendo
             {
                 while (!this.IsPaused && this.IsPoweredOn)
                 {
-                    this.Step();
+                    try
+                    {
+                        this.Step();
+                    }
+                    catch (Exception e)
+                    {
+                    }
 
                     // TODO: Get RAW Screen data from PPU.
                     // TODO: Audio.

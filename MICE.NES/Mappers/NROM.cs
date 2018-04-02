@@ -26,7 +26,11 @@ namespace MICE.Nintendo.Mappers
                 this.cartridge.CharacterRomBanks.Add(new byte[2000]);
             }
 
-            if (memorySegment.Range.Min == 0x8000)
+            if (memorySegment.Range.Min == 0x6000)
+            {
+                this.bankLinkage.Add((memorySegment, this.cartridge.SRAM));
+            }
+            else if (memorySegment.Range.Min == 0x8000)
             {
                 this.bankLinkage.Add((memorySegment, this.cartridge.ProgramROMBanks[0]));
             }
