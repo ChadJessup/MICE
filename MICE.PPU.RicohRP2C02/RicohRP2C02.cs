@@ -2,6 +2,7 @@
 using MICE.Common.Interfaces;
 using MICE.PPU.RicohRP2C02.Components;
 using MICE.PPU.RicohRP2C02.Handlers;
+using System;
 
 namespace MICE.PPU.RicohRP2C02
 {
@@ -17,7 +18,7 @@ namespace MICE.PPU.RicohRP2C02
             public const int NTSCHeight = 224;
         }
 
-        private byte registerLatch;
+        public byte RegisterLatch { get; set; }
 
         public RicohRP2C02(PPUMemoryMap memoryMap, PPURegisters registers, IMemoryMap cpuMemoryMap)
         {
@@ -146,7 +147,7 @@ namespace MICE.PPU.RicohRP2C02
         public bool IsRenderLine => this.IsVisibleLine || this.IsPreRenderLine;
 
         public bool IsFetchLine => this.IsRenderLine;
-        public bool IsFetchCycle => (this.Cycle >= 1 && this.Cycle <= 256) || (this.Cycle >= 321 && this.Cycle <= 336);
+        public bool IsFetchCycle => this.IsVisibleCycle || (this.Cycle >= 321 && this.Cycle <= 336);
         public bool ShouldFetch => this.IsRenderingEnabled && this.IsFetchLine && this.IsFetchCycle;
 
         public bool ShouldIncrementHorizontal => this.IsRenderingEnabled && this.IsRenderLine && this.IsFetchCycle && this.Cycle % 8 == 0;
@@ -159,36 +160,51 @@ namespace MICE.PPU.RicohRP2C02
 
         public void PowerOn()
         {
+            this.Registers.PPUADDR.ReadByteInsteadAction = (_, value) => this.RegisterLatch;
             this.Registers.PPUADDR.AfterWriteAction = (_, value) =>
             {
-                this.registerLatch = value;
+                this.RegisterLatch = value;
                 this.UpdatePPUAddress(value);
             };
 
-            this.Registers.PPUADDR.ReadByteInsteadAction = (address, value) => this.registerLatch;
-            this.Registers.PPUMASK.AfterWriteAction = (address, value) => this.registerLatch = value;
 
-            this.Registers.PPUSCROLL.AfterWriteAction = (address, value) => this.ScrollHandler.PPUScrollWrittenTo(address, value);
+            this.Registers.PPUMASK.ReadByteInsteadAction = (_, value) => this.RegisterLatch;
+            this.Registers.PPUMASK.AfterWriteAction = (address, value) => this.RegisterLatch = value;
 
+
+            this.Registers.PPUSCROLL.ReadByteInsteadAction = (_, value) => this.RegisterLatch;
+            this.Registers.PPUSCROLL.AfterWriteAction = (address, value) =>
+            {
+                if (value != 0x0000)
+                {
+
+                }
+
+                //this.registerLatch = value;
+                this.ScrollHandler.PPUScrollWrittenTo(address, value);
+            };
+
+
+            this.Registers.PPUCTRL.ReadByteInsteadAction = (_, value) => this.RegisterLatch;
             this.Registers.PPUCTRL.AfterWriteAction = (address, value) =>
             {
-                this.registerLatch = value;
+                this.RegisterLatch = value;
 
                 this.ShouldNMInterrupt = false;
                 this.InternalRegisters.t = (ushort)((this.InternalRegisters.t & 0xF3FF) | ((value & 0x03) << 10));
             };
 
+
+            byte bufferedRead = 0;
             this.Registers.PPUDATA.ReadShortInsteadAction = (_, value) => this.InternalRegisters.v;
             this.Registers.PPUDATA.AfterReadAction = (_, value) => this.InternalRegisters.v += (ushort)this.VRAMAddressIncrement;
             this.Registers.PPUDATA.AfterWriteAction = (_, value) =>
             {
-                this.registerLatch = value;
+                this.RegisterLatch = value;
 
                 this.MemoryMap.Write(this.InternalRegisters.v, value);
                 this.InternalRegisters.v += (ushort)this.VRAMAddressIncrement;
             };
-
-            byte bufferedRead = 0;
             this.Registers.PPUDATA.ReadByteInsteadAction = (_, value) =>
             {
                 if (this.InternalRegisters.v >= 0x3F00 && this.InternalRegisters.v <= 0x3FFF)
@@ -203,13 +219,34 @@ namespace MICE.PPU.RicohRP2C02
                 return temp;
             };
 
+
+            this.Registers.PPUSTATUS.AfterWriteAction = (_, value) => this.RegisterLatch = value;
             this.Registers.PPUSTATUS.AfterReadAction = (_, value) =>
             {
                 this.InternalRegisters.w = true;
                 this.IsVBlank = false;
             };
+            this.Registers.PPUSTATUS.ReadByteInsteadAction = (_, value) =>
+            {
+                byte result = (byte)(this.RegisterLatch & 0b00011111);
 
-            this.Registers.OAMADDR.AfterWriteAction = (address, value) => this.registerLatch = value;
+                return (byte)(result | value);
+            };
+
+            this.Registers.OAMADDR.ReadByteInsteadAction = (_, value) => this.RegisterLatch;
+            this.Registers.OAMADDR.AfterWriteAction = (_, value) => this.RegisterLatch = value;
+
+            this.Registers.OAMDATA.ReadByteInsteadAction = (_, value) => this.PrimaryOAM[this.Registers.OAMADDR.ReadInternal()];
+            this.Registers.OAMDATA.AfterWriteAction = (_, value) =>
+            {
+                this.RegisterLatch = value;
+
+                byte oamADDR = this.Registers.OAMADDR.ReadInternal();
+                this.Registers.OAMADDR.WriteInternal(++oamADDR);
+                this.PrimaryOAM[this.Registers.OAMADDR.ReadInternal()] = value;
+            };
+
+            this.Registers.OAMDMA.ReadByteInsteadAction = (_, value) => this.RegisterLatch;
 
             this.IsPowered = true;
             this.Restart();
@@ -258,29 +295,32 @@ namespace MICE.PPU.RicohRP2C02
                 }
             }
 
+            if (this.IsVisibleLine)
+            {
+                if (this.IsRenderingEnabled && this.IsVisibleCycle)
+                {
+                    this.DrawPixel(this.Cycle - 1, this.ScanLine);
+                }
+
+                if (this.Cycle == 64)
+                {
+                    this.SecondaryOAM.Data.Clear(0xFF);
+                }
+
+                if (this.Cycle == 257 && (this.BackgroundHandler.ShowBackground || this.SpriteHandler.ShowSprites))
+                {
+                    this.SpriteHandler.EvaluateSpritesOnScanline(this.PrimaryOAM, this.ScanLine, this.Cycle);
+                }
+            }
+
             if (this.ScanLine == 241 && this.Cycle == 1)
             {
                 this.HandleVerticalBlankLines();
             }
 
-            if (this.IsRenderingEnabled && this.IsVisibleLine && this.IsVisibleCycle)
-            {
-                this.DrawPixel(this.Cycle - 1, this.ScanLine);
-            }
-
             if (this.ScanLine <= 240 && this.Cycle >= 257 && this.Cycle <= 320)
             {
                 this.Registers.OAMADDR.Write(0);
-            }
-
-            if (this.IsVisibleLine && this.Cycle == 64)
-            {
-                this.SecondaryOAM.Data.Clear(0xFF);
-            }
-
-            if (this.Cycle == 257 && this.IsVisibleLine && (this.BackgroundHandler.ShowBackground || this.SpriteHandler.ShowSprites))
-            {
-                this.SpriteHandler.EvaluateSpritesOnScanline(this.PrimaryOAM, this.ScanLine, this.Cycle);
             }
 
             if (this.ShouldFetch)
@@ -422,15 +462,15 @@ namespace MICE.PPU.RicohRP2C02
                 && (drawnTile.backgroundPixel != 0x00
                 && drawnSprite.spritePixel != 0x00);
 
-            //if (this.SpriteHandler.WasSprite0Hit)
-            //{
+            if (this.SpriteHandler.WasSprite0Hit)
+            {
 
-            //}
+            }
         }
 
         private void UpdatePPUAddress(byte value)
         {
-            this.registerLatch = value;
+            this.RegisterLatch = value;
 
             if (this.InternalRegisters.w)
             {

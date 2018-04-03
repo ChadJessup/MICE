@@ -41,5 +41,8 @@ namespace MICE.Components.CPU
         }
 
         public override string ToString() => $"0x{this.Value:X4} - 0b{Convert.ToString(this.Value, 2).PadLeft(8, '0')} - {this.Name}";
+
+        public byte ReadInternal() => this.Value;
+        public void WriteInternal(byte value) => this.Value = value;
     }
 }

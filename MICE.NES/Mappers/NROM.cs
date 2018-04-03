@@ -131,13 +131,10 @@ namespace MICE.Nintendo.Mappers
         /// <returns>The data that was read.</returns>
         public override ushort ReadShort(int index)
         {
-            foreach (var (segment, bytes) in this.bankLinkage.Where(linkage => linkage.segment.IsIndexInRange(index)))
-            {
-                var arrayOffset = segment.GetOffsetInSegment(index);
-                return BitConverter.ToUInt16(bytes, arrayOffset);
-            }
+            var (segment, bytes) = this.bankLinkage.First(linkage => linkage.segment.IsIndexInRange(index));
+            var arrayOffset = segment.GetOffsetInSegment(index);
 
-            throw new InvalidOperationException($"Invalid memory range and/or size (ushort) was requested to be read from in NROM Mapper: 0x{index:X4}");
+            return BitConverter.ToUInt16(bytes, arrayOffset);
         }
 
         /// <summary>
@@ -148,36 +145,27 @@ namespace MICE.Nintendo.Mappers
         /// <returns>The data that was read.</returns>
         public override byte ReadByte(int index)
         {
-            foreach (var (segment, bytes) in this.bankLinkage.Where(linkage => linkage.segment.IsIndexInRange(index)))
+            var (segment, bytes) = this.bankLinkage.First(linkage => linkage.segment.IsIndexInRange(index));
+
+            if (index < 0x2000)
             {
-                if (index < 0x2000)
-                {
-                    return bytes[index];
-                }
-
-                var arrayOffset = segment.GetOffsetInSegment(index);
-
-                return bytes[arrayOffset];
+                return bytes[index];
             }
 
-            throw new InvalidOperationException($"Invalid memory range and/or size (byte) was requested to be read from in NROM Mapper: 0x{index:X4}");
+            var arrayOffset = segment.GetOffsetInSegment(index);
+
+            return bytes[arrayOffset];
         }
 
         public override void Write(int index, byte value)
         {
-            foreach (var (segment, bytes) in this.bankLinkage.Where(linkage => linkage.segment.IsIndexInRange(index)))
-            {
-                var arrayOffset = segment.GetOffsetInSegment(index);
+            var (segment, bytes) = this.bankLinkage.First(linkage => linkage.segment.IsIndexInRange(index));
+            var arrayOffset = segment.GetOffsetInSegment(index);
 
-                bytes[arrayOffset] = value;
-                return;
-            }
-
-            throw new InvalidOperationException($"Invalid memory range and/or size (byte) was requested to be written to in NROM Mapper: 0x{index:X4}");
+            bytes[arrayOffset] = value;
         }
 
-        public override void Write(int index, ushort value) => throw new NotImplementedException();
-
         public override void CopyBytes(ushort startAddress, Array destination, int destinationIndex, int length) => throw new NotImplementedException();
+        public override void Write(int index, ushort value) => throw new NotImplementedException();
     }
 }

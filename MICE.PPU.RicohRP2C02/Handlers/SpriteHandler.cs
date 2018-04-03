@@ -74,6 +74,11 @@ namespace MICE.PPU.RicohRP2C02.Handlers
 
         public void EvaluateSpritesOnScanline(OAM oam, int scanline, int cycle)
         {
+            if (scanline == 193)
+            {
+
+            }
+
             this.currentScanlineSprites.Clear();
 
             this.CurrentScanlineSpriteCount = 0;
@@ -88,6 +93,11 @@ namespace MICE.PPU.RicohRP2C02.Handlers
                 if (spriteRow < 0 || spriteRow >= spriteHeight)
                 {
                     continue;
+                }
+
+                if (spriteY != 0)
+                {
+
                 }
 
                 if (scanline >= 192 && scanline <= 200)

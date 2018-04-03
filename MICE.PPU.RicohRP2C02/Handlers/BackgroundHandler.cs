@@ -1,7 +1,6 @@
 ﻿using MICE.Common.Interfaces;
 using MICE.PPU.RicohRP2C02.Components;
 using System;
-using System.Collections.Generic;
 
 namespace MICE.PPU.RicohRP2C02.Handlers
 {
@@ -86,17 +85,8 @@ namespace MICE.PPU.RicohRP2C02.Handlers
 
             tile.PaletteAddress = (ushort)(0x3f00 + 4 * paletteId + colorIndex);
 
-            try
-            {
-                var palette = this.paletteHandler.GetBackgroundColor(paletteId, colorIndex);
-               // var palette = this.ppuMemoryMap.ReadByte(tile.PaletteAddress);
-
-                return (palette, tile);
-            }
-            catch (Exception)
-            {
-                return (0, tile);
-            }
+            var palette = this.paletteHandler.GetBackgroundColor(paletteId, colorIndex);
+            return (palette, tile);
         }
 
         public void NextCycle() => tileData <<= 4;
@@ -116,7 +106,6 @@ namespace MICE.PPU.RicohRP2C02.Handlers
             int shift = ((this.internalRegisters.v >> 4) & 0b00000100) | (this.internalRegisters.v & 0b00000010);
 
             var value = this.ppuMemoryMap.ReadByte(address);
-            // this.attributeTableByte = (byte)(((value >> shift) & 0b00000011) << 2);
             this.attribute = new NametableAttribute(value, this.internalRegisters.v);
         }
 

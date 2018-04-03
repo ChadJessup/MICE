@@ -53,7 +53,7 @@ namespace MICE.Common.Misc
             this.memorySegments.Add(item);
         }
 
-        public T GetMemorySegment<T>(string segmentName) where T : IMemorySegment => (T)this.memorySegments.Where(ms => ms is T).FirstOrDefault(ms => ms.Name == segmentName);
+        public T GetMemorySegment<T>(string segmentName) where T : IMemorySegment => (T)this.memorySegments.First(ms => ms is T && ms.Name == segmentName);
 
         // Standard collection methods...
         public bool IsReadOnly => false;
@@ -77,39 +77,27 @@ namespace MICE.Common.Misc
             }
             else
             {
-                foreach (var segment in this.memorySegments.Where(seg => seg.IsIndexInRange(index)))
-                {
-                    this.memorySegmentCache.Add(index, segment);
-                    value = segment.ReadByte(index);
-                    break;
-                }
+                var segment = this.memorySegments.First(seg => seg.IsIndexInRange(index));
+                this.memorySegmentCache.Add(index, segment);
+
+                value = segment.ReadByte(index);
             }
 
             return value;
-
-            throw new InvalidOperationException($"Address was requested that hasn't been mapped (0x{index:X})");
         }
 
         public virtual void Write(int index, byte value)
         {
-            if (index == 0x2340)
-            {
-
-            }
             if (this.memorySegmentCache.TryGetValue(index, out IMemorySegment cachedSegment))
             {
                 cachedSegment.Write(index, value);
                 return;
             }
 
-            foreach (var segment in this.memorySegments.Where(seg => seg.IsIndexInRange(index)))
-            {
-                this.memorySegmentCache.Add(index, segment);
-                segment.Write(index, value);
-                return;
-            }
+            var segment = this.memorySegments.First(seg => seg.IsIndexInRange(index));
+            this.memorySegmentCache.Add(index, segment);
 
-            throw new InvalidOperationException($"Address was requested that hasn't been mapped (0x{index:X})");
+            segment.Write(index, value);
         }
 
         public virtual void BulkTransfer(ushort startAddress, Array destinationArray, int destinationIndex, int size)

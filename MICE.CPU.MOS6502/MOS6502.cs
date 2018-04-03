@@ -21,6 +21,7 @@ namespace MICE.CPU.MOS6502
             { InterruptType.NMI, 0xFFFA },
             { InterruptType.Reset, 0xFFFC},
         };
+
         public Endianness Endianness { get; } = Endianness.LittleEndian;
 
         /// <summary>

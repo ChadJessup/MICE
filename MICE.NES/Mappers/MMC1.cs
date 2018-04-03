@@ -123,15 +123,8 @@ namespace MICE.Nintendo.Mappers
                 case var _ when address >= 0xE000 && address <= 0xFFFF:
                     return this.currentProgramROMBank8000[address - 0xE000];
                 default:
-                    foreach (var (segment, bytes) in this.bankLinkage.Where(linkage => linkage.segment.IsIndexInRange(address)))
-                    {
-                        var arrayOffset = segment.GetOffsetInSegment(address);
-
-                        var value = bytes[arrayOffset];
-                        return value;
-                    }
-
-                    throw new InvalidOperationException($"Unexpected address (0x{address:X4}) requested in MMC1 Mapper");
+                    var (segment, bytes) = this.bankLinkage.First(linkage => linkage.segment.IsIndexInRange(address));
+                    return bytes[segment.GetOffsetInSegment(address)];
             }
 
             throw new InvalidOperationException($"Invalid memory range and/or size (byte) was requested to be read from in NROM Mapper: 0x{address:X4}");
@@ -139,7 +132,6 @@ namespace MICE.Nintendo.Mappers
 
         public override void Write(int address, byte value)
         {
-            // TODO: Convert to memory map maayyyyyybe?
             switch (address)
             {
                 case var _ when address < 0x2000:
@@ -152,15 +144,10 @@ namespace MICE.Nintendo.Mappers
                     this.HandleLoadRegister(address, value);
                     break;
                 default:
-                    foreach (var (segment, bytes) in this.bankLinkage.Where(linkage => linkage.segment.IsIndexInRange(address)))
-                    {
-                        var arrayOffset = segment.GetOffsetInSegment(address);
-                        bytes[arrayOffset] = value;
-
-                        return;
-                    }
-
-                    throw new InvalidOperationException($"Unexpected address (0x{address:X4}) requested in MMC1 Mapper");
+                    var (segment, bytes) = this.bankLinkage.First(linkage => linkage.segment.IsIndexInRange(address));
+                    var arrayOffset = segment.GetOffsetInSegment(address);
+                    bytes[arrayOffset] = value;
+                    break;
             }
         }
 

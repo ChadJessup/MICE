@@ -8,27 +8,16 @@ using MICE.Nintendo.Loaders;
 using MICE.PPU.RicohRP2C02;
 using MICE.PPU.RicohRP2C02.Components;
 using System;
-using System.IO;
 using System.Threading.Tasks;
 
 namespace MICE.Nintendo
 {
     public class NES : ISystem
     {
-        public NES()
-        {
-            if (File.Exists(this.debugPath))
-            {
-                File.Delete(this.debugPath);
-            }
-
-         //   this.sw = File.AppendText(this.debugPath);
-        }
+        private long ppuTotalCycles = 0;
 
         public string Name { get; } = "Nintendo Entertainment System";
         public long CurrentFrame { get; private set; } = 0;
-
-        private string debugPath = @"c:\emulators\nes\debug-mice.txt";
 
         // Create components...
         public DataBus DataBus { get; } = new DataBus();
@@ -89,8 +78,6 @@ namespace MICE.Nintendo
             this.PPU.MemoryMap.GetMemorySegment<Nametable>("Name Table 2").AttachHandler(this.Cartridge.Mapper);
             this.PPU.MemoryMap.GetMemorySegment<Nametable>("Name Table 3").AttachHandler(this.Cartridge.Mapper);
         }
-
-        private long ppuTotalCycles = 0;
 
         public void Step()
         {
@@ -156,6 +143,7 @@ namespace MICE.Nintendo
                 : 513;
 
             this.CPUMemoryMap.BulkTransfer(readAddress, this.PPU.PrimaryOAM.Data, this.PPU.Registers.OAMADDR, 256);
+            this.PPU.RegisterLatch = value;
         }
 
         public Task Run()
