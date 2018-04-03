@@ -223,19 +223,14 @@ namespace MICE.PPU.RicohRP2C02
 
             this.Registers.OAMADDR.Write(0);
             this.Registers.PPUSCROLL.Write(0);
-            // this.Registers.PPUDATA.Write(0);
 
             this.InternalRegisters.w = true;
-            //this.InternalRegisters.v = 0;
 
             this.FrameNumber = 0;
             this.ScanLine = 240;
             this.Cycle = 340;
 
             this.ClearOutput();
-
-            //this.ScanLine = -1;
-            //this.Cycle = 0;
         }
 
         public int Step()
@@ -263,14 +258,14 @@ namespace MICE.PPU.RicohRP2C02
                 }
             }
 
-            if (this.ShouldSetVBlank)
+            if (this.ScanLine == 241 && this.Cycle == 1)
             {
                 this.HandleVerticalBlankLines();
             }
 
             if (this.IsRenderingEnabled && this.IsVisibleLine && this.IsVisibleCycle)
             {
-                this.HandleVisibleScanlines();
+                this.DrawPixel(this.Cycle - 1, this.ScanLine);
             }
 
             if (this.ScanLine <= 240 && this.Cycle >= 257 && this.Cycle <= 320)
@@ -278,17 +273,13 @@ namespace MICE.PPU.RicohRP2C02
                 this.Registers.OAMADDR.Write(0);
             }
 
-            if (this.IsVisibleLine)
+            if (this.IsVisibleLine && this.Cycle == 64)
             {
-                if (this.Cycle == 64)
-                {
-                    this.SecondaryOAM.Data.Clear(0xFF);
-                }
+                this.SecondaryOAM.Data.Clear(0xFF);
             }
 
             if (this.Cycle == 257 && this.IsVisibleLine && (this.BackgroundHandler.ShowBackground || this.SpriteHandler.ShowSprites))
             {
-                //this.SpriteHandler.EvaluateSpritesOnScanline2(this.PrimaryOAM, this.SecondaryOAM, this.ScanLine);
                 this.SpriteHandler.EvaluateSpritesOnScanline(this.PrimaryOAM, this.ScanLine, this.Cycle);
             }
 
@@ -335,9 +326,6 @@ namespace MICE.PPU.RicohRP2C02
         {
             switch (this.Cycle)
             {
-                // Idle cycle
-                case 0:
-                    break;
                 case 1:
                     this.IsVBlank = false;
                     this.SpriteHandler.WasSprite0Hit = false;
@@ -366,25 +354,6 @@ namespace MICE.PPU.RicohRP2C02
             if (this.Cycle >= 257 && this.Cycle <= 320)
             {
                 this.Registers.OAMADDR.Write(00);
-                // Tile Data fetch for next scanline
-            }
-            else if (this.Cycle >= 321 && this.Cycle <= 336)
-            {
-                // Tile fetch for next scanline
-            }
-            else if (this.Cycle >= 337 && this.Cycle <= 340)
-            {
-                // For unknown reason, 2-bytes fetched which are fetched again later.
-            }
-        }
-
-        private void HandleVisibleScanlines()
-        {
-            switch (this.Cycle)
-            {
-                case var c when c > 0 && c <= 256 && this.IsRenderingEnabled && SpriteHandler.ShowSprites:
-                    this.DrawPixel(this.Cycle - 1, this.ScanLine);
-                    break;
             }
         }
 
@@ -431,15 +400,12 @@ namespace MICE.PPU.RicohRP2C02
 
         private void HandleVerticalBlankLines()
         {
-            if (this.ScanLine == 241 && this.Cycle == 1)
-            {
-                this.IsVBlank = true;
-                this.SpriteHandler.ClearSprites();
+            this.IsVBlank = true;
+            this.SpriteHandler.ClearSprites();
 
-                if (this.WasNMIRequested)
-                {
-                    this.ShouldNMInterrupt = true;
-                }
+            if (this.WasNMIRequested)
+            {
+                this.ShouldNMInterrupt = true;
             }
         }
 

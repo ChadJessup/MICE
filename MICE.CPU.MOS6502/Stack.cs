@@ -3,7 +3,6 @@ using MICE.Common.Misc;
 using MICE.Components.CPU;
 using MICE.Components.Memory;
 using System;
-using System.IO;
 
 namespace MICE.CPU.MOS6502
 {
@@ -17,12 +16,9 @@ namespace MICE.CPU.MOS6502
             public const int StackPointerStart = 0xFD;
         }
 
-        private StreamWriter fs;
-        public Stack(int lowerIndex, int upperIndex, string name, StreamWriter fs)
+        public Stack(int lowerIndex, int upperIndex, string name)
             : base(new Range<int>(lowerIndex, upperIndex), name)
         {
-            this.fs = fs;
-            // Set the capactiy to the size of the memory segment as setup in the CPU Memory Map.
         }
 
         public Register8Bit Pointer { get; private set; }

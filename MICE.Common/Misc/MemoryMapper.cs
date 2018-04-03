@@ -2,19 +2,12 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 
 namespace MICE.Common.Misc
 {
     public class MemoryMapper : ICollection<IMemorySegment>, IMemoryMap
     {
-        private StreamWriter sw;
-        public MemoryMapper(StreamWriter sw)
-        {
-            this.sw = sw;
-        }
-
         private Dictionary<int, IMemorySegment> memorySegmentCache = new Dictionary<int, IMemorySegment>();
 
         private List<IMemorySegment> memorySegments = new List<IMemorySegment>();

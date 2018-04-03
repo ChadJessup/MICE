@@ -3,26 +3,17 @@ using MICE.Common.Interfaces;
 using MICE.Components.Memory;
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Threading;
 
 namespace MICE.CPU.MOS6502
 {
     public class MOS6502 : ICPU
     {
-        public StreamWriter fs;
-
         private readonly IMemoryMap memoryMap;
         private long ranOpcodeCount = 0;
         private long stepCount = 1;
         private Opcodes Opcodes;
 
-        public MOS6502(IMemoryMap memoryMap, StreamWriter sw)
-        {
-            this.fs = sw;
-            this.memoryMap = memoryMap;
-        }
-
+        public MOS6502(IMemoryMap memoryMap) => this.memoryMap = memoryMap;
         public IReadOnlyDictionary<InterruptType, int> InterruptOffsets = new Dictionary<InterruptType, int>()
         {
             { InterruptType.BRK, 0xFFFE },
@@ -30,7 +21,6 @@ namespace MICE.CPU.MOS6502
             { InterruptType.NMI, 0xFFFA },
             { InterruptType.Reset, 0xFFFC},
         };
-
         public Endianness Endianness { get; } = Endianness.LittleEndian;
 
         /// <summary>
@@ -140,7 +130,7 @@ namespace MICE.CPU.MOS6502
 
         public void Reset()
         {
-            this.Opcodes = new Opcodes(this, this.fs);
+            this.Opcodes = new Opcodes(this);
             this.Registers = new Registers();
             this.Registers.PC.Write(this.memoryMap.ReadShort(this.InterruptOffsets[InterruptType.Reset]));
 
@@ -209,36 +199,15 @@ namespace MICE.CPU.MOS6502
                 this.CurrentOpcode = this.Opcodes[code];
 
                 this.CurrentOpcode.Instruction(this.CurrentOpcode);
-
-                //Console.WriteLine(this.stepCount);
             }
             catch (Exception e)
             {
-  //              this.fs.WriteLine($"{this.stepCount:D4}:0x{code:X}:0x{this.Registers.PC.Read():X}:{opCode?.Name}:{opCode?.Cycles + opCode?.AddedCycles}-PC:{Registers.PC.Read()}:A:{Registers.A.Read()}:X:{Registers.X.Read()}:Y:{Registers.Y.Read()}:SP:{Registers.SP.Read()}:P:{Convert.ToString(Registers.P.Read(), 2).PadLeft(8, '0')}");
- //               this.fs.WriteLine($"Exception thrown from opcode attempt: {opCode}{Environment.NewLine}{e.Message}");
-  //              this.fs.Flush();
             }
 
-//            int logStart = 19724;
-//            int logFor = int.MaxValue;
-//            int logCap = logStart + logFor;
-
 //           // Console.WriteLine($"{this.stepCount}:0x{code:X}:0x{this.Registers.PC.Read():X}:{opCode?.Name}:{opCode?.Cycles + opCode?.AddedCycles}-PC:{Registers.PC.Read()}:A:{Registers.A.Read():D4}:X:{Registers.X.Read():D4}:Y:{Registers.Y.Read():D4}:SP:{Registers.SP.Read():D4}:P:{Convert.ToString(Registers.P.Read(), 2).PadLeft(8, '0')}");
-////            if (this.stepCount > logStart && this.stepCount < logCap)
-//            {
-//                //                this.fs.WriteLine($"{this.stepCount}:0x{code:X}:0x{this.Registers.PC.Read():X}:{opCode?.Name}:{opCode?.Cycles + opCode?.AddedCycles}-PC:{Registers.PC.Read()}:A:{Registers.A.Read()}:X:{Registers.X.Read()}:Y:{Registers.Y.Read()}:SP:{Registers.SP.Read()}:P:{Convert.ToString(Registers.P.Read(), 2).PadLeft(8, '0')}");
-//                //              this.fs.Flush();
-//            }
-
-//            if (this.stepCount >= logCap)
-//            {
-//    //            this.fs.Flush();
-//                //throw new InvalidOperationException("Quitting in release mode.");
-//            }
 
             if (this.CurrentOpcode.ShouldVerifyResults && (oldPC + this.CurrentOpcode.PCDelta != this.Registers.PC))
             {
-    //            this.fs.Flush();
                 throw new InvalidOperationException($"Program Counter was not what was expected after executing instruction: {this.CurrentOpcode.Name} (0x{this.CurrentOpcode.Code:X}).{Environment.NewLine}Was: 0x{oldPC:X}{Environment.NewLine}Is: 0x{this.Registers.PC.Read():X}{Environment.NewLine}Expected: 0x{oldPC + this.CurrentOpcode.PCDelta:X}");
             }
 

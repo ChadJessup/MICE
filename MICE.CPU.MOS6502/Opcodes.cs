@@ -11,11 +11,9 @@ namespace MICE.CPU.MOS6502
     {
         private Dictionary<int, int> opCodeCount = new Dictionary<int, int>();
         private MOS6502 CPU;
-        private StreamWriter sw;
 
-        public Opcodes(MOS6502 cpu, StreamWriter sw)
+        public Opcodes(MOS6502 cpu)
         {
-            this.sw = sw;
             this.CPU = cpu;
 
             var bindingFlags = BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance;
@@ -341,10 +339,6 @@ namespace MICE.CPU.MOS6502
         [MOS6502Opcode(0xB1, "LDA", AddressingModes.IndirectY, timing: 5, length: 2)]
         public void LDA(OpcodeContainer container)
         {
-            if (container.Code == 0xAD)
-            {
-
-            }
             var (value, address, samePage) = AddressingMode.GetAddressedValue(CPU, container);
             this.WriteByteToRegister(CPU.Registers.A, value, S: true, Z: true);
 
@@ -569,15 +563,8 @@ namespace MICE.CPU.MOS6502
 
             CPU.Registers.Y.Write(++y);
 
-            if (y == 0)
-            {
-
-            }
-
             this.HandleNegative(CPU.Registers.Y);
             this.HandleZero(CPU.Registers.Y);
-
-            //this.WriteByteToRegister(CPU.Registers.Y, ++y, S: true, Z: true);
         }
 
         [MOS6502Opcode(0xE8, "INX", AddressingModes.Implied, timing: 2, length: 1)]
@@ -672,10 +659,7 @@ namespace MICE.CPU.MOS6502
         // https://stackoverflow.com/a/29224684/1865301
         private void HandleOverflow(byte original, byte operand, byte value)
         {
-            // CPU.IsOverflowed = (original & 0x80) == (argument & 0x80) && (original & 0x80) != (sum & 0x80);
-            // CPU.IsOverflowed = (~(original ^ argument) & (original ^ sum) & 0x80) != 0;
             CPU.IsOverflowed = ((original ^ operand) & 0x80) != 0 && ((original ^ value) & 0x80) != 0;
-            //CPU.IsOverflowed = result < 0;
         }
 
         private void CompareValues(byte value1, byte value2, bool S = true, bool Z = true, bool C = true)

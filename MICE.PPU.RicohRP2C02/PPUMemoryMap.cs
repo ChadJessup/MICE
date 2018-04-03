@@ -10,7 +10,7 @@ namespace MICE.PPU.RicohRP2C02
     /// </summary>
     public class PPUMemoryMap : MemoryMapper
     {
-        public PPUMemoryMap(StreamWriter sw) : base(sw)
+        public PPUMemoryMap() : base()
         {
             // http://nesdev.com/NESDoc.pdf - Figure 3-1 PPU memory map
 

@@ -18,7 +18,6 @@ namespace MICE.Nintendo.Components
         public bool IsReadingInputs { get; private set; }
         public bool IsStrobing { get; private set; }
 
-        public override ushort ReadShort(int index) => throw new NotImplementedException();
         public override byte ReadByte(int index)
         {
             if (this.IsStrobing)
@@ -49,12 +48,9 @@ namespace MICE.Nintendo.Components
             }
         }
 
-        private byte BuildReturnValue(bool isPressed)
-        {
-            return (byte)(0b01000000 | (isPressed ? 1 : 0));
-        }
-
+        private byte BuildReturnValue(bool isPressed) => (byte)(0b01000000 | (isPressed ? 1 : 0));
         private bool GetInput(NESInputs input) => this.Inputs.HasFlag(input);
+        public void InputsChanged(NESInputs inputs) => this.Inputs = inputs;
 
         public override void Write(int index, byte value)
         {
@@ -63,10 +59,9 @@ namespace MICE.Nintendo.Components
             this.readCount = 0;
         }
 
-        public override void Write(int index, ushort value) => throw new NotImplementedException();
         public override byte[] GetBytes() => throw new NotImplementedException();
+        public override ushort ReadShort(int index) => throw new NotImplementedException();
+        public override void Write(int index, ushort value) => throw new NotImplementedException();
         public override void CopyBytes(ushort startAddress, Array destination, int destinationIndex, int length) => throw new NotImplementedException();
-
-        public void InputsChanged(NESInputs inputs) => this.Inputs = inputs;
     }
 }

@@ -30,8 +30,6 @@ namespace MICE.Nintendo
 
         private string debugPath = @"c:\emulators\nes\debug-mice.txt";
 
-        public StreamWriter sw;
-
         // Create components...
         public DataBus DataBus { get; } = new DataBus();
         public AddressBus AddressBus { get; } = new AddressBus();
@@ -59,14 +57,14 @@ namespace MICE.Nintendo
             }
 
             var ppuRegisters = new PPURegisters();
-            this.CPUMemoryMap = new NESMemoryMap(ppuRegisters, this.InputHandler, this.sw);
-            this.PPU = new RicohRP2C02(new PPUMemoryMap(this.sw), ppuRegisters, this.CPUMemoryMap);
+            this.CPUMemoryMap = new NESMemoryMap(ppuRegisters, this.InputHandler);
+            this.PPU = new RicohRP2C02(new PPUMemoryMap(), ppuRegisters, this.CPUMemoryMap);
 
             this.PPU.Registers.OAMDMA.AfterWriteAction = this.DMATransfer;
 
             this.MapToCartridge();
 
-            this.CPU = new Ricoh2A03(this.CPUMemoryMap, this.sw);
+            this.CPU = new Ricoh2A03(this.CPUMemoryMap);
 
             this.CPU.PowerOn();
             this.PPU.PowerOn();
