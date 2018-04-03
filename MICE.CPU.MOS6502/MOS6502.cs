@@ -161,7 +161,7 @@ namespace MICE.CPU.MOS6502
 
             // TODO: Move the below to NES specific reset logic...APU specifically...
             // Frame IRQ Enabled - APU
-            this.memoryMap.Write(0x4017, 0x00);
+            // this.memoryMap.Write(0x4017, 0x00);
 
             // All channels disabled.
             this.memoryMap.Write(0x4015, 0x00);

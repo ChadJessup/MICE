@@ -12,6 +12,7 @@ namespace MICE.Common.Interfaces
         bool IsPoweredOn { get; }
         bool IsPaused { get; }
 
+        void InputChanged(object inputs);
         void Pause(bool isPaused);
         void PowerOn();
         void PowerOff();

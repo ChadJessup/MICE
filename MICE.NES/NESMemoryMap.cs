@@ -1,6 +1,8 @@
 ﻿using MICE.Common.Misc;
 using MICE.Components.Memory;
 using MICE.CPU.MOS6502;
+using MICE.Nintendo.Handlers;
+using MICE.Nintendo.Interfaces;
 using System.IO;
 
 namespace MICE.Nintendo
@@ -10,7 +12,7 @@ namespace MICE.Nintendo
     /// </summary>
     public class NESMemoryMap : MemoryMapper
     {
-        public NESMemoryMap(PPU.RicohRP2C02.PPURegisters ppuRegisters, StreamWriter sw) : base(sw)
+        public NESMemoryMap(PPU.RicohRP2C02.PPURegisters ppuRegisters, InputHandler inputHandler, StreamWriter sw) : base(sw)
         {
             // The NES CPU's memory is mapped out like below - with some trickery possible in the ROM itself to further map out memory.
 
@@ -49,7 +51,9 @@ namespace MICE.Nintendo
 
             this.Add(new RAM(0x4010, 0x4013, "APU DMC Channel"));
             this.Add(new RAM(0x4015, 0x4015, "APU Channel Status"));
-            this.Add(new RAM(0x4017, 0x4017, "APU Frame Counter"));
+
+            // TODO: This overlaps with input, but current system doesn't allow that...figure it out!
+            //this.Add(new RAM(0x4017, 0x4017, "APU Frame Counter"));
 
             // TODO: 4010 - 4013 = APU...not implemented now, but we need to map it still.
             //this.Add(new RAM(0x4011, 0x4011, "APU DMA Load Counter"));
@@ -57,12 +61,10 @@ namespace MICE.Nintendo
             // $4014 - I/O - I/O Registers (DMA for sprites)
             this.Add(new MemoryMappedRegister<byte>(0x4014, 0x4014, ppuRegisters.OAMDMA, "Mapped PPU Sprite DMA Register"));
 
-            // TODO: 4016 Input...not implemented now, but we need to map it still.
-            this.Add(new RAM(0x4016, 0x4016, "Control Input 1"));
+            this.Add(inputHandler.GetController1(0x4016, 0x4016, "Control Input 1"));
 
-            // TODO: 4017 Input...not implemented now, but we need to map it still.
             // Duplicated with APU register.
-            // this.Add(new RAM(0x4017, 0x4017, "Control Input 2"));
+            this.Add(inputHandler.GetController2(0x4017, 0x4017, "Control Input 2"));
 
             // Expansion Memory - seems to be able to be used by various Mappers for various reasons
             // TODO: Route into cartridge as well?

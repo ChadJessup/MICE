@@ -2,6 +2,8 @@
 using MICE.Components.Bus;
 using MICE.Components.Memory;
 using MICE.CPU.MOS6502;
+using MICE.Nintendo.Components;
+using MICE.Nintendo.Handlers;
 using MICE.Nintendo.Loaders;
 using MICE.PPU.RicohRP2C02;
 using MICE.PPU.RicohRP2C02.Components;
@@ -40,6 +42,8 @@ namespace MICE.Nintendo
 
         public NESCartridge Cartridge { get; private set; }
         public Ricoh2A03 CPU { get; private set; }
+
+        public InputHandler InputHandler { get; } = new InputHandler();
         public byte[] Screen { get; private set; } = new byte[256 * 240];
 
         public bool IsPoweredOn => (this.CPU?.IsPowered ?? false) && (this.PPU?.IsPowered ?? false);
@@ -55,7 +59,7 @@ namespace MICE.Nintendo
             }
 
             var ppuRegisters = new PPURegisters();
-            this.CPUMemoryMap = new NESMemoryMap(ppuRegisters, this.sw);
+            this.CPUMemoryMap = new NESMemoryMap(ppuRegisters, this.InputHandler, this.sw);
             this.PPU = new RicohRP2C02(new PPUMemoryMap(this.sw), ppuRegisters, this.CPUMemoryMap);
 
             this.PPU.Registers.OAMDMA.AfterWriteAction = this.DMATransfer;
@@ -195,6 +199,8 @@ namespace MICE.Nintendo
                 this.Run();
             }
         }
+
+        public void InputChanged(object inputs) => this.InputHandler.InputChanged((NESInputs)inputs);
 
         public EventHandler<NintendoStepArgs> StepCompleted { get; set; }
         public EventHandler<FrameCompleteArgs> FrameFinished { get; set; }

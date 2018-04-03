@@ -107,5 +107,10 @@ namespace MICE.WPF.ViewModels
 
         private void NotifyPropertyChanged([CallerMemberName] String propertyName = "")
             => this.PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+
+        public void InputChanged(object inputs)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

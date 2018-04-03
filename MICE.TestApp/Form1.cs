@@ -1,4 +1,5 @@
 ﻿using MICE.Nintendo;
+using MICE.Nintendo.Components;
 using MICE.Nintendo.Loaders;
 using System;
 using System.Drawing;
@@ -14,12 +15,18 @@ namespace MICE.TestApp
 {
     public partial class Form1 : Form
     {
+        private NES nes;
         private Bitmap bitmap;
         private Graphics graphics;
+        private NESInputs inputs;
 
         public Form1()
         {
-            InitializeComponent();
+            this.InitializeComponent();
+
+            this.KeyPreview = true;
+            this.KeyDown += this.OnInputDownChanged;
+            this.KeyUp += this.OnInputUpChanged;
 
             this.graphics = this.CreateGraphics();
             this.graphics.InterpolationMode = InterpolationMode.NearestNeighbor;
@@ -95,12 +102,94 @@ namespace MICE.TestApp
             this.bitmap.Palette = palette;
         }
 
+        private void OnInputDownChanged(object sender, KeyEventArgs e)
+        {
+            switch (e.KeyData)
+            {
+                case Keys.Z:
+                    this.SetInput(NESInputs.A);
+                    break;
+                case Keys.X:
+                    this.SetInput(NESInputs.B);
+                    break;
+                case Keys.Tab:
+                    this.SetInput(NESInputs.Select);
+                    break;
+                case Keys.Enter:
+                    this.SetInput(NESInputs.Start);
+                    break;
+                case Keys.Up:
+                    this.SetInput(NESInputs.Up);
+                    break;
+                case Keys.Down:
+                    this.SetInput(NESInputs.Down);
+                    break;
+                case Keys.Left:
+                    this.SetInput(NESInputs.Left);
+                    break;
+                case Keys.Right:
+                    this.SetInput(NESInputs.Right);
+                    break;
+            }
+
+            this.nes.InputChanged(this.inputs);
+        }
+
+        private void SetInput(NESInputs input)
+        {
+            if (!this.inputs.HasFlag(input))
+            {
+                this.inputs |= input;
+            }
+        }
+
+        private void RemoveInput(NESInputs input)
+        {
+            if (this.inputs.HasFlag(input))
+            {
+                this.inputs &= ~input;
+            }
+        }
+
+        private void OnInputUpChanged(object sender, KeyEventArgs e)
+        {
+            switch (e.KeyData)
+            {
+                case Keys.Z:
+                    this.RemoveInput(NESInputs.A);
+                    break;
+                case Keys.X:
+                    this.RemoveInput(NESInputs.B);
+                    break;
+                case Keys.Tab:
+                    this.RemoveInput(NESInputs.Select);
+                    break;
+                case Keys.Enter:
+                    this.RemoveInput(NESInputs.Start);
+                    break;
+                case Keys.Up:
+                    this.RemoveInput(NESInputs.Up);
+                    break;
+                case Keys.Down:
+                    this.RemoveInput(NESInputs.Down);
+                    break;
+                case Keys.Left:
+                    this.RemoveInput(NESInputs.Left);
+                    break;
+                case Keys.Right:
+                    this.RemoveInput(NESInputs.Right);
+                    break;
+            }
+
+            this.nes.InputChanged(this.inputs);
+        }
+
         private void Go()
         {
-            var nes = new NES();
-            //var cartridge = NESLoader.CreateCartridge(@"C:\Emulators\NES\Games\World\Donkey Kong (JU).nes");
+            this.nes = new NES();
+            var cartridge = NESLoader.CreateCartridge(@"C:\Emulators\NES\Games\World\Donkey Kong (JU).nes");
             //var cartridge = NESLoader.CreateCartridge(@"C:\Emulators\NES\Games\Super Mario Bros.nes");
-            var cartridge = NESLoader.CreateCartridge(@"C:\Emulators\NES\Games\USA\Legend of Zelda, The (U) (PRG 1).nes");
+            //var cartridge = NESLoader.CreateCartridge(@"C:\Emulators\NES\Games\USA\Legend of Zelda, The (U) (PRG 1).nes");
             //var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\full_palette\full_palette.nes");
 
             //var cartridge = NESLoader.CreateCartridge(@"C:\Emulators\NES\Games\USA\Slalom (U).nes");
@@ -122,11 +211,12 @@ namespace MICE.TestApp
             //var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\nes_instr_test\rom_singles\03-zero_page.nes");
             //var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\sprite_hit_tests_2005.10.05\01.basics.nes");
 
-            nes.LoadCartridge(cartridge);
-            nes.PowerOn();
+            this.nes.LoadCartridge(cartridge);
+
+            this.nes.PowerOn();
 
             Task.Factory.StartNew(
-                () => nes.Run(),
+                () => this.nes.Run(),
                 CancellationToken.None,
                 TaskCreationOptions.LongRunning,
                 TaskScheduler.Current);
@@ -140,7 +230,7 @@ namespace MICE.TestApp
                 double fps = 0;
                 double improveBy = 0;
 
-                while (!nes.IsPaused && nes.IsPoweredOn)
+                while (!this.nes.IsPaused && this.nes.IsPoweredOn)
                 {
                     if ((DateTime.Now - lastTime).TotalSeconds >= 1)
                     {
@@ -152,8 +242,8 @@ namespace MICE.TestApp
 
                     // Basic 60 fps lock...not good, but I don't care atm.
                     Task.Delay(16);
-                    uiDispatcher.Invoke(() => this.Text = $"Frame: {nes.CurrentFrame} FPS: {fps} Improve: {improveBy:F2}x");
-                    this.Draw(nes.Screen);
+                    uiDispatcher.Invoke(() => this.Text = $"Frame: {this.nes.CurrentFrame} FPS: {fps} Improve: {improveBy:F2}x");
+                    this.Draw(this.nes.Screen);
                 }
             },
             CancellationToken.None,

@@ -32,9 +32,11 @@
             // 
             // Form1
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(12F, 25F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.None;
             this.ClientSize = new System.Drawing.Size(673, 499);
+            this.KeyPreview = true;
+            this.MaximizeBox = false;
+            this.MinimumSize = new System.Drawing.Size(699, 570);
             this.Name = "Form1";
             this.Text = "MICE TestApp";
             this.Shown += new System.EventHandler(this.OnShown);
