@@ -248,6 +248,9 @@ namespace MICE.CPU.MOS6502
         [MOS6502Opcode(0x55, "EOR", AddressingModes.ZeroPageX, timing: 4, length: 2)]
         [MOS6502Opcode(0x4D, "EOR", AddressingModes.Absolute, timing: 4, length: 3)]
         [MOS6502Opcode(0x5D, "EOR", AddressingModes.AbsoluteX, timing: 4, length: 3)]
+        [MOS6502Opcode(0x59, "EOR", AddressingModes.AbsoluteY, timing: 4, length: 3)]
+        [MOS6502Opcode(0x41, "EOR", AddressingModes.IndirectX, timing: 6, length: 2)]
+        [MOS6502Opcode(0x51, "EOR", AddressingModes.IndirectY, timing: 5, length: 2)]
         public void EOR(OpcodeContainer container)
         {
             var result = AddressingMode.GetAddressedValue(CPU, container);
@@ -302,10 +305,11 @@ namespace MICE.CPU.MOS6502
 
         #region Load Operations
 
+        [MOS6502Opcode(0xA2, "LDX", AddressingModes.Immediate, timing: 2, length: 2)]
         [MOS6502Opcode(0xA6, "LDX", AddressingModes.ZeroPage, timing: 3, length: 2)]
+        [MOS6502Opcode(0xB6, "LDX", AddressingModes.ZeroPageY, timing: 4, length: 2)]
         [MOS6502Opcode(0xBE, "LDX", AddressingModes.AbsoluteY, timing: 4, length: 3)]
         [MOS6502Opcode(0xAE, "LDX", AddressingModes.Absolute, timing: 4, length: 3)]
-        [MOS6502Opcode(0xA2, "LDX", AddressingModes.Immediate, timing: 2, length: 2)]
         public void LDX(OpcodeContainer container)
         {
             var result = AddressingMode.GetAddressedValue(CPU, container);
@@ -325,12 +329,13 @@ namespace MICE.CPU.MOS6502
             this.HandlePageBoundaryCrossed(container, result.IsSamePage);
         }
 
-        [MOS6502Opcode(0xB9, "LDA", AddressingModes.AbsoluteY, timing: 4, length: 3)]
-        [MOS6502Opcode(0xB5, "LDA", AddressingModes.ZeroPageX, timing: 4, length: 2)]
-        [MOS6502Opcode(0xA5, "LDA", AddressingModes.ZeroPage, timing: 3, length: 2)]
         [MOS6502Opcode(0xA9, "LDA", AddressingModes.Immediate, timing: 2, length: 2)]
+        [MOS6502Opcode(0xA5, "LDA", AddressingModes.ZeroPage, timing: 3, length: 2)]
+        [MOS6502Opcode(0xB5, "LDA", AddressingModes.ZeroPageX, timing: 4, length: 2)]
         [MOS6502Opcode(0xAD, "LDA", AddressingModes.Absolute, timing: 4, length: 3)]
         [MOS6502Opcode(0xBD, "LDA", AddressingModes.AbsoluteX, timing: 4, length: 3)]
+        [MOS6502Opcode(0xB9, "LDA", AddressingModes.AbsoluteY, timing: 4, length: 3)]
+        [MOS6502Opcode(0xa1, "LDA", AddressingModes.IndirectX, timing: 6, length: 2)]
         [MOS6502Opcode(0xB1, "LDA", AddressingModes.IndirectY, timing: 5, length: 2)]
         public void LDA(OpcodeContainer container)
         {
@@ -348,7 +353,7 @@ namespace MICE.CPU.MOS6502
         public void TXS(OpcodeContainer container) => CPU.Registers.SP.Write(CPU.Registers.X);
 
         [MOS6502Opcode(0xBA, "TSX", AddressingModes.Immediate, timing: 2, length: 1)]
-        public void TSX(OpcodeContainer container) => CPU.Registers.X.Write(CPU.Registers.SP);
+        public void TSX(OpcodeContainer container) => this.WriteByteToRegister(CPU.Registers.X, CPU.Registers.SP, S: true, Z: true);
 
         [MOS6502Opcode(0x48, "PHA", AddressingModes.Immediate, timing: 3, length: 1)]
         public void PHA(OpcodeContainer container) => CPU.Stack.Push(CPU.Registers.A);
@@ -357,10 +362,18 @@ namespace MICE.CPU.MOS6502
         public void PLA(OpcodeContainer container) => this.WriteByteToRegister(CPU.Registers.A, CPU.Stack.PopByte(), S: true, Z: true);
 
         [MOS6502Opcode(0x08, "PHP", AddressingModes.Immediate, timing: 3, length: 1)]
-        public void PHP(OpcodeContainer container) => CPU.Stack.Push(CPU.Registers.P);
+        public void PHP(OpcodeContainer container)
+        {
+            CPU.Stack.Push((byte)(CPU.Registers.P | 0x10));
+        }
 
         [MOS6502Opcode(0x28, "PLP", AddressingModes.Immediate, timing: 4, length: 1)]
-        public void PLP(OpcodeContainer container) => this.WriteByteToRegister(CPU.Registers.P, CPU.Stack.PopByte(), S: false, Z: false);
+        public void PLP(OpcodeContainer container)
+        {
+            this.WriteByteToRegister(CPU.Registers.P, CPU.Stack.PopByte(), S: false, Z: false);
+            CPU.WillBreak = false;
+            CPU.Unused = true;
+        }
 
         #endregion
 
@@ -402,6 +415,7 @@ namespace MICE.CPU.MOS6502
 
         #region Jumps
 
+        [MOS6502Opcode(0x04, "NOP", AddressingModes.Implied, timing: 2, length: 1)] // unofficial
         [MOS6502Opcode(0x1A, "NOP", AddressingModes.Implied, timing: 2, length: 1)] // unofficial
         [MOS6502Opcode(0x3A, "NOP", AddressingModes.Implied, timing: 2, length: 1)] // unofficial
         [MOS6502Opcode(0x5A, "NOP", AddressingModes.Implied, timing: 2, length: 1)] // unofficial

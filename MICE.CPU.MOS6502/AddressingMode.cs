@@ -4,6 +4,19 @@ namespace MICE.CPU.MOS6502
 {
     public static class AddressingMode
     {
+        public static AddressingModeResult GetZeroPageY(MOS6502 CPU, bool getValue = true)
+        {
+            var intermediateAddress = CPU.ReadNextByte(incrementPC: false);
+            var zeroPageYAddress = (byte)(intermediateAddress + CPU.Registers.Y);
+
+            if (getValue)
+            {
+                return new AddressingModeResult(CPU.ReadByteAt(zeroPageYAddress), intermediateAddress, zeroPageYAddress, null);
+            }
+
+            return new AddressingModeResult(0x00, intermediateAddress, zeroPageYAddress, null);
+        }
+
         public static AddressingModeResult GetZeroPageX(MOS6502 CPU, bool getValue = true)
         {
             var intermediateAddress = CPU.ReadNextByte(incrementPC: false);
@@ -125,6 +138,9 @@ namespace MICE.CPU.MOS6502
                 case AddressingModes.Immediate:
                     result = AddressingMode.GetImmediate(CPU, getValue);
                     break;
+                case AddressingModes.ZeroPageY:
+                    result = AddressingMode.GetZeroPageY(CPU, getValue);
+                    break;
                 case AddressingModes.ZeroPageX:
                     result = AddressingMode.GetZeroPageX(CPU, getValue);
                     break;
@@ -158,10 +174,14 @@ namespace MICE.CPU.MOS6502
                     return $"(${result.IntermediateAddress:X4}) @ ${result.Address:X4}";
                 case AddressingModes.IndirectY:
                     return $"(${result.IntermediateAddress:X2}),Y @ ${result.Address:X4}";
+                case AddressingModes.IndirectX:
+                    return $"(${result.IntermediateAddress:X2}),X @ ${result.Address:X4}";
                 case AddressingModes.ZeroPage:
                     return $"${result.Address:X2}";
                 case AddressingModes.ZeroPageX:
                     return $"${result.IntermediateAddress:X2},X @ ${result.Address:X2}";
+                case AddressingModes.ZeroPageY:
+                    return $"${result.IntermediateAddress:X2},Y @ ${result.Address:X2}";
                 case AddressingModes.AbsoluteY:
                     return $"${result.IntermediateAddress:X4},Y @ ${result.Address:X4}";
                 case AddressingModes.AbsoluteX:

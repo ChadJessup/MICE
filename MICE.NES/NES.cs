@@ -18,7 +18,7 @@ namespace MICE.Nintendo
     {
         private static class Constants
         {
-            public const string DebugFile = @"C:\Emulators\NES\MICE - Trace.txt";
+            public const string DebugFile = @"G:\Emulators\NES\MICE - Trace.txt";
         }
 
         private long ppuTotalCycles = 0;
@@ -94,11 +94,6 @@ namespace MICE.Nintendo
         public static StringBuilder traceFileOutput = new StringBuilder();
         public void Step()
         {
-            if (CPU.CurrentCycle == 473982)
-            {
-
-            }
-
             var registerState = this.GetRegisterState();
 
             // 1 Step = 1 Frame to the NES, since we're doing frame-based timing here:
@@ -218,19 +213,29 @@ namespace MICE.Nintendo
             var label = this.GetLabelForAddress();
             var expectedSpace = 29;
             var stackIndentation = 0xFF - CPU.Registers.SP.Read();
-            if (CPU.CurrentOpcode?.Name == "TXS" || CPU.CurrentOpcode?.Name == "RTS") { stackIndentation += 2; }
-            else if (CPU.CurrentOpcode?.Name == "JSR") { stackIndentation -= 2; }
-            else if (CPU.CurrentOpcode?.Name == "PHA") { stackIndentation -= 1; }
-            else if (CPU.CurrentOpcode?.Name == "PHA") { stackIndentation -= 1; }
-            else if (CPU.CurrentOpcode?.Name == "PLA") { stackIndentation += 1; }
-            else if (CPU.CurrentOpcode?.Name == "RTI") { stackIndentation += 3; }
-            else if (CPU.CurrentOpcode?.Name == "PLP") { stackIndentation += 1; }
+
+            var opCodeName = CPU.CurrentOpcode?.Name;
+
+            if (opCodeName == "TXS" || opCodeName == "RTS") { stackIndentation += 2; }
+            else if (opCodeName == "JSR") { stackIndentation -= 2; }
+            else if (opCodeName == "PHA") { stackIndentation -= 1; }
+            else if (opCodeName == "PHA") { stackIndentation -= 1; }
+            else if (opCodeName == "PLA") { stackIndentation += 1; }
+            else if (opCodeName == "RTI") { stackIndentation += 3; }
+            else if (opCodeName == "PLP") { stackIndentation += 1; }
+            else if (CPU.CurrentOpcode.Code == 0x7A || CPU.CurrentOpcode.Code == 0x5A ||
+                     CPU.CurrentOpcode.Code == 0x3A || CPU.CurrentOpcode.Code == 0x80 ||
+                     CPU.CurrentOpcode.Code == 0x04 || CPU.CurrentOpcode.Code == 0xDA ||
+                     CPU.CurrentOpcode.Code == 0x1A || CPU.CurrentOpcode.Code == 0xFA)
+            {
+                opCodeName = "NOP*";
+            }
 
             var output = new StringBuilder($"{CPU.LastPC:X4}");
             try
             {
                 output.Append("  ");
-                output.Append($"{CPU.CurrentOpcode?.Name ?? "SEI"} {label}");
+                output.Append($"{opCodeName ?? "SEI"} {label}");
                 output.Append(' ', Math.Max(1, expectedSpace - label.Length));
                 output.Append(registerState);
             }

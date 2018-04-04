@@ -107,15 +107,43 @@ namespace MICE.TestApp
             this.nes = new NES();
             //var cartridge = NESLoader.CreateCartridge(@"C:\Emulators\NES\Games\World\Donkey Kong (JU).nes");
             //var cartridge = NESLoader.CreateCartridge(@"C:\Emulators\NES\Games\Super Mario Bros.nes");
-            //var cartridge = NESLoader.CreateCartridge(@"C:\Emulators\NES\Games\USA\Legend of Zelda, The (U) (PRG 1).nes");
+            //var cartridge = NESLoader.CreateCartridge(@"G:\Emulators\NES\Games\USA\Legend of Zelda, The (U) (PRG 1).nes");
             //var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\full_palette\full_palette.nes");
 
             //var cartridge = NESLoader.CreateCartridge(@"C:\Emulators\NES\Games\USA\Slalom (U).nes");
 
             // Test ROMS.
             //var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\blargg_nes_cpu_test5\official.nes");
-            //var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\nestest.nes");
+            //var cartridge = NESLoader.CreateCartridge(@"G:\src\emulators\nes-test-roms\nestest.nes");
             //var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\instr_test-v3\official_only.nes");
+            //var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\scanline\scanline.nes");
+            //var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\scanline-a1\scanline.nes");
+            //var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\scrolltest\scroll.nes");
+            //var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\cpu_timing_test6\cpu_timing_test.nes");
+
+            // CPU Tests
+            var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\instr_test-v3\rom_singles\01-implied.nes");
+            //var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\instr_test-v3\rom_singles\02-immediate.nes");
+            //var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\instr_test-v3\rom_singles\03-zero_page.nes");
+            //var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\instr_test-v3\rom_singles\04-zp_xy.nes");
+            //var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\instr_test-v3\rom_singles\05-absolute.nes");
+            //var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\instr_test-v3\rom_singles\06-abs_xy.nes");
+            //var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\instr_test-v3\rom_singles\07-ind_x.nes");
+            //var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\instr_test-v3\rom_singles\08-ind_y.nes");
+            //var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\instr_test-v3\rom_singles\09-branches.nes");
+            //var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\instr_test-v3\rom_singles\10-stack.nes");
+            //var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\instr_test-v3\rom_singles\11-jmp_jsr.nes");
+            //var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\instr_test-v3\rom_singles\12-rts.nes");
+            //var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\instr_test-v3\rom_singles\13-rti.nes");
+            //var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\instr_test-v3\rom_singles\14-brk.nes");
+            //var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\instr_test-v3\rom_singles\15-special.nes");
+
+            // PPU Tests
+            //var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\blargg_ppu_tests_2005.09.15b\palette_ram.nes");
+            //var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\blargg_ppu_tests_2005.09.15b\power_up_palette.nes");
+            //var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\blargg_ppu_tests_2005.09.15b\sprite_ram.nes");
+            //var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\blargg_ppu_tests_2005.09.15b\vbl_clear_time.nes");
+            //var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\blargg_ppu_tests_2005.09.15b\vram_access.nes");
 
             // gray screen
             //var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\blargg_ppu_tests_2005.09.15b\sprite_ram.nes");
@@ -124,10 +152,14 @@ namespace MICE.TestApp
             // needs CNROM
             //var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\cpu_dummy_reads\cpu_dummy_reads.nes");
 
-            //var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\nes_instr_test\rom_singles\01-implied.nes");
             //var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\nes_instr_test\rom_singles\02-immediate.nes");
-            var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\nes_instr_test\rom_singles\03-zero_page.nes");
+            //var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\nes_instr_test\rom_singles\03-zero_page.nes");
             //var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\sprite_hit_tests_2005.10.05\01.basics.nes");
+
+            // PASSING Tests...need to automate
+            //var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\nes_instr_test\rom_singles\01-implied.nes");
+
+
 
             this.nes.LoadCartridge(cartridge);
 
