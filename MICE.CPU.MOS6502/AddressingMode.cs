@@ -4,131 +4,173 @@ namespace MICE.CPU.MOS6502
 {
     public static class AddressingMode
     {
-        public static (byte value, ushort address, bool? samePage) GetZeroPageX(MOS6502 CPU, bool getValue = true)
+        public static AddressingModeResult GetZeroPageX(MOS6502 CPU, bool getValue = true)
         {
             var zeroPageXAddress = (byte)(CPU.ReadNextByte(incrementPC: false) + CPU.Registers.X);
 
             if (getValue)
             {
-                return (CPU.ReadByteAt(zeroPageXAddress), zeroPageXAddress, null);
+                return new AddressingModeResult(CPU.ReadByteAt(zeroPageXAddress), zeroPageXAddress, null);
             }
 
-            return (0x00, zeroPageXAddress, null);
+            return new AddressingModeResult(0x00, zeroPageXAddress, null);
         }
 
-        public static (byte value, ushort address, bool? samePage) GetZeroPage(MOS6502 CPU, bool getValue = true)
+        public static AddressingModeResult GetZeroPage(MOS6502 CPU, bool getValue = true)
         {
             var zeroPageAddress = CPU.ReadNextByte(incrementPC: false);
 
             if (getValue)
             {
-                return (CPU.ReadByteAt(zeroPageAddress), zeroPageAddress, null);
+                return new AddressingModeResult(CPU.ReadByteAt(zeroPageAddress), zeroPageAddress, null);
             }
 
-            return (0x00, zeroPageAddress, null);
+            return new AddressingModeResult(0x00, zeroPageAddress, null);
         }
 
-        public static (byte value, ushort address, bool? samePage) GetAbsolute(MOS6502 CPU, bool getValue = true)
+        public static AddressingModeResult GetAbsolute(MOS6502 CPU, bool getValue = true)
         {
             var absoluteAddress = CPU.ReadNextShort();
 
             if (getValue)
             {
-                return (CPU.ReadByteAt(absoluteAddress), absoluteAddress, null);
+                return new AddressingModeResult(CPU.ReadByteAt(absoluteAddress), absoluteAddress, null);
             }
 
-            return (0x00, absoluteAddress, null);
+            return new AddressingModeResult(0x00, absoluteAddress, null);
         }
 
-        public static (byte value, ushort address, bool? samePage) GetIndirect(MOS6502 CPU, bool getValue = true)
+        public static AddressingModeResult GetIndirect(MOS6502 CPU, bool getValue = true)
         {
             var indirectAddress = CPU.ReadNextShort(incrementPC: false);
             var baseAddress = CPU.ReadShortAt(indirectAddress, incrementPC: false);
 
             return getValue
-                ? (CPU.ReadByteAt(baseAddress), baseAddress, AreSamePage(indirectAddress, baseAddress))
-                : ((byte)0x00, baseAddress, AreSamePage(indirectAddress, baseAddress));
+                ? new AddressingModeResult(CPU.ReadByteAt(baseAddress), indirectAddress, baseAddress, AreSamePage(indirectAddress, baseAddress))
+                : new AddressingModeResult(0x00, indirectAddress, baseAddress, AreSamePage(indirectAddress, baseAddress));
         }
 
-        public static (byte value, ushort address, bool? samePage) GetIndirectY(MOS6502 CPU, bool getValue = true)
+        public static AddressingModeResult GetIndirectY(MOS6502 CPU, bool getValue = true)
         {
             var incompleteYAddress = CPU.ReadNextByte(incrementPC: false);
             var baseAddress = CPU.ReadShortAt(incompleteYAddress, incrementPC: false);
             var addressWithY = (ushort)(baseAddress + CPU.Registers.Y);
 
             return getValue
-                ? (CPU.ReadByteAt(addressWithY), addressWithY, AreSamePage(addressWithY, baseAddress))
-                : ((byte)0x00, addressWithY, AreSamePage(addressWithY, baseAddress));
+                ? new AddressingModeResult(CPU.ReadByteAt(addressWithY), incompleteYAddress, addressWithY, AreSamePage(addressWithY, baseAddress))
+                : new AddressingModeResult(0x00, incompleteYAddress, addressWithY, AreSamePage(addressWithY, baseAddress));
         }
 
-        public static (byte value, ushort address, bool? samePage) GetIndirectX(MOS6502 CPU, bool getValue = true)
+        public static AddressingModeResult GetIndirectX(MOS6502 CPU, bool getValue = true)
         {
             var incompleteXAddress = CPU.ReadNextByte(incrementPC: false);
             var baseAddress = CPU.ReadShortAt(incompleteXAddress, incrementPC: false);
             var addressWithX = (ushort)(baseAddress + CPU.Registers.X);
 
             return getValue
-                ? (CPU.ReadByteAt(addressWithX), addressWithX, AreSamePage(addressWithX, baseAddress))
-                : ((byte)0x00, addressWithX, AreSamePage(addressWithX, baseAddress));
+                ? new AddressingModeResult(CPU.ReadByteAt(addressWithX), addressWithX, AreSamePage(addressWithX, baseAddress))
+                : new AddressingModeResult(0x00, addressWithX, AreSamePage(addressWithX, baseAddress));
         }
 
-        public static (byte value, ushort address, bool? samePage) GetAbsoluteX(MOS6502 CPU, bool getValue = true)
+        public static AddressingModeResult GetAbsoluteX(MOS6502 CPU, bool getValue = true)
         {
             var nextAddress = CPU.ReadNextShort();
             var nextAddressWithX = (ushort)(nextAddress + CPU.Registers.X);
 
             return getValue
-                ? (CPU.ReadByteAt(nextAddressWithX), nextAddressWithX, AreSamePage(nextAddress, nextAddressWithX))
-                : ((byte)0x00, nextAddressWithX, AreSamePage(nextAddress, nextAddressWithX));
+                ? new AddressingModeResult(CPU.ReadByteAt(nextAddressWithX), nextAddress, nextAddressWithX, AreSamePage(nextAddress, nextAddressWithX))
+                : new AddressingModeResult(0x00, nextAddress, nextAddressWithX, AreSamePage(nextAddress, nextAddressWithX));
         }
 
-        public static (byte value, ushort address, bool? samePage) GetAbsoluteY(MOS6502 CPU, bool getValue = true)
+        public static AddressingModeResult GetAbsoluteY(MOS6502 CPU, bool getValue = true)
         {
             var nextAddress = CPU.ReadNextShort();
             var nextAddressWithY = (ushort)(nextAddress + CPU.Registers.Y);
 
             return getValue
-                ? (CPU.ReadByteAt(nextAddressWithY), nextAddressWithY, AreSamePage(nextAddress, nextAddressWithY))
-                : ((byte)0x00, nextAddressWithY, AreSamePage(nextAddress, nextAddressWithY));
+                ? new AddressingModeResult(CPU.ReadByteAt(nextAddressWithY), nextAddress, nextAddressWithY, AreSamePage(nextAddress, nextAddressWithY))
+                : new AddressingModeResult(0x00, nextAddress, nextAddressWithY, AreSamePage(nextAddress, nextAddressWithY));
         }
 
-        public static (byte value, ushort address, bool? samePage) GetImmediate(MOS6502 CPU, bool getValue = true)
+        public static AddressingModeResult GetImmediate(MOS6502 CPU, bool getValue = true)
         {
             if (getValue)
             {
-                return (CPU.ReadNextByte(), CPU.Registers.PC, null);
+                return new AddressingModeResult(CPU.ReadNextByte(), CPU.Registers.PC, null);
             }
 
-            return (0x00, CPU.Registers.PC, null);
+            return new AddressingModeResult(0x00, CPU.Registers.PC, null);
         }
 
-        public static (byte value, ushort address, bool? samePage) GetAddressedValue(MOS6502 CPU, OpcodeContainer container, bool getValue = true)
+        public static AddressingModeResult GetAddressedValue(MOS6502 CPU, OpcodeContainer container, bool getValue = true)
         {
+            AddressingModeResult result;
+
             switch (container.AddressingMode)
             {
                 case AddressingModes.Accumulator:
                     // Keep an eye on this one, could cause an issue if caller thinks accumulator has an address like this...
-                    return (CPU.Registers.A, 0x0000, null);
+                    result = new AddressingModeResult(CPU.Registers.A, 0x0000, 0x0000, null);
+                    break;
                 case AddressingModes.Indirect:
-                    return AddressingMode.GetIndirect(CPU, getValue);
+                    result = AddressingMode.GetIndirect(CPU, getValue);
+                    break;
                 case AddressingModes.IndirectY:
-                    return AddressingMode.GetIndirectY(CPU, getValue);
+                    result = AddressingMode.GetIndirectY(CPU, getValue);
+                    break;
                 case AddressingModes.IndirectX:
-                    return AddressingMode.GetIndirectY(CPU, getValue);
+                    result = AddressingMode.GetIndirectY(CPU, getValue);
+                    break;
                 case AddressingModes.Immediate:
-                    return AddressingMode.GetImmediate(CPU, getValue);
+                    result = AddressingMode.GetImmediate(CPU, getValue);
+                    break;
                 case AddressingModes.ZeroPageX:
-                    return AddressingMode.GetZeroPageX(CPU, getValue);
+                    result = AddressingMode.GetZeroPageX(CPU, getValue);
+                    break;
                 case AddressingModes.ZeroPage:
-                    return AddressingMode.GetZeroPage(CPU, getValue);
+                    result = AddressingMode.GetZeroPage(CPU, getValue);
+                    break;
                 case AddressingModes.Absolute:
-                    return AddressingMode.GetAbsolute(CPU, getValue);
+                    result = AddressingMode.GetAbsolute(CPU, getValue);
+                    break;
                 case AddressingModes.AbsoluteY:
-                    return AddressingMode.GetAbsoluteY(CPU, getValue);
+                    result = AddressingMode.GetAbsoluteY(CPU, getValue);
+                    break;
                 case AddressingModes.AbsoluteX:
-                    return AddressingMode.GetAbsoluteX(CPU, getValue);
+                    result = AddressingMode.GetAbsoluteX(CPU, getValue);
+                    break;
                 default:
                     throw new InvalidOperationException($"Unhandled AddressMode ({container.AddressingMode}) for Opcode: ({container.Name})");
+            }
+
+            CPU.LastAccessedAddress = AddressingMode.GetAddressAsString(CPU, container, result);
+            return result;
+        }
+
+        private static string GetAddressAsString(MOS6502 CPU, OpcodeContainer container, AddressingModeResult result)
+        {
+            switch (container.AddressingMode)
+            {
+                case AddressingModes.Accumulator:
+                    return "A";
+                case AddressingModes.Indirect:
+                    return $"(${result.IntermediateAddress:X4}) @ ${result.Address:X4}";
+                case AddressingModes.IndirectY:
+                    return $"(${result.IntermediateAddress:D2}),Y @ ${result.Address:X4}";
+                case AddressingModes.ZeroPage:
+                    return $"${result.Address:D2}";
+                case AddressingModes.ZeroPageX:
+                    return $"${result.Address:X2},X @ ${result.Address:X2}";
+                case AddressingModes.AbsoluteY:
+                    return $"${result.IntermediateAddress:X4},Y @ ${result.Address:X4}";
+                case AddressingModes.AbsoluteX:
+                    return $"${result.IntermediateAddress:X4},X @ ${result.Address:X4}";
+                case AddressingModes.Absolute:
+                    return $"${result.Address:X4}";
+                case AddressingModes.Immediate:
+                    return $"#${result.Value:X2}";
+                default:
+                    return $"0x{result.Address:X4}";
             }
         }
 

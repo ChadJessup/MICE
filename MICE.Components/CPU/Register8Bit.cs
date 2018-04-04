@@ -35,7 +35,7 @@ namespace MICE.Components.CPU
         public override byte Read()
         {
             var value = this.ReadByteInsteadAction?.Invoke(null, this.Value) ?? this.Value;
-            this.AfterReadAction?.Invoke(null, this.Value);
+            this.AfterReadAction?.Invoke(null, value);
 
             return value;
         }

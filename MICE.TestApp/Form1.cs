@@ -192,7 +192,7 @@ namespace MICE.TestApp
             //var cartridge = NESLoader.CreateCartridge(@"C:\Emulators\NES\Games\USA\Legend of Zelda, The (U) (PRG 1).nes");
             //var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\full_palette\full_palette.nes");
 
-            //var cartridge = NESLoader.CreateCartridge(@"C:\Emulators\NES\Games\USA\Slalom (U).nes");
+            //var cartridge = NESLoader.CreateCartridge(@"G:\Emulators\NES\Games\USA\Slalom (U).nes");
 
             // Test ROMS.
             //var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\blargg_nes_cpu_test5\official.nes");

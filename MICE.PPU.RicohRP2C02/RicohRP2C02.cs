@@ -18,7 +18,15 @@ namespace MICE.PPU.RicohRP2C02
             public const int NTSCHeight = 224;
         }
 
-        public byte RegisterLatch { get; set; }
+        private byte registerLatch = 0;
+        public byte RegisterLatch
+        {
+            get => this.registerLatch;
+            set
+            {
+                this.registerLatch = value;
+            }
+        }
 
         public RicohRP2C02(PPUMemoryMap memoryMap, PPURegisters registers, IMemoryMap cpuMemoryMap)
         {
@@ -143,7 +151,7 @@ namespace MICE.PPU.RicohRP2C02
         public bool IsPreRenderLine => this.ScanLine == 261;
         public bool IsVisibleLine => this.ScanLine >= 0 && this.ScanLine <= 239;
         public bool IsVisibleCycle => this.Cycle >= 1 && this.Cycle <= 256;
-        public bool IsPostRenderLine => this.ScanLine >= 240 && this.ScanLine <= 260;
+        public bool IsPostRenderLine => this.ScanLine == 240;
         public bool IsRenderLine => this.IsVisibleLine || this.IsPreRenderLine;
 
         public bool IsFetchLine => this.IsRenderLine;
@@ -157,6 +165,93 @@ namespace MICE.PPU.RicohRP2C02
         public bool ShouldCopyHorizontalBits => this.IsRenderingEnabled && this.IsRenderLine && this.Cycle == 257;
 
         public bool ShouldSetVBlank => this.IsPostRenderLine && this.Cycle == 1;
+
+        public int Step()
+        {
+            ++this.Cycle;
+
+            if (this.OnFinalCycleOnLine())
+            {
+                this.ScanLine++;
+                this.Cycle = 0;
+
+                if (this.ScanLine == 240)
+                {
+                    this.FrameNumber++;
+                }
+                else if (this.ScanLine == 261)
+                {
+                    this.HandleFinalScanline();
+                }
+            }
+
+            if (this.IsPreRenderLine && this.Cycle == 1)
+            {
+                this.IsVBlank = false;
+                this.SpriteHandler.WasSprite0Hit = false;
+                this.SpriteHandler.WasSpriteOverflow = false;
+            }
+
+            if (this.IsVisibleLine)
+            {
+                if (this.IsRenderingEnabled && this.IsVisibleCycle)
+                {
+                    this.DrawPixel(this.Cycle - 1, this.ScanLine);
+                }
+
+                if (this.Cycle == 64)
+                {
+                    this.SecondaryOAM.Data.Clear(0xFF);
+                }
+
+                if (this.Cycle == 257 && (this.BackgroundHandler.ShowBackground || this.SpriteHandler.ShowSprites))
+                {
+                    this.SpriteHandler.EvaluateSpritesOnScanline(this.PrimaryOAM, this.ScanLine, this.Cycle);
+                }
+            }
+
+            if (this.ScanLine == 241 && this.Cycle == 1)
+            {
+                this.HandleVerticalBlankLines();
+            }
+
+            if (this.ScanLine <= 240 && this.Cycle >= 257 && this.Cycle <= 320)
+            {
+                this.Registers.OAMADDR.WriteInternal(0);
+
+                if(this.ScanLine == 240)
+                {
+
+                }
+            }
+
+            if (this.ShouldFetch)
+            {
+                this.Fetch();
+            }
+
+            if (this.ShouldIncrementHorizontal)
+            {
+                this.ScrollHandler.IncrementCoarseX();
+            }
+
+            if (this.ShouldIncrementVertical)
+            {
+                this.ScrollHandler.IncrementCoarseY();
+            }
+
+            if (this.ShouldCopyHorizontalBits)
+            {
+                this.ScrollHandler.CopyHorizontalBits();
+            }
+
+            if (this.ShouldCopyVertical)
+            {
+                this.ScrollHandler.CopyVerticalBits();
+            }
+
+            return 0;
+        }
 
         public void PowerOn()
         {
@@ -175,12 +270,7 @@ namespace MICE.PPU.RicohRP2C02
             this.Registers.PPUSCROLL.ReadByteInsteadAction = (_, value) => this.RegisterLatch;
             this.Registers.PPUSCROLL.AfterWriteAction = (address, value) =>
             {
-                if (value != 0x0000)
-                {
-
-                }
-
-                //this.registerLatch = value;
+                this.RegisterLatch = (byte)value;
                 this.ScrollHandler.PPUScrollWrittenTo(address, value);
             };
 
@@ -226,6 +316,7 @@ namespace MICE.PPU.RicohRP2C02
                 this.InternalRegisters.w = true;
                 this.IsVBlank = false;
             };
+
             this.Registers.PPUSTATUS.ReadByteInsteadAction = (_, value) =>
             {
                 byte result = (byte)(this.RegisterLatch & 0b00011111);
@@ -242,8 +333,8 @@ namespace MICE.PPU.RicohRP2C02
                 this.RegisterLatch = value;
 
                 byte oamADDR = this.Registers.OAMADDR.ReadInternal();
-                this.Registers.OAMADDR.WriteInternal(++oamADDR);
                 this.PrimaryOAM[this.Registers.OAMADDR.ReadInternal()] = value;
+                this.Registers.OAMADDR.WriteInternal(++oamADDR);
             };
 
             this.Registers.OAMDMA.ReadByteInsteadAction = (_, value) => this.RegisterLatch;
@@ -263,92 +354,11 @@ namespace MICE.PPU.RicohRP2C02
 
             this.InternalRegisters.w = true;
 
-            this.FrameNumber = 0;
-            this.ScanLine = 240;
-            this.Cycle = 340;
+            this.FrameNumber = 1;
+            this.ScanLine = 0;
+            this.Cycle = 30;
 
             this.ClearOutput();
-        }
-
-        public int Step()
-        {
-            ++this.Cycle;
-
-            if (this.OnFinalCycleOnLine())
-            {
-                this.ScanLine++;
-                this.Cycle = 0;
-
-                if (this.ScanLine == 262)
-                {
-                    this.HandleFinalScanline();
-                }
-            }
-
-            if (this.IsPreRenderLine)
-            {
-                if (this.Cycle == 1)
-                {
-                    this.IsVBlank = false;
-                    this.SpriteHandler.WasSprite0Hit = false;
-                    this.SpriteHandler.WasSpriteOverflow = false;
-                }
-            }
-
-            if (this.IsVisibleLine)
-            {
-                if (this.IsRenderingEnabled && this.IsVisibleCycle)
-                {
-                    this.DrawPixel(this.Cycle - 1, this.ScanLine);
-                }
-
-                if (this.Cycle == 64)
-                {
-                    this.SecondaryOAM.Data.Clear(0xFF);
-                }
-
-                if (this.Cycle == 257 && (this.BackgroundHandler.ShowBackground || this.SpriteHandler.ShowSprites))
-                {
-                    this.SpriteHandler.EvaluateSpritesOnScanline(this.PrimaryOAM, this.ScanLine, this.Cycle);
-                }
-            }
-
-            if (this.ScanLine == 241 && this.Cycle == 1)
-            {
-                this.HandleVerticalBlankLines();
-            }
-
-            if (this.ScanLine <= 240 && this.Cycle >= 257 && this.Cycle <= 320)
-            {
-                this.Registers.OAMADDR.Write(0);
-            }
-
-            if (this.ShouldFetch)
-            {
-                this.Fetch();
-            }
-
-            if (this.ShouldIncrementHorizontal)
-            {
-                this.ScrollHandler.IncrementCoarseX();
-            }
-
-            if (this.ShouldIncrementVertical)
-            {
-                this.ScrollHandler.IncrementCoarseY();
-            }
-
-            if (this.ShouldCopyHorizontalBits)
-            {
-                this.ScrollHandler.CopyHorizontalBits();
-            }
-
-            if (this.ShouldCopyVertical)
-            {
-                this.ScrollHandler.CopyVerticalBits();
-            }
-
-            return 0;
         }
 
         private bool OnFinalCycleOnLine() =>
@@ -358,8 +368,7 @@ namespace MICE.PPU.RicohRP2C02
 
         private void HandleFinalScanline()
         {
-            this.ScanLine = 0;
-            this.FrameNumber++;
+            this.ScanLine = -1;
         }
 
         private void HandlePrerenderScanline()
@@ -470,8 +479,6 @@ namespace MICE.PPU.RicohRP2C02
 
         private void UpdatePPUAddress(byte value)
         {
-            this.RegisterLatch = value;
-
             if (this.InternalRegisters.w)
             {
                 this.InternalRegisters.t = (ushort)((this.InternalRegisters.t & 0x80FF) | ((value & 0x3F) << 8));

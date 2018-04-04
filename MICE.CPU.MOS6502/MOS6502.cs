@@ -1,19 +1,29 @@
 ﻿using MICE.Common;
 using MICE.Common.Interfaces;
-using MICE.Components.Memory;
 using System;
 using System.Collections.Generic;
+using System.Text;
 
 namespace MICE.CPU.MOS6502
 {
     public class MOS6502 : ICPU
     {
+        private static class Constants
+        {
+            public const int ExtraNMIHandledCycles = 7;
+        }
+
         private readonly IMemoryMap memoryMap;
+        private readonly StringBuilder trace;
         private long ranOpcodeCount = 0;
         private long stepCount = 1;
         private Opcodes Opcodes;
 
-        public MOS6502(IMemoryMap memoryMap) => this.memoryMap = memoryMap;
+        public MOS6502(IMemoryMap memoryMap, StringBuilder trace)
+        {
+            this.memoryMap = memoryMap;
+            this.trace = trace;
+        }
         public IReadOnlyDictionary<InterruptType, int> InterruptOffsets = new Dictionary<InterruptType, int>()
         {
             { InterruptType.BRK, 0xFFFE },
@@ -23,6 +33,15 @@ namespace MICE.CPU.MOS6502
         };
 
         public Endianness Endianness { get; } = Endianness.LittleEndian;
+
+        public ushort LastPC { get; set; }
+
+        private string lastAccessedAddress;
+        public string LastAccessedAddress
+        {
+            get => this.lastAccessedAddress;
+            set => this.lastAccessedAddress = value;
+        }
 
         /// <summary>
         /// Gets or sets a value requesting a non-maskable interrrupt.
@@ -136,7 +155,9 @@ namespace MICE.CPU.MOS6502
             this.Registers.PC.Write(this.memoryMap.ReadShort(this.InterruptOffsets[InterruptType.Reset]));
 
             this.Stack = this.memoryMap.GetMemorySegment<Stack>("Stack");
-            this.Stack.SetStackPointer(this.Registers.SP);
+            this.Stack.SetInitialStackPointer(this.Registers.SP);
+            this.Stack.Push(0x00);
+            this.Stack.Push(0x00);
 
             this.Unused = true;
             this.AreInterruptsDisabled = true;
@@ -148,7 +169,7 @@ namespace MICE.CPU.MOS6502
             this.IsZero = false;
             this.WillBreak = false;
 
-            this.Registers.P.Write(0x34);
+            this.Registers.P.Write(0x24);
 
             // TODO: Move the below to NES specific reset logic...APU specifically...
             // Frame IRQ Enabled - APU
@@ -158,10 +179,7 @@ namespace MICE.CPU.MOS6502
             this.memoryMap.Write(0x4015, 0x00);
         }
 
-        private long nmiCycleStart = 0;
-
-        private RAM memory = null;
-
+        private bool shouldHandleNMI = false;
         /// <summary>
         /// Steps the CPU and returns the amount of Cycles that would have occurred if the CPU were real.
         /// The cycles can be used by other components as a timing mechanism.
@@ -169,29 +187,23 @@ namespace MICE.CPU.MOS6502
         /// <returns>The amount of cycles that have passed in this step.</returns>
         public int Step()
         {
-            if (this.memory == null)
-            {
-                this.memory = this.memoryMap.GetMemorySegment<RAM>("RAM");
-            }
-
-            ushort oldPC = this.Registers.PC;
+            this.LastAccessedAddress = "";
 
             if (this.WasNMIRequested)
             {
-                if (this.nmiCycleStart == 0)
+                if (!shouldHandleNMI)
                 {
-                    this.nmiCycleStart = this.CurrentCycle;
+                    this.shouldHandleNMI = true;
                 }
-                else if (this.CurrentCycle - this.nmiCycleStart >= 14)
+                else
                 {
                     this.HandleNMIRequest();
                     this.AreInterruptsDisabled = true;
                     this.WasNMIRequested = false;
-                    this.nmiCycleStart = 0;
-
-                    return 1;
                 }
             }
+
+            this.LastPC = this.Registers.PC.Read();
 
             byte code = 0;
             try
@@ -207,18 +219,21 @@ namespace MICE.CPU.MOS6502
 
 //           // Console.WriteLine($"{this.stepCount}:0x{code:X}:0x{this.Registers.PC.Read():X}:{opCode?.Name}:{opCode?.Cycles + opCode?.AddedCycles}-PC:{Registers.PC.Read()}:A:{Registers.A.Read():D4}:X:{Registers.X.Read():D4}:Y:{Registers.Y.Read():D4}:SP:{Registers.SP.Read():D4}:P:{Convert.ToString(Registers.P.Read(), 2).PadLeft(8, '0')}");
 
-            if (this.CurrentOpcode.ShouldVerifyResults && (oldPC + this.CurrentOpcode.PCDelta != this.Registers.PC))
+            if (this.CurrentOpcode.ShouldVerifyResults && (LastPC + this.CurrentOpcode.PCDelta != this.Registers.PC))
             {
-                throw new InvalidOperationException($"Program Counter was not what was expected after executing instruction: {this.CurrentOpcode.Name} (0x{this.CurrentOpcode.Code:X}).{Environment.NewLine}Was: 0x{oldPC:X}{Environment.NewLine}Is: 0x{this.Registers.PC.Read():X}{Environment.NewLine}Expected: 0x{oldPC + this.CurrentOpcode.PCDelta:X}");
+                throw new InvalidOperationException($"Program Counter was not what was expected after executing instruction: {this.CurrentOpcode.Name} (0x{this.CurrentOpcode.Code:X}).{Environment.NewLine}Was: 0x{LastPC:X}{Environment.NewLine}Is: 0x{this.Registers.PC.Read():X}{Environment.NewLine}Expected: 0x{LastPC + this.CurrentOpcode.PCDelta:X}");
             }
 
             this.stepCount++;
             this.ranOpcodeCount++;
 
-            if (this.stepCount == 0x00000000000e38ed)
+            if (!this.WasNMIRequested && this.shouldHandleNMI)
             {
-
+                this.shouldHandleNMI = false;
+                trace.Append($" - [NMI - Cycle: {this.CurrentCycle + Constants.ExtraNMIHandledCycles}]");
+                this.CurrentOpcode.AddedCycles += Constants.ExtraNMIHandledCycles;
             }
+
             return this.CurrentOpcode.Cycles + this.CurrentOpcode.AddedCycles;
         }
 

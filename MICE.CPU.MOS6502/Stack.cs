@@ -13,7 +13,7 @@ namespace MICE.CPU.MOS6502
     {
         private static class Constants
         {
-            public const int StackPointerStart = 0xFD;
+            public const int StackPointerStart = 0xFF;
         }
 
         public Stack(int lowerIndex, int upperIndex, string name)
@@ -23,7 +23,7 @@ namespace MICE.CPU.MOS6502
 
         public Register8Bit Pointer { get; private set; }
 
-        public void SetStackPointer(Register8Bit register)
+        public void SetInitialStackPointer(Register8Bit register)
         {
             this.Pointer = register;
             this.Pointer.Write(Constants.StackPointerStart);
