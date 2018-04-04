@@ -55,6 +55,7 @@ namespace MICE.CPU.MOS6502
         // Most of the following is from: http://www.6502.org/tutorials/6502opcodes.html
         // Also: http://www.obelisk.me.uk/6502/reference.html
         // And: http://www.thealmightyguru.com/Games/Hacking/Wiki/index.php?title=6502_Opcodes
+        // Unofficial Opcodes: http://www.oxyron.de/html/opcodes02.html
 
         #region Bit Operations
 
@@ -415,12 +416,25 @@ namespace MICE.CPU.MOS6502
 
         #region Jumps
 
-        [MOS6502Opcode(0x04, "NOP", AddressingModes.Implied, timing: 2, length: 1)] // unofficial
+        [MOS6502Opcode(0x00, "BRK", AddressingModes.Implied, timing: 7, length: 1, verify: false)]
+        public void BRK(OpcodeContainer container)
+        {
+            CPU.WillBreak = true;
+            CPU.Unused = true;
+
+            CPU.HandleInterruptRequest(InterruptType.IRQ, (ushort)(CPU.Registers.PC + 1));
+            CPU.AreInterruptsDisabled = true;
+        }
+
+        [MOS6502Opcode(0x04, "NOP", AddressingModes.ZeroPage, timing: 3, length: 1)] // unofficial
+        [MOS6502Opcode(0x0C, "NOP", AddressingModes.Absolute, timing: 4, length: 1)] // unofficial
+        [MOS6502Opcode(0x1C, "NOP", AddressingModes.AbsoluteX, timing: 4, length: 1)] // unofficial
         [MOS6502Opcode(0x1A, "NOP", AddressingModes.Implied, timing: 2, length: 1)] // unofficial
+        [MOS6502Opcode(0x14, "NOP", AddressingModes.ZeroPageX, timing: 2, length: 1)] // unofficial
         [MOS6502Opcode(0x3A, "NOP", AddressingModes.Implied, timing: 2, length: 1)] // unofficial
         [MOS6502Opcode(0x5A, "NOP", AddressingModes.Implied, timing: 2, length: 1)] // unofficial
         [MOS6502Opcode(0x7A, "NOP", AddressingModes.Implied, timing: 2, length: 1)] // unofficial
-        [MOS6502Opcode(0x80, "NOP", AddressingModes.Implied, timing: 2, length: 1)] // unofficial
+        [MOS6502Opcode(0x80, "NOP", AddressingModes.Immediate, timing: 2, length: 1)] // unofficial
         [MOS6502Opcode(0xDA, "NOP", AddressingModes.Implied, timing: 2, length: 1)] // unofficial
         [MOS6502Opcode(0xEA, "NOP", AddressingModes.Implied, timing: 2, length: 1)]
         [MOS6502Opcode(0xFA, "NOP", AddressingModes.Implied, timing: 2, length: 1)] // unofficial
@@ -432,7 +446,24 @@ namespace MICE.CPU.MOS6502
         [MOS6502Opcode(0x4C, "JMP", AddressingModes.Absolute, timing: 3, length: 3, verify: false)]
         public void JMP(OpcodeContainer container)
         {
-            var result = AddressingMode.GetAddressedValue(CPU, container, getValue: false);
+            AddressingModeResult result = new AddressingModeResult();
+
+            // 6502 bug in indirect JMP...
+            var nextShort = CPU.ReadNextShort(incrementPC: false);
+            if (container.AddressingMode == AddressingModes.Indirect && (nextShort & 0x00FF) == 0xFF)
+            {
+                byte lowByte = CPU.ReadByteAt(nextShort, incrementPC: false);
+                byte highByte = CPU.ReadByteAt((ushort)(nextShort - 0x00FF), incrementPC: false);
+
+                ushort baseAddress = (ushort)(highByte << 8 | lowByte);
+
+                result = new AddressingModeResult(0x00, nextShort, baseAddress, samePage: null);
+            }
+            else
+            {
+                result = AddressingMode.GetAddressedValue(CPU, container, getValue: false);
+            }
+
             CPU.SetPCTo(result.Address);
         }
 
@@ -464,6 +495,15 @@ namespace MICE.CPU.MOS6502
 
         #region Branches
 
+        [MOS6502Opcode(0x10, "BPL", AddressingModes.Relative, timing: 2, length: 2)]
+        public void BPL(OpcodeContainer container)
+        {
+            var (cycles, pcDelta) = this.Branch(!CPU.IsNegative);
+
+            container.AddedCycles = cycles;
+            container.PCDelta = pcDelta;
+        }
+
         [MOS6502Opcode(0x30, "BMI", AddressingModes.Relative, timing: 2, length: 2)]
         public void BMI(OpcodeContainer container)
         {
@@ -473,10 +513,19 @@ namespace MICE.CPU.MOS6502
             container.PCDelta = pcDelta;
         }
 
-        [MOS6502Opcode(0x10, "BPL", AddressingModes.Relative, timing: 2, length: 2)]
-        public void BPL(OpcodeContainer container)
+        [MOS6502Opcode(0x50, "BVC", AddressingModes.Relative, timing: 2, length: 2)]
+        public void BVC(OpcodeContainer container)
         {
-            var (cycles, pcDelta) = this.Branch(!CPU.IsNegative);
+            var (cycles, pcDelta) = this.Branch(!CPU.IsOverflowed);
+
+            container.AddedCycles = cycles;
+            container.PCDelta = pcDelta;
+        }
+
+        [MOS6502Opcode(0x70, "BVS", AddressingModes.Relative, timing: 2, length: 2)]
+        public void BVS(OpcodeContainer container)
+        {
+            var (cycles, pcDelta) = this.Branch(CPU.IsOverflowed);
 
             container.AddedCycles = cycles;
             container.PCDelta = pcDelta;

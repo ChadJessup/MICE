@@ -197,7 +197,7 @@ namespace MICE.CPU.MOS6502
                 }
                 else
                 {
-                    this.HandleNMIRequest();
+                    this.HandleInterruptRequest(InterruptType.NMI, this.Registers.PC);
                     this.AreInterruptsDisabled = true;
                     this.WasNMIRequested = false;
                 }
@@ -289,16 +289,16 @@ namespace MICE.CPU.MOS6502
             return value;
         }
 
-        private void HandleNMIRequest()
+        public void HandleInterruptRequest(InterruptType interruptType, ushort returnAddress)
         {
-            // Push PC to stack...
-            this.Stack.Push(this.Registers.PC);
+            // Push return address to stack...usually PC.
+            this.Stack.Push(returnAddress);
 
             // Push P to stack...
             this.Stack.Push(this.Registers.P);
 
-            // Set PC to NMI vector.
-            this.Registers.PC.Write(this.memoryMap.ReadShort(this.InterruptOffsets[InterruptType.NMI]));
+            // Set PC to Interrupt vector.
+            this.Registers.PC.Write(this.memoryMap.ReadShort(this.InterruptOffsets[interruptType]));
         }
     }
 }

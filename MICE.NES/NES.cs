@@ -226,7 +226,8 @@ namespace MICE.Nintendo
             else if (CPU.CurrentOpcode.Code == 0x7A || CPU.CurrentOpcode.Code == 0x5A ||
                      CPU.CurrentOpcode.Code == 0x3A || CPU.CurrentOpcode.Code == 0x80 ||
                      CPU.CurrentOpcode.Code == 0x04 || CPU.CurrentOpcode.Code == 0xDA ||
-                     CPU.CurrentOpcode.Code == 0x1A || CPU.CurrentOpcode.Code == 0xFA)
+                     CPU.CurrentOpcode.Code == 0x1A || CPU.CurrentOpcode.Code == 0xFA ||
+                     CPU.CurrentOpcode.Code == 0x14)
             {
                 opCodeName = "NOP*";
             }
