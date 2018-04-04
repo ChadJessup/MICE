@@ -7,14 +7,8 @@
         {
         }
 
-        // TODO: fix this
         public override void Write(ushort value)
         {
-            if (value != 0x0)
-            {
-
-            }
-
             this.Value = (ushort)(this.Value << 8 | value);
             this.AfterWriteAction?.Invoke(null, value);
         }

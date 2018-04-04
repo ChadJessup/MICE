@@ -64,9 +64,9 @@ namespace MICE.CPU.MOS6502
         {
             var result = AddressingMode.GetAddressedValue(CPU, container);
 
-            this.HandleNegative(result.Value);
-            this.HandleZero((byte)(result.Value & CPU.Registers.A));
             CPU.IsOverflowed = (result.Value & 0x40) != 0;
+            CPU.IsNegative = (result.Value & 0x80) != 0;
+            CPU.IsZero = (result.Value & CPU.Registers.A) == 0;
         }
 
         [MOS6502Opcode(0x09, "ORA", AddressingModes.Immediate, timing: 2, length: 2)]

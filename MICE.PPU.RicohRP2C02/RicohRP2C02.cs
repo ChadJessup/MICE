@@ -2,7 +2,6 @@
 using MICE.Common.Interfaces;
 using MICE.PPU.RicohRP2C02.Components;
 using MICE.PPU.RicohRP2C02.Handlers;
-using System;
 
 namespace MICE.PPU.RicohRP2C02
 {
@@ -22,10 +21,7 @@ namespace MICE.PPU.RicohRP2C02
         public byte RegisterLatch
         {
             get => this.registerLatch;
-            set
-            {
-                this.registerLatch = value;
-            }
+            set => this.registerLatch = value;
         }
 
         public RicohRP2C02(PPUMemoryMap memoryMap, PPURegisters registers, IMemoryMap cpuMemoryMap)
@@ -148,7 +144,7 @@ namespace MICE.PPU.RicohRP2C02
 
         public bool IsRenderingEnabled => this.BackgroundHandler.ShowBackground;
 
-        public bool IsPreRenderLine => this.ScanLine == 261;
+        public bool IsPreRenderLine => this.ScanLine == -1;
         public bool IsVisibleLine => this.ScanLine >= 0 && this.ScanLine <= 239;
         public bool IsVisibleCycle => this.Cycle >= 1 && this.Cycle <= 256;
         public bool IsPostRenderLine => this.ScanLine == 240;
@@ -218,11 +214,6 @@ namespace MICE.PPU.RicohRP2C02
             if (this.ScanLine <= 240 && this.Cycle >= 257 && this.Cycle <= 320)
             {
                 this.Registers.OAMADDR.WriteInternal(0);
-
-                if(this.ScanLine == 240)
-                {
-
-                }
             }
 
             if (this.ShouldFetch)
@@ -321,7 +312,22 @@ namespace MICE.PPU.RicohRP2C02
             {
                 byte result = (byte)(this.RegisterLatch & 0b00011111);
 
-                return (byte)(result | value);
+                if (this.SpriteHandler.WasSpriteOverflow)
+                {
+                    result |= 0b00100000;
+                }
+
+                if (this.SpriteHandler.WasSprite0Hit)
+                {
+                    result |= 0b01000000;
+                }
+
+                if (this.IsVBlank)
+                {
+                    result |= 0b10000000;
+                }
+
+                return (byte)value;
             };
 
             this.Registers.OAMADDR.ReadByteInsteadAction = (_, value) => this.RegisterLatch;
@@ -350,7 +356,7 @@ namespace MICE.PPU.RicohRP2C02
             this.Registers.PPUSTATUS.Write(0);
 
             this.Registers.OAMADDR.Write(0);
-            this.Registers.PPUSCROLL.Write(0);
+            this.Registers.PPUSCROLL.WriteInternal(0);
 
             this.InternalRegisters.w = true;
 
@@ -369,41 +375,6 @@ namespace MICE.PPU.RicohRP2C02
         private void HandleFinalScanline()
         {
             this.ScanLine = -1;
-        }
-
-        private void HandlePrerenderScanline()
-        {
-            switch (this.Cycle)
-            {
-                case 1:
-                    this.IsVBlank = false;
-                    this.SpriteHandler.WasSprite0Hit = false;
-                    this.SpriteHandler.WasSpriteOverflow = false;
-                    this.Fetch();
-                    break;
-                case var c when c > 1 && c <= 256:
-                    this.Fetch();
-                    if (c % 8 == 0)
-                    {
-                        this.ScrollHandler.IncrementCoarseX();
-                    }
-                    break;
-                case var c when c == 257:
-                    this.ScrollHandler.CopyHorizontalBits();
-                    break;
-                case var c when c >= 280 && c <= 304:
-                    this.ScrollHandler.CopyVerticalBits();
-                    break;
-                case var c when c >= 321 && c <= 340:
-                    this.Fetch();
-                    break;
-            }
-
-            // Current scanline data fetch cycles
-            if (this.Cycle >= 257 && this.Cycle <= 320)
-            {
-                this.Registers.OAMADDR.Write(00);
-            }
         }
 
         private void DrawPixel(int x, int y)

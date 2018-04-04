@@ -205,19 +205,11 @@ namespace MICE.CPU.MOS6502
 
             this.LastPC = this.Registers.PC.Read();
 
-            byte code = 0;
-            try
-            {
-                code = this.ReadNextByte();
-                this.CurrentOpcode = this.Opcodes[code];
+            this.CurrentOpcode = this.Opcodes[this.ReadNextByte()];
 
-                this.CurrentOpcode.Instruction(this.CurrentOpcode);
-            }
-            catch (Exception e)
-            {
-            }
+            this.CurrentOpcode.Instruction(this.CurrentOpcode);
 
-//           // Console.WriteLine($"{this.stepCount}:0x{code:X}:0x{this.Registers.PC.Read():X}:{opCode?.Name}:{opCode?.Cycles + opCode?.AddedCycles}-PC:{Registers.PC.Read()}:A:{Registers.A.Read():D4}:X:{Registers.X.Read():D4}:Y:{Registers.Y.Read():D4}:SP:{Registers.SP.Read():D4}:P:{Convert.ToString(Registers.P.Read(), 2).PadLeft(8, '0')}");
+            // Console.WriteLine($"{this.stepCount}:0x{code:X}:0x{this.Registers.PC.Read():X}:{opCode?.Name}:{opCode?.Cycles + opCode?.AddedCycles}-PC:{Registers.PC.Read()}:A:{Registers.A.Read():D4}:X:{Registers.X.Read():D4}:Y:{Registers.Y.Read():D4}:SP:{Registers.SP.Read():D4}:P:{Convert.ToString(Registers.P.Read(), 2).PadLeft(8, '0')}");
 
             if (this.CurrentOpcode.ShouldVerifyResults && (LastPC + this.CurrentOpcode.PCDelta != this.Registers.PC))
             {

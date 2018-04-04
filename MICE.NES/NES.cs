@@ -18,7 +18,7 @@ namespace MICE.Nintendo
     {
         private static class Constants
         {
-            public const string DebugFile = @"C:\Users\shabu\Desktop\MICE - Trace.txt";
+            public const string DebugFile = @"C:\Emulators\NES\MICE - Trace.txt";
         }
 
         private long ppuTotalCycles = 0;
@@ -94,19 +94,18 @@ namespace MICE.Nintendo
         public static StringBuilder traceFileOutput = new StringBuilder();
         public void Step()
         {
-            if (CPU.CurrentCycle == 957167)
+            if (CPU.CurrentCycle == 57166)
             {
 
             }
+
             var registerState = this.GetRegisterState();
 
             // 1 Step = 1 Frame to the NES, since we're doing frame-based timing here:
             // 1 System step = 1 CPU step + (3 PPU steps * CPU Cycles in Step) + (2 Audio steps * 1 CPU cycle).
             // Cycles are based on which instructions the CPU ran.
-            var cycleEvent = new NintendoStepArgs
-            {
-                CPUStepsOccurred = this.CPU.Step()
-            };
+            var cycleEvent = new NintendoStepArgs();
+            cycleEvent.CPUStepsOccurred = this.CPU.Step();
 
             NES.traceFileOutput.AppendLine(this.GetState(registerState));
 
@@ -131,11 +130,9 @@ namespace MICE.Nintendo
 
             if (this.PPU.FrameNumber > this.CurrentFrame)
             {
-                //Console.WriteLine($"Finished Frame: {this.CurrentFrame}");
-
                 this.CurrentFrame = this.PPU.FrameNumber;
                 Array.Copy(this.PPU.ScreenData, this.Screen, this.PPU.ScreenData.Length);
-                File.AppendAllText(Constants.DebugFile, NES.traceFileOutput.ToString());
+            //    File.AppendAllText(Constants.DebugFile, NES.traceFileOutput.ToString());
                 NES.traceFileOutput.Clear();
             }
 
@@ -160,7 +157,7 @@ namespace MICE.Nintendo
         public void DMATransfer(int? address, byte value)
         {
             ushort readAddress = (ushort)(value << 8);
-            //this.sw.WriteLine("DMA Just Happened!");
+
             var lastCycle = this.CPU.CurrentCycle;
 
             this.CPU.CurrentOpcode.AddedCycles +=
