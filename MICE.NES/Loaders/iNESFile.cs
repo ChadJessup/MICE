@@ -124,6 +124,10 @@ namespace MICE.Nintendo.Loaders
                 // TODO: We'll want to load in a file here at a later time
                 this.SRAM = new ArraySegment<byte>(bytes, Constants.LocationOfSRAM, Constants.SizeOfSRAM).ToArray();
             }
+            else
+            {
+                this.SRAM = new byte[Constants.SizeOfSRAM];
+            }
 
             int romBankOffset = this.HasTrainer
                 ? Constants.SizeOfHeader + Constants.SizeOfTrainer

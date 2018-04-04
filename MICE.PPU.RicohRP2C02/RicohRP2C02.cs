@@ -2,6 +2,7 @@
 using MICE.Common.Interfaces;
 using MICE.PPU.RicohRP2C02.Components;
 using MICE.PPU.RicohRP2C02.Handlers;
+using System;
 
 namespace MICE.PPU.RicohRP2C02
 {
@@ -386,7 +387,7 @@ namespace MICE.PPU.RicohRP2C02
 
             this.ScreenData[(y * Constants.NTSCWidth) + x] = muxedPixel;
 
-            if (drawnTile.tile.TileByte % 4 != 0 && drawnSprite.spritePixel % 4 != 0)
+            if (drawnTile.tile?.TileByte % 4 != 0 && drawnSprite.spritePixel % 4 != 0)
             {
                 this.HandleSprite0Hit(drawnTile, drawnSprite);
             }
@@ -441,11 +442,6 @@ namespace MICE.PPU.RicohRP2C02
                 drawnSprite.sprite?.IsSpriteZero ?? false
                 && (drawnTile.backgroundPixel != 0x00
                 && drawnSprite.spritePixel != 0x00);
-
-            if (this.SpriteHandler.WasSprite0Hit)
-            {
-
-            }
         }
 
         private void UpdatePPUAddress(byte value)

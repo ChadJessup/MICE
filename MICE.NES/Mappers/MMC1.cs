@@ -63,6 +63,7 @@ namespace MICE.Nintendo.Mappers
             switch (memorySegment)
             {
                 case var ms when ms.Range.Min == 0x6000:
+                    this.bankLinkage.Add((memorySegment, this.cartridge.SRAM));
                     break;
                 case var ms when ms.Range.Min == 0x8000:
                     this.bankLinkage.Add((memorySegment, this.cartridge.ProgramROMBanks[0]));

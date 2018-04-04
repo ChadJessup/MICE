@@ -23,7 +23,7 @@ namespace MICE.Nintendo.Mappers
         {
             if (!this.cartridge.CharacterRomBanks.Any())
             {
-                this.cartridge.CharacterRomBanks.Add(new byte[2000]);
+                this.cartridge.CharacterRomBanks.Add(new byte[0x2000]);
             }
 
             if (memorySegment.Range.Min == 0x6000)

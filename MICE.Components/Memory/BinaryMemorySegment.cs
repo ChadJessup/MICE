@@ -44,7 +44,17 @@ namespace MICE.Components.Memory
         public override void Write(int index, ushort value) => throw new NotImplementedException();
         public override void CopyBytes(ushort startAddress, Array destinationArray, int destinationIndex, int length)
         {
-            Array.Copy(this.Data, this.GetOffsetInSegment(startAddress), destinationArray, destinationIndex, length);
+            byte sourceIndex = (byte)this.GetOffsetInSegment(startAddress);
+
+            byte dstIndex = (byte)destinationIndex;
+            var dstArray = (byte[])destinationArray;
+
+            for (int i = 0; i < length; i++)
+            {
+                dstArray[dstIndex++] = this.Data[sourceIndex++];
+            }
+
+            //Array.Copy(this.Data, sourceIndex, destinationArray, destinationIndex, length);
         }
     }
 }

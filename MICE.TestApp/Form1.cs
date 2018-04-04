@@ -102,6 +102,73 @@ namespace MICE.TestApp
             this.bitmap.Palette = palette;
         }
 
+        private void Go()
+        {
+            this.nes = new NES();
+            //var cartridge = NESLoader.CreateCartridge(@"C:\Emulators\NES\Games\World\Donkey Kong (JU).nes");
+            //var cartridge = NESLoader.CreateCartridge(@"C:\Emulators\NES\Games\Super Mario Bros.nes");
+            //var cartridge = NESLoader.CreateCartridge(@"C:\Emulators\NES\Games\USA\Legend of Zelda, The (U) (PRG 1).nes");
+            //var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\full_palette\full_palette.nes");
+
+            //var cartridge = NESLoader.CreateCartridge(@"C:\Emulators\NES\Games\USA\Slalom (U).nes");
+
+            // Test ROMS.
+            //var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\blargg_nes_cpu_test5\official.nes");
+            //var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\nestest.nes");
+            //var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\instr_test-v3\official_only.nes");
+
+            // gray screen
+            //var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\blargg_ppu_tests_2005.09.15b\sprite_ram.nes");
+            //var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\nes_instr_test\rom_singles\01-implied.nes");
+
+            // needs CNROM
+            //var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\cpu_dummy_reads\cpu_dummy_reads.nes");
+
+            //var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\nes_instr_test\rom_singles\01-implied.nes");
+            //var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\nes_instr_test\rom_singles\02-immediate.nes");
+            var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\nes_instr_test\rom_singles\03-zero_page.nes");
+            //var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\sprite_hit_tests_2005.10.05\01.basics.nes");
+
+            this.nes.LoadCartridge(cartridge);
+
+            this.nes.PowerOn();
+
+            Task.Factory.StartNew(
+                () => this.nes.Run(),
+                CancellationToken.None,
+                TaskCreationOptions.LongRunning,
+                TaskScheduler.Current);
+
+            var uiDispatcher = Dispatcher.CurrentDispatcher;
+
+            Task.Factory.StartNew(() =>
+            {
+                DateTime lastTime = DateTime.Now;
+                long lastFrame = 0;
+                double fps = 0;
+                double improveBy = 0;
+
+                while (!this.nes.IsPaused && this.nes.IsPoweredOn)
+                {
+                    if ((DateTime.Now - lastTime).TotalSeconds >= 1)
+                    {
+                        fps = nes.CurrentFrame - lastFrame;
+                        lastFrame = nes.CurrentFrame;
+                        improveBy = 60 / fps;
+                        lastTime = DateTime.Now;
+                    }
+
+                    // Basic 60 fps lock...not good, but I don't care atm.
+                    Task.Delay(16);
+                    uiDispatcher.Invoke(() => this.Text = $"Frame: {this.nes.CurrentFrame} FPS: {fps} Improve: {improveBy:F2}x");
+                    this.Draw(this.nes.Screen);
+                }
+            },
+            CancellationToken.None,
+            TaskCreationOptions.LongRunning,
+            TaskScheduler.Current);
+        }
+
         private void OnInputDownChanged(object sender, KeyEventArgs e)
         {
             switch (e.KeyData)
@@ -182,73 +249,6 @@ namespace MICE.TestApp
             }
 
             this.nes.InputChanged(this.inputs);
-        }
-
-        private void Go()
-        {
-            this.nes = new NES();
-            //var cartridge = NESLoader.CreateCartridge(@"C:\Emulators\NES\Games\World\Donkey Kong (JU).nes");
-            //var cartridge = NESLoader.CreateCartridge(@"C:\Emulators\NES\Games\Super Mario Bros.nes");
-            //var cartridge = NESLoader.CreateCartridge(@"C:\Emulators\NES\Games\USA\Legend of Zelda, The (U) (PRG 1).nes");
-            var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\full_palette\full_palette.nes");
-
-            //var cartridge = NESLoader.CreateCartridge(@"G:\Emulators\NES\Games\USA\Slalom (U).nes");
-
-            // Test ROMS.
-            //var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\blargg_nes_cpu_test5\official.nes");
-            //var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\nestest.nes");
-            //var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\instr_test-v3\official_only.nes");
-
-            // gray screen
-            //var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\blargg_ppu_tests_2005.09.15b\sprite_ram.nes");
-            //var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\nes_instr_test\rom_singles\01-implied.nes");
-
-            // needs CNROM
-            //var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\cpu_dummy_reads\cpu_dummy_reads.nes");
-
-            //var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\nes_instr_test\rom_singles\01-implied.nes");
-            //var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\nes_instr_test\rom_singles\02-immediate.nes");
-            //var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\nes_instr_test\rom_singles\03-zero_page.nes");
-            //var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\sprite_hit_tests_2005.10.05\01.basics.nes");
-
-            this.nes.LoadCartridge(cartridge);
-
-            this.nes.PowerOn();
-
-            Task.Factory.StartNew(
-                () => this.nes.Run(),
-                CancellationToken.None,
-                TaskCreationOptions.LongRunning,
-                TaskScheduler.Current);
-
-            var uiDispatcher = Dispatcher.CurrentDispatcher;
-
-            Task.Factory.StartNew(() =>
-            {
-                DateTime lastTime = DateTime.Now;
-                long lastFrame = 0;
-                double fps = 0;
-                double improveBy = 0;
-
-                while (!this.nes.IsPaused && this.nes.IsPoweredOn)
-                {
-                    if ((DateTime.Now - lastTime).TotalSeconds >= 1)
-                    {
-                        fps = nes.CurrentFrame - lastFrame;
-                        lastFrame = nes.CurrentFrame;
-                        improveBy = 60 / fps;
-                        lastTime = DateTime.Now;
-                    }
-
-                    // Basic 60 fps lock...not good, but I don't care atm.
-                    Task.Delay(16);
-                    uiDispatcher.Invoke(() => this.Text = $"Frame: {this.nes.CurrentFrame} FPS: {fps} Improve: {improveBy:F2}x");
-                    this.Draw(this.nes.Screen);
-                }
-            },
-            CancellationToken.None,
-            TaskCreationOptions.LongRunning,
-            TaskScheduler.Current);
         }
 
         private Rectangle bitmapRectangle = new Rectangle(0, 0, 256, 240);

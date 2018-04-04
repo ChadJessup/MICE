@@ -94,7 +94,7 @@ namespace MICE.Nintendo
         public static StringBuilder traceFileOutput = new StringBuilder();
         public void Step()
         {
-            if (CPU.CurrentCycle == 57166)
+            if (CPU.CurrentCycle == 473982)
             {
 
             }
@@ -132,7 +132,7 @@ namespace MICE.Nintendo
             {
                 this.CurrentFrame = this.PPU.FrameNumber;
                 Array.Copy(this.PPU.ScreenData, this.Screen, this.PPU.ScreenData.Length);
-            //    File.AppendAllText(Constants.DebugFile, NES.traceFileOutput.ToString());
+                File.AppendAllText(Constants.DebugFile, NES.traceFileOutput.ToString());
                 NES.traceFileOutput.Clear();
             }
 
@@ -224,11 +224,12 @@ namespace MICE.Nintendo
             else if (CPU.CurrentOpcode?.Name == "PHA") { stackIndentation -= 1; }
             else if (CPU.CurrentOpcode?.Name == "PLA") { stackIndentation += 1; }
             else if (CPU.CurrentOpcode?.Name == "RTI") { stackIndentation += 3; }
+            else if (CPU.CurrentOpcode?.Name == "PLP") { stackIndentation += 1; }
 
             var output = new StringBuilder($"{CPU.LastPC:X4}");
             try
             {
-                output.Append(' ', stackIndentation + 2);
+                output.Append("  ");
                 output.Append($"{CPU.CurrentOpcode?.Name ?? "SEI"} {label}");
                 output.Append(' ', Math.Max(1, expectedSpace - label.Length));
                 output.Append(registerState);
@@ -278,6 +279,8 @@ namespace MICE.Nintendo
                     return "PpuStatus_2002";
                 case "$2003":
                     return "OamAddr_2003";
+                case "$2004":
+                    return "OamData_2004";
                 case "$2005":
                     return "PpuScroll_2005";
                 case "$2006":
