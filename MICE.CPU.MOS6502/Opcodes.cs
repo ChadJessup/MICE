@@ -373,7 +373,7 @@ namespace MICE.CPU.MOS6502
         {
             this.WriteByteToRegister(CPU.Registers.P, CPU.Stack.PopByte(), S: false, Z: false);
             CPU.WillBreak = false;
-            CPU.Unused = true;
+            CPU.Reserved = true;
         }
 
         #endregion
@@ -420,26 +420,32 @@ namespace MICE.CPU.MOS6502
         public void BRK(OpcodeContainer container)
         {
             CPU.WillBreak = true;
-            CPU.Unused = true;
+            CPU.Reserved = true;
 
             CPU.HandleInterruptRequest(InterruptType.IRQ, (ushort)(CPU.Registers.PC + 1));
             CPU.AreInterruptsDisabled = true;
         }
 
-        [MOS6502Opcode(0x04, "NOP", AddressingModes.ZeroPage, timing: 3, length: 1)] // unofficial
+        [MOS6502Opcode(0x04, "NOP", AddressingModes.ZeroPage, timing: 3, length: 2)] // unofficial
+        [MOS6502Opcode(0x64, "NOP", AddressingModes.ZeroPage, timing: 3, length: 2)] // unofficial
         [MOS6502Opcode(0x0C, "NOP", AddressingModes.Absolute, timing: 4, length: 1)] // unofficial
         [MOS6502Opcode(0x1C, "NOP", AddressingModes.AbsoluteX, timing: 4, length: 1)] // unofficial
         [MOS6502Opcode(0x1A, "NOP", AddressingModes.Implied, timing: 2, length: 1)] // unofficial
-        [MOS6502Opcode(0x14, "NOP", AddressingModes.ZeroPageX, timing: 2, length: 1)] // unofficial
+        [MOS6502Opcode(0x14, "NOP", AddressingModes.ZeroPageX, timing: 4, length: 1)] // unofficial
         [MOS6502Opcode(0x3A, "NOP", AddressingModes.Implied, timing: 2, length: 1)] // unofficial
         [MOS6502Opcode(0x5A, "NOP", AddressingModes.Implied, timing: 2, length: 1)] // unofficial
         [MOS6502Opcode(0x7A, "NOP", AddressingModes.Implied, timing: 2, length: 1)] // unofficial
-        [MOS6502Opcode(0x80, "NOP", AddressingModes.Immediate, timing: 2, length: 1)] // unofficial
+        [MOS6502Opcode(0x80, "NOP", AddressingModes.Immediate, timing: 2, length: 2)] // unofficial
+        [MOS6502Opcode(0x82, "NOP", AddressingModes.Immediate, timing: 2, length: 2)] // unofficial
+        [MOS6502Opcode(0xC2, "NOP", AddressingModes.Immediate, timing: 2, length: 2)] // unofficial
+        [MOS6502Opcode(0xE2, "NOP", AddressingModes.Immediate, timing: 2, length: 2)] // unofficial
+        [MOS6502Opcode(0x89, "NOP", AddressingModes.Immediate, timing: 2, length: 2)] // unofficial
         [MOS6502Opcode(0xDA, "NOP", AddressingModes.Implied, timing: 2, length: 1)] // unofficial
         [MOS6502Opcode(0xEA, "NOP", AddressingModes.Implied, timing: 2, length: 1)]
         [MOS6502Opcode(0xFA, "NOP", AddressingModes.Implied, timing: 2, length: 1)] // unofficial
         public void NOP(OpcodeContainer container)
         {
+            var result = AddressingMode.GetAddressedValue(CPU, container);
         }
 
         [MOS6502Opcode(0x6C, "JMP", AddressingModes.Indirect, timing: 5, length: 3, verify: false)]
@@ -685,22 +691,37 @@ namespace MICE.CPU.MOS6502
         [MOS6502Opcode(0xF1, "SBC", AddressingModes.IndirectY, timing: 5, length: 2)]
         public void SBC(OpcodeContainer container)
         {
-            var addressingResult = AddressingMode.GetAddressedValue(CPU, container);
+            var result = AddressingMode.GetAddressedValue(CPU, container);
 
-            var oldAccumulator = CPU.Registers.A.Read();
-            var result = CPU.Registers.A - addressingResult.Value - 1 + (CPU.IsCarry ? 1 : 0);
+            result.Value = (byte)(~result.Value);
 
-            this.WriteByteToRegister(CPU.Registers.A, (byte)result, S: true, Z: true);
+            var originalValue = CPU.Registers.A.Read();
+            var sum = originalValue + result.Value + (CPU.IsCarry ? 1 : 0);
 
-            this.HandleCarry(result);
-            this.HandlePageBoundaryCrossed(container, addressingResult.IsSamePage);
-            this.HandleOverflow(oldAccumulator, addressingResult.Value, (byte)result);
+            CPU.IsCarry = sum >> 8 != 0;
+
+            this.WriteByteToRegister(CPU.Registers.A, (byte)sum, S: true, Z: true);
+            this.HandlePageBoundaryCrossed(container, result.IsSamePage);
+            this.HandleOverflow(originalValue, result.Value, (byte)sum);
         }
-
-        private void HandleCarry(int value) => CPU.IsCarry = (value & 0b10000000) == 0x80;
 
         #endregion
 
+        #region Unofficial
+
+        [MOS6502Opcode(0x2B, "ANC", AddressingModes.Immediate, timing: 2, length: 2, verify: false)]
+        [MOS6502Opcode(0x0B, "ANC", AddressingModes.Immediate, timing: 2, length: 2, verify: false)]
+        public void ANC(OpcodeContainer container)
+        {
+            var result = AddressingMode.GetAddressedValue(CPU, container);
+
+            this.WriteByteToRegister(CPU.Registers.A, (byte)(CPU.Registers.A & result.Value), S: true, Z: true);
+            CPU.IsCarry = (CPU.Registers.A & 0x80) != 0;
+        }
+
+
+
+        #endregion
         // TODO: hmmm...seems too easy, we'll see. 0x80 = 128, max of signed byte.
         private void HandleNegative(byte operand) => CPU.IsNegative = operand >= 0x80;
 
@@ -709,7 +730,7 @@ namespace MICE.CPU.MOS6502
         // https://stackoverflow.com/a/29224684/1865301
         private void HandleOverflow(byte original, byte operand, byte value)
         {
-            CPU.IsOverflowed = ((original ^ operand) & 0x80) != 0 && ((original ^ value) & 0x80) != 0;
+            CPU.IsOverflowed = (~(original ^ operand) & 0x80) != 0 && ((original ^ value) & 0x80) != 0;
         }
 
         private void CompareValues(byte value1, byte value2, bool S = true, bool Z = true, bool C = true)

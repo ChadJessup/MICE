@@ -223,26 +223,22 @@ namespace MICE.Nintendo
             else if (opCodeName == "PLA") { stackIndentation += 1; }
             else if (opCodeName == "RTI") { stackIndentation += 3; }
             else if (opCodeName == "PLP") { stackIndentation += 1; }
+            else if (CPU.CurrentOpcode.Code == 0xEB) { opCodeName = "SBC*"; expectedSpace--; }
             else if (CPU.CurrentOpcode.Code == 0x7A || CPU.CurrentOpcode.Code == 0x5A ||
                      CPU.CurrentOpcode.Code == 0x3A || CPU.CurrentOpcode.Code == 0x80 ||
                      CPU.CurrentOpcode.Code == 0x04 || CPU.CurrentOpcode.Code == 0xDA ||
                      CPU.CurrentOpcode.Code == 0x1A || CPU.CurrentOpcode.Code == 0xFA ||
-                     CPU.CurrentOpcode.Code == 0x14)
-            {
-                opCodeName = "NOP*";
-            }
+                     CPU.CurrentOpcode.Code == 0x14 || CPU.CurrentOpcode.Code == 0x80 ||
+                     CPU.CurrentOpcode.Code == 0x82 || CPU.CurrentOpcode.Code == 0xC2 ||
+                     CPU.CurrentOpcode.Code == 0xE2 || CPU.CurrentOpcode.Code == 0x89) { opCodeName = "NOP*"; expectedSpace--; }
+            else if (opCodeName == "ANC") { opCodeName = "ANC*"; expectedSpace--; }
 
             var output = new StringBuilder($"{CPU.LastPC:X4}");
-            try
-            {
-                output.Append("  ");
-                output.Append($"{opCodeName ?? "SEI"} {label}");
-                output.Append(' ', Math.Max(1, expectedSpace - label.Length));
-                output.Append(registerState);
-            }
-            catch(Exception e)
-            {
-            }
+
+            output.Append("  ");
+            output.Append($"{opCodeName ?? "SEI"} {label}");
+            output.Append(' ', Math.Max(1, expectedSpace - label.Length));
+            output.Append(registerState);
 
             return output.ToString();
         }

@@ -93,6 +93,7 @@ namespace MICE.CPU.MOS6502
 
         /// <summary>
         /// Gets or sets a value indicating whether the CPU is in Decimal mode (BCD).
+        /// Note: Sometimes marked as 'Unused'.
         /// </summary>
         public bool IsDecimalMode
         {
@@ -110,9 +111,10 @@ namespace MICE.CPU.MOS6502
         }
 
         /// <summary>
-        /// Unused bit.
+        /// Reserved bit.
+        /// Note: Almost always true?
         /// </summary>
-        public bool Unused
+        public bool Reserved
         {
             get => this.Registers.P.GetBit(5);
             set => this.Registers.P.SetBit(5, value);
@@ -159,7 +161,7 @@ namespace MICE.CPU.MOS6502
             this.Stack.Push(0x00);
             this.Stack.Push(0x00);
 
-            this.Unused = true;
+            this.Reserved = true;
             this.AreInterruptsDisabled = true;
 
             this.IsCarry = false;

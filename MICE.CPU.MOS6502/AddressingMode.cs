@@ -122,6 +122,9 @@ namespace MICE.CPU.MOS6502
 
             switch (container.AddressingMode)
             {
+                case AddressingModes.Implied:
+                    result = new AddressingModeResult(0x0, 0x0000, 0x0000, null);
+                    break;
                 case AddressingModes.Accumulator:
                     // Keep an eye on this one, could cause an issue if caller thinks accumulator has an address like this...
                     result = new AddressingModeResult(CPU.Registers.A, 0x0000, 0x0000, null);
@@ -164,10 +167,12 @@ namespace MICE.CPU.MOS6502
             return result;
         }
 
-        private static string GetAddressAsString(MOS6502 CPU, OpcodeContainer container, AddressingModeResult result)
+        public static string GetAddressAsString(MOS6502 CPU, OpcodeContainer container, AddressingModeResult result)
         {
             switch (container.AddressingMode)
             {
+                case AddressingModes.Implied:
+                    return "";
                 case AddressingModes.Accumulator:
                     return "A";
                 case AddressingModes.Indirect:
