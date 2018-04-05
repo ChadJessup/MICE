@@ -719,10 +719,39 @@ namespace MICE.CPU.MOS6502
             CPU.IsCarry = (CPU.Registers.A & 0x80) != 0;
         }
 
+        [MOS6502Opcode(0x4B, "ALR", AddressingModes.Immediate, timing: 2, length: 2)]
+        public void ALR(OpcodeContainer container)
+        {
+            var result = AddressingMode.GetAddressedValue(CPU, container);
 
+            var andedValue = (CPU.Registers.A & result.Value);
+            CPU.IsCarry = (andedValue & 0x01) != 0;
+
+            andedValue >>= 1;
+            this.WriteByteToRegister(CPU.Registers.A, (byte)andedValue, S: true, Z: true);
+        }
+
+        [MOS6502Opcode(0x6B, "ARR", AddressingModes.Immediate, timing: 2, length: 2)]
+        public void ARR(OpcodeContainer container)
+        {
+            if (CPU.CurrentCycle == 1399195)
+            {
+
+            }
+
+            var result = AddressingMode.GetAddressedValue(CPU, container);
+            var andedValue = (CPU.Registers.A & result.Value);
+
+            andedValue >>= 1;
+
+            this.WriteByteToRegister(CPU.Registers.A, (byte)andedValue, S: true, Z: true);
+
+            CPU.IsOverflowed = CPU.Registers.A.GetBit(6) ^ CPU.Registers.A.GetBit(5);
+            CPU.IsCarry = CPU.Registers.A.GetBit(6);
+        }
 
         #endregion
-        // TODO: hmmm...seems too easy, we'll see. 0x80 = 128, max of signed byte.
+
         private void HandleNegative(byte operand) => CPU.IsNegative = operand >= 0x80;
 
         private void HandleZero(byte operand) => CPU.IsZero = operand == 0;

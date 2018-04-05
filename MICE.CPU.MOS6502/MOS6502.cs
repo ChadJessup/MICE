@@ -205,12 +205,19 @@ namespace MICE.CPU.MOS6502
                 }
             }
 
+
             this.LastPC = this.Registers.PC.Read();
 
-            this.CurrentOpcode = this.Opcodes[this.ReadNextByte()];
 
             try
             {
+                this.CurrentOpcode = this.Opcodes[this.ReadNextByte()];
+
+                if (this.CurrentCycle == 1399195)
+                {
+
+                }
+
                 this.CurrentOpcode.Instruction(this.CurrentOpcode);
             }
             catch(Exception e)

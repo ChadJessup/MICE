@@ -177,7 +177,7 @@ namespace MICE.Nintendo.Mappers
 
             var incomingValue = Convert.ToString(value, 2).PadLeft(8, '0');
             var existingValue = Convert.ToString(this.LoadRegister.Read(), 2).PadLeft(8, '0');
-            Console.WriteLine($"Incoming: {incomingValue} Register: {existingValue}");
+            // Console.WriteLine($"Incoming: {incomingValue} Register: {existingValue}");
         }
 
         private void MapNametable(IMemorySegment memorySegment)
@@ -297,7 +297,7 @@ namespace MICE.Nintendo.Mappers
                     throw new InvalidOperationException($"Unexpected CharacterROMBankMode: {this.CharacterRomBankMode}");
             }
 
-            Console.WriteLine($"Switched Character ROM Bank: {this.CharacterRomBankMode}");
+            // Console.WriteLine($"Switched Character ROM Bank: {this.CharacterRomBankMode}");
         }
 
         private void SetProgramRomBank(byte value)
@@ -320,7 +320,7 @@ namespace MICE.Nintendo.Mappers
                     throw new InvalidOperationException($"Unexpected ProgramROMBankMode: {this.ProgramRomBankMode}");
             }
 
-            Console.WriteLine($"Switched Program ROM Bank: {this.ProgramRomBankMode}");
+            // Console.WriteLine($"Switched Program ROM Bank: {this.ProgramRomBankMode}");
         }
 
         private void SetNametableMirroring(byte controlByte)
