@@ -744,8 +744,6 @@ namespace MICE.CPU.MOS6502
             var newA = (((CPU.Registers.A & result.OperandValue) >> 1) | (CPU.IsCarry ? 0x80 : 0x00));
 
             this.WriteByteToRegister(CPU.Registers.A, (byte)newA, S: true, Z: true);
-            CPU.IsCarry = false;
-            CPU.IsOverflowed = false;
 
             if ((CPU.Registers.A & 0x40) != 0)
             {
@@ -801,6 +799,10 @@ namespace MICE.CPU.MOS6502
         public void ISC(OpcodeContainer container)
         {
             var result = AddressingMode.GetAddressedOperand(CPU, container);
+
+            result.OperandValue++;
+            ADD(container, (byte)(result.OperandValue ^ 0xFF));
+            CPU.WriteByteAt(result.Address, result.OperandValue, incrementPC: false);
         }
 
         [MOS6502Opcode(0x07, "SLO", AddressingModes.ZeroPage, timing: 5, length: 2, unofficial: true)]
@@ -881,12 +883,9 @@ namespace MICE.CPU.MOS6502
         {
             var result = AddressingMode.GetAddressedOperand(CPU, container);
 
-            var oldCarry = CPU.IsCarry;
-            CPU.IsCarry = (result.OperandValue & 0b00000001) != 0;
-            var shifted = (byte)(result.OperandValue >> 1 | (oldCarry ? 0b1000000 : 0x00));
-            this.ADD(container, shifted);
-
-            CPU.WriteByteAt(result.Address, shifted, incrementPC: false);
+            var shiftedValue = this.ROR(result.OperandValue);
+            this.ADD(container, shiftedValue);
+            CPU.WriteByteAt(result.Address, shiftedValue, incrementPC: false);
         }
 
         [MOS6502Opcode(0x87, "SAX", AddressingModes.ZeroPage, timing: 5, length: 2, unofficial: true)]
@@ -896,6 +895,8 @@ namespace MICE.CPU.MOS6502
         public void SAX(OpcodeContainer container)
         {
             var result = AddressingMode.GetAddressedOperand(CPU, container);
+
+            CPU.WriteByteAt(result.Address, (byte)(CPU.Registers.A & CPU.Registers.X), incrementPC: false);
         }
 
         [MOS6502Opcode(0xC7, "DCP", AddressingModes.ZeroPage, timing: 5, length: 2, unofficial: true)]
@@ -908,6 +909,10 @@ namespace MICE.CPU.MOS6502
         public void DCP(OpcodeContainer container)
         {
             var result = AddressingMode.GetAddressedOperand(CPU, container);
+
+            result.OperandValue--;
+            this.CompareValues(CPU.Registers.A, result.OperandValue, S: true, Z: true, C: true);
+            CPU.WriteByteAt(result.Address, result.OperandValue, incrementPC: false);
         }
 
         [MOS6502Opcode(0x9C, "SHY", AddressingModes.AbsoluteX, timing: 5, length: 3, unofficial: true)]
@@ -943,6 +948,22 @@ namespace MICE.CPU.MOS6502
         private void HandleOverflow(byte original, byte operand, byte value)
         {
             CPU.IsOverflowed = (~(original ^ operand) & 0x80) != 0 && ((original ^ value) & 0x80) != 0;
+        }
+
+        private byte ROR(byte value)
+        {
+            bool carryFlag = CPU.IsCarry;
+            CPU.IsCarry = false;
+            CPU.IsNegative = false;
+            CPU.IsZero = false;
+
+            CPU.IsCarry = (value & 0x01) != 0;
+
+            byte result = (byte)(value >> 1 | (carryFlag ? 0x80 : 0x00));
+            this.HandleNegative(result);
+            this.HandleZero(result);
+
+            return result;
         }
 
         private void CompareValues(byte value1, byte value2, bool S = true, bool Z = true, bool C = true)

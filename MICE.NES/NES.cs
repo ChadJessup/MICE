@@ -92,6 +92,7 @@ namespace MICE.Nintendo
         }
 
         public static StringBuilder traceFileOutput = new StringBuilder();
+
         public void Step()
         {
             var registerState = this.GetRegisterState();
@@ -127,7 +128,7 @@ namespace MICE.Nintendo
             {
                 this.CurrentFrame = this.PPU.FrameNumber;
                 Array.Copy(this.PPU.ScreenData, this.Screen, this.PPU.ScreenData.Length);
-                File.AppendAllText(Constants.DebugFile, NES.traceFileOutput.ToString());
+             // File.AppendAllText(Constants.DebugFile, NES.traceFileOutput.ToString());
                 NES.traceFileOutput.Clear();
             }
 
@@ -225,36 +226,12 @@ namespace MICE.Nintendo
             else if (opCodeName == "PLP") { stackIndentation += 1; }
             else if (CPU.CurrentOpcode.IsUnofficial) { opCodeName += "*"; expectedSpace--; }
 
-            var output = new StringBuilder($"{CPU.LastPC:X4}");
-
-            output.Append("  ");
-            output.Append($"{opCodeName ?? "SEI"} {label}");
-            output.Append(' ', Math.Max(1, expectedSpace - label.Length));
-            output.Append(registerState);
-
-            return output.ToString();
+            var spaces = new String(' ', Math.Max(1, expectedSpace - label.Length));
+            return $"{CPU.LastPC:X4}  {opCodeName ?? "SEI"} {label} {spaces} {registerState}";
         }
 
         private string GetRegisterState()
-        {
-            var output = new StringBuilder($"A:{CPU.Registers.A.Read():X2} ");
-            try
-            {
-                output.Append($"X:{CPU.Registers.X.Read():X2} ");
-                output.Append($"Y:{CPU.Registers.Y.Read():X2} ");
-                output.Append($"P:{CPU.Registers.P.Read():X2} ");
-                output.Append($"SP:{CPU.Registers.SP.Read():X2} ");
-                output.Append($"CYC:{this.PPU.Cycle,3} ");
-                output.Append($"SL:{this.PPU.ScanLine,3} ");
-                output.Append($"FC:{this.CurrentFrame} ");
-                output.Append($"CPU Cycle:{this.CPU.CurrentCycle}");
-            }
-            catch(Exception e)
-            {
-            }
-
-            return output.ToString();
-        }
+            => $"A:{CPU.Registers.A.Read():X2} X:{CPU.Registers.X.Read():X2} Y:{CPU.Registers.Y.Read():X2} P:{CPU.Registers.P.Read():X2} SP:{CPU.Registers.SP.Read():X2} CYC:{this.PPU.Cycle,3} SL:{this.PPU.ScanLine,3} FC:{this.CurrentFrame} CPU Cycle:{this.CPU.CurrentCycle}";
 
         private string GetLabelForAddress()
         {

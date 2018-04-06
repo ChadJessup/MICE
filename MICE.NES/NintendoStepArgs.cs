@@ -1,8 +1,6 @@
-﻿using System;
-
-namespace MICE.Nintendo
+﻿namespace MICE.Nintendo
 {
-    public class NintendoStepArgs : EventArgs
+    public struct NintendoStepArgs
     {
         public int CPUStepsOccurred { get; set; }
         public int PPUStepsOccurred { get; set; }
