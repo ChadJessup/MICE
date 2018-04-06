@@ -1,9 +1,8 @@
-﻿using System;
+﻿using MICE.Components.CPU;
+using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Reflection;
-using MICE.Components.CPU;
 
 namespace MICE.CPU.MOS6502
 {
@@ -873,7 +872,7 @@ namespace MICE.CPU.MOS6502
         }
 
         [MOS6502Opcode(0x67, "RRA", AddressingModes.ZeroPage, timing: 5, length: 2, unofficial: true)]
-        [MOS6502Opcode(0x77, "RRA", AddressingModes.ZeroPage, timing: 6, length: 2, unofficial: true)]
+        [MOS6502Opcode(0x77, "RRA", AddressingModes.ZeroPageX, timing: 6, length: 2, unofficial: true)]
         [MOS6502Opcode(0x6F, "RRA", AddressingModes.Absolute, timing: 6, length: 2, unofficial: true)]
         [MOS6502Opcode(0x7F, "RRA", AddressingModes.AbsoluteX, timing: 7, length: 3, unofficial: true)]
         [MOS6502Opcode(0x7B, "RRA", AddressingModes.AbsoluteY, timing: 7, length: 3, unofficial: true)]
