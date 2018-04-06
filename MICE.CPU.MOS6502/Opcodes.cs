@@ -750,7 +750,7 @@ namespace MICE.CPU.MOS6502
         [MOS6502Opcode(0xA7, "LAX", AddressingModes.ZeroPage, timing: 3, length: 2, unofficial: true)]
         [MOS6502Opcode(0xB7, "LAX", AddressingModes.ZeroPageY, timing: 4, length: 2, unofficial: true)]
         [MOS6502Opcode(0xAF, "LAX", AddressingModes.Absolute, timing: 4, length: 2, unofficial: true)]
-        [MOS6502Opcode(0xBF, "LAX", AddressingModes.AbsoluteY, timing: 4, length: 2, unofficial: true)]
+        [MOS6502Opcode(0xBF, "LAX", AddressingModes.AbsoluteY, timing: 4, length: 3, unofficial: true)]
         [MOS6502Opcode(0xA3, "LAX", AddressingModes.IndirectX, timing: 6, length: 2, unofficial: true)]
         [MOS6502Opcode(0xB3, "LAX", AddressingModes.IndirectY, timing: 5, length: 2, unofficial: true)]
         public void LAX(OpcodeContainer container)
@@ -912,22 +912,23 @@ namespace MICE.CPU.MOS6502
         {
             var result = AddressingMode.GetAddressedOperand(CPU, container);
 
-            byte addrHigh = (byte)(result.OperandValue >> 8);
-            byte addrLow = (byte)(result.OperandValue & 0xFF);
+            byte addrHigh = (byte)(result.Address >> 8);
+            byte addrLow = (byte)(result.Address & 0xFF);
             byte value = (byte)(CPU.Registers.Y & (addrHigh + 1));
 
             ushort newAddress = (ushort)(((CPU.Registers.Y & (addrHigh + 1)) << 8) | addrLow);
             CPU.WriteByteAt(newAddress, value, incrementPC: false);
         }
 
-        // aka, SXA
+        // aka, SXA - this seems to be a very poopy opcode to implement: http://forums.nesdev.com/viewtopic.php?f=3&t=3831&start=30
+        // Implementation below is how Mesen implemented it.
         [MOS6502Opcode(0x9E, "SHX", AddressingModes.AbsoluteY, timing: 5, length: 3, unofficial: true)]
         public void SHX(OpcodeContainer container)
         {
             var result = AddressingMode.GetAddressedOperand(CPU, container);
 
-            byte addrHigh = (byte)(result.OperandValue >> 8);
-            byte addrLow = (byte)(result.OperandValue & 0xFF);
+            byte addrHigh = (byte)(result.Address >> 8);
+            byte addrLow = (byte)(result.Address & 0xFF);
             byte value = (byte)(CPU.Registers.X & (addrHigh + 1));
 
             ushort newAddress = (ushort)(((CPU.Registers.X & (addrHigh + 1)) << 8) | addrLow);
