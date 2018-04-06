@@ -116,7 +116,7 @@ namespace MICE.CPU.MOS6502
             return new AddressingModeResult(0x00, CPU.Registers.PC, null);
         }
 
-        public static AddressingModeResult GetAddressedValue(MOS6502 CPU, OpcodeContainer container, bool getValue = true)
+        public static AddressingModeResult GetAddressedOperand(MOS6502 CPU, OpcodeContainer container, bool getValue = true)
         {
             AddressingModeResult result;
 
@@ -194,7 +194,7 @@ namespace MICE.CPU.MOS6502
                 case AddressingModes.Absolute:
                     return $"${result.Address:X4}";
                 case AddressingModes.Immediate:
-                    return $"#${result.Value:X2}";
+                    return $"#${result.Operand:X2}";
                 default:
                     return $"0x{result.Address:X4}";
             }

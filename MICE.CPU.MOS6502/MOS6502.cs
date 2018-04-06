@@ -213,7 +213,7 @@ namespace MICE.CPU.MOS6502
             {
                 this.CurrentOpcode = this.Opcodes[this.ReadNextByte()];
 
-                if (this.CurrentCycle == 1486393)
+                if (this.CurrentCycle == 1595896)
                 {
 
                 }

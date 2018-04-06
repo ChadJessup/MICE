@@ -17,19 +17,25 @@ namespace MICE.CPU.MOS6502
         public int Cycles { get; private set; }
 
         /// <summary>
+        /// Gets a value indicating if this Opcode is Unofficial.
+        /// </summary>
+        public bool Unofficial { get; private set; }
+
+        /// <summary>
         /// The change expected in the PC register, usually how many bytes were read while.
         /// </summary>
         public int PCDelta { get; private set; }
 
         public bool ShouldVerify { get; private set; }
 
-        public MOS6502OpcodeAttribute(int code, string name, AddressingModes addressingMode, int timing, int length, string description = "", bool verify = true)
+        public MOS6502OpcodeAttribute(int code, string name, AddressingModes addressingMode, int timing, int length, string description = "", bool verify = true, bool unofficial = false)
             : base(code, name, description)
         {
             this.AddressingMode = addressingMode;
             this.Cycles = timing;
             this.PCDelta = length;
             this.ShouldVerify = verify;
+            this.Unofficial = unofficial;
         }
     }
 }
