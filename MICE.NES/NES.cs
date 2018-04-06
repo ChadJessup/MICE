@@ -18,7 +18,7 @@ namespace MICE.Nintendo
     {
         private static class Constants
         {
-            public const string DebugFile = @"G:\Emulators\NES\MICE - Trace.txt";
+            public const string DebugFile = @"C:\Emulators\NES\MICE - Trace.txt";
         }
 
         private long ppuTotalCycles = 0;
@@ -128,7 +128,7 @@ namespace MICE.Nintendo
             {
                 this.CurrentFrame = this.PPU.FrameNumber;
                 Array.Copy(this.PPU.ScreenData, this.Screen, this.PPU.ScreenData.Length);
-             // File.AppendAllText(Constants.DebugFile, NES.traceFileOutput.ToString());
+                File.AppendAllText(Constants.DebugFile, NES.traceFileOutput.ToString());
                 NES.traceFileOutput.Clear();
             }
 

@@ -336,10 +336,15 @@ namespace MICE.CPU.MOS6502
         [MOS6502Opcode(0xAD, "LDA", AddressingModes.Absolute, timing: 4, length: 3)]
         [MOS6502Opcode(0xBD, "LDA", AddressingModes.AbsoluteX, timing: 4, length: 3)]
         [MOS6502Opcode(0xB9, "LDA", AddressingModes.AbsoluteY, timing: 4, length: 3)]
-        [MOS6502Opcode(0xa1, "LDA", AddressingModes.IndirectX, timing: 6, length: 2)]
+        [MOS6502Opcode(0xA1, "LDA", AddressingModes.IndirectX, timing: 6, length: 2)]
         [MOS6502Opcode(0xB1, "LDA", AddressingModes.IndirectY, timing: 5, length: 2)]
         public void LDA(OpcodeContainer container)
         {
+            if (CPU.CurrentCycle == 221264)
+            {
+
+            }
+
             var result = AddressingMode.GetAddressedOperand(CPU, container);
             this.WriteByteToRegister(CPU.Registers.A, result.OperandValue, S: true, Z: true);
 
@@ -905,16 +910,33 @@ namespace MICE.CPU.MOS6502
             CPU.WriteByteAt(result.Address, result.OperandValue, incrementPC: false);
         }
 
+        //SYA - this seems to be a very poopy opcode to implement: http://forums.nesdev.com/viewtopic.php?f=3&t=3831&start=30
+        // Implementation below is how Mesen implemented it.
         [MOS6502Opcode(0x9C, "SHY", AddressingModes.AbsoluteX, timing: 5, length: 3, unofficial: true)]
         public void SHY(OpcodeContainer container)
         {
             var result = AddressingMode.GetAddressedOperand(CPU, container);
+
+            byte addrHigh = (byte)(result.OperandValue >> 8);
+            byte addrLow = (byte)(result.OperandValue & 0xFF);
+            byte value = (byte)(CPU.Registers.Y & (addrHigh + 1));
+
+            ushort newAddress = (ushort)(((CPU.Registers.Y & (addrHigh + 1)) << 8) | addrLow);
+            CPU.WriteByteAt(newAddress, value, incrementPC: false);
         }
 
+        // aka, SXA
         [MOS6502Opcode(0x9E, "SHX", AddressingModes.AbsoluteY, timing: 5, length: 3, unofficial: true)]
         public void SHX(OpcodeContainer container)
         {
             var result = AddressingMode.GetAddressedOperand(CPU, container);
+
+            byte addrHigh = (byte)(result.OperandValue >> 8);
+            byte addrLow = (byte)(result.OperandValue & 0xFF);
+            byte value = (byte)(CPU.Registers.X & (addrHigh + 1));
+
+            ushort newAddress = (ushort)(((CPU.Registers.X & (addrHigh + 1)) << 8) | addrLow);
+            CPU.WriteByteAt(newAddress, value, incrementPC: false);
         }
 
         #endregion
