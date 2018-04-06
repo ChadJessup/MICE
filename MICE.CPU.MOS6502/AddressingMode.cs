@@ -77,9 +77,16 @@ namespace MICE.CPU.MOS6502
 
         public static AddressingModeResult GetIndirectX(MOS6502 CPU, bool getValue = true)
         {
+            // val = PEEK(PEEK((arg + X) % 256) + PEEK((arg + X + 1) % 256) * 256)
             var incompleteXAddress = CPU.ReadNextByte(incrementPC: false);
-            var baseAddress = CPU.ReadShortAt(incompleteXAddress, incrementPC: false);
-            var addressWithX = (ushort)(baseAddress + CPU.Registers.X);
+            var baseAddress = (ushort)(incompleteXAddress + CPU.Registers.X);
+            baseAddress %= 256;
+            var addressWithX = CPU.ReadShortAt(baseAddress, incrementPC: false);
+
+            var arg = CPU.ReadNextByte();
+
+            var test = (CPU.ReadByteAt((byte)(arg + CPU.Registers.X), incrementPC: false) % 256) + CPU.ReadByteAt((byte)((arg + CPU.Registers.X + 1) % 256), incrementPC: false);
+            //CPU.ReadByteAt() * 256);
 
             return getValue
                 ? new AddressingModeResult(CPU.ReadByteAt(addressWithX), incompleteXAddress, addressWithX, AreSamePage(addressWithX, baseAddress))

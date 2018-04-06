@@ -394,9 +394,14 @@ namespace MICE.CPU.MOS6502
         [MOS6502Opcode(0x91, "STA", AddressingModes.IndirectY, timing: 6, length: 2)]
         public void STA(OpcodeContainer container)
         {
+            if (container.AddressingMode == AddressingModes.IndirectX)
+            {
+
+            }
+
             var result = AddressingMode.GetAddressedOperand(CPU, container, getValue: false);
 
-            CPU.WriteByteAt(result.Address, CPU.Registers.A);
+            CPU.WriteByteAt(result.Address, CPU.Registers.A, incrementPC: true);
         }
 
         [MOS6502Opcode(0x86, "STX", AddressingModes.ZeroPage, timing: 3, length: 2)]
