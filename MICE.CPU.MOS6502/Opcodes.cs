@@ -429,13 +429,13 @@ namespace MICE.CPU.MOS6502
         [MOS6502Opcode(0x04, "NOP", AddressingModes.ZeroPage, timing: 3, length: 2, unofficial: true)]
         [MOS6502Opcode(0x44, "NOP", AddressingModes.ZeroPage, timing: 3, length: 2, unofficial: true)]
         [MOS6502Opcode(0x64, "NOP", AddressingModes.ZeroPage, timing: 3, length: 2, unofficial: true)]
-        [MOS6502Opcode(0x14, "NOP", AddressingModes.ZeroPageX, timing: 4, length: 1, unofficial: true)]
+        [MOS6502Opcode(0x14, "NOP", AddressingModes.ZeroPageX, timing: 4, length: 2, unofficial: true)]
         [MOS6502Opcode(0x34, "NOP", AddressingModes.ZeroPageX, timing: 4, length: 2, unofficial: true)]
-        [MOS6502Opcode(0x54, "NOP", AddressingModes.ZeroPageX, timing: 4, length: 1, unofficial: true)]
-        [MOS6502Opcode(0x74, "NOP", AddressingModes.ZeroPageX, timing: 4, length: 1, unofficial: true)]
-        [MOS6502Opcode(0xD4, "NOP", AddressingModes.ZeroPageX, timing: 4, length: 1, unofficial: true)]
-        [MOS6502Opcode(0xF4, "NOP", AddressingModes.ZeroPageX, timing: 4, length: 1, unofficial: true)]
-        [MOS6502Opcode(0x0C, "NOP", AddressingModes.Absolute, timing: 4, length: 1, unofficial: true)]
+        [MOS6502Opcode(0x54, "NOP", AddressingModes.ZeroPageX, timing: 4, length: 2, unofficial: true)]
+        [MOS6502Opcode(0x74, "NOP", AddressingModes.ZeroPageX, timing: 4, length: 2, unofficial: true)]
+        [MOS6502Opcode(0xD4, "NOP", AddressingModes.ZeroPageX, timing: 4, length: 2, unofficial: true)]
+        [MOS6502Opcode(0xF4, "NOP", AddressingModes.ZeroPageX, timing: 4, length: 2, unofficial: true)]
+        [MOS6502Opcode(0x0C, "NOP", AddressingModes.Absolute, timing: 4, length: 3, unofficial: true)]
         [MOS6502Opcode(0x1C, "NOP", AddressingModes.AbsoluteX, timing: 4, length: 3, unofficial: true)]
         [MOS6502Opcode(0x3C, "NOP", AddressingModes.AbsoluteX, timing: 4, length: 3, unofficial: true)]
         [MOS6502Opcode(0x5C, "NOP", AddressingModes.AbsoluteX, timing: 4, length: 3, unofficial: true)]
@@ -494,7 +494,7 @@ namespace MICE.CPU.MOS6502
             CPU.LastAccessedAddress = $"${nextPC:X4}";
         }
 
-        [MOS6502Opcode(0x60, "RTS", AddressingModes.Absolute, timing: 6, length: 1, verify: false)]
+        [MOS6502Opcode(0x60, "RTS", AddressingModes.Absolute, timing: 6, length: 3, verify: false)]
         public void RTS(OpcodeContainer container)
         {
             var address = CPU.Stack.PopShort();
@@ -735,21 +735,14 @@ namespace MICE.CPU.MOS6502
 
             this.WriteByteToRegister(CPU.Registers.A, (byte)newA, S: true, Z: true);
 
-            if ((CPU.Registers.A & 0x40) != 0)
-            {
-                CPU.IsCarry = true;
-            }
-
-            if (((CPU.IsCarry ? 0x01 : 0x00) ^ ((CPU.Registers.A >> 5) & 0x01)) != 0)
-            {
-                CPU.IsOverflowed = true;
-            }
+            CPU.IsCarry = (CPU.Registers.A & 0x40) != 0;
+            CPU.IsOverflowed = ((CPU.IsCarry ? 0x01 : 0x00) ^ ((CPU.Registers.A >> 5) & 0x01)) != 0;
         }
 
         [MOS6502Opcode(0xAB, "LAX", AddressingModes.Immediate, timing: 2, length: 2, unofficial: true)]
         [MOS6502Opcode(0xA7, "LAX", AddressingModes.ZeroPage, timing: 3, length: 2, unofficial: true)]
         [MOS6502Opcode(0xB7, "LAX", AddressingModes.ZeroPageY, timing: 4, length: 2, unofficial: true)]
-        [MOS6502Opcode(0xAF, "LAX", AddressingModes.Absolute, timing: 4, length: 2, unofficial: true)]
+        [MOS6502Opcode(0xAF, "LAX", AddressingModes.Absolute, timing: 4, length: 3, unofficial: true)]
         [MOS6502Opcode(0xBF, "LAX", AddressingModes.AbsoluteY, timing: 4, length: 3, unofficial: true)]
         [MOS6502Opcode(0xA3, "LAX", AddressingModes.IndirectX, timing: 6, length: 2, unofficial: true)]
         [MOS6502Opcode(0xB3, "LAX", AddressingModes.IndirectY, timing: 5, length: 2, unofficial: true)]
@@ -797,7 +790,7 @@ namespace MICE.CPU.MOS6502
 
         [MOS6502Opcode(0x07, "SLO", AddressingModes.ZeroPage, timing: 5, length: 2, unofficial: true)]
         [MOS6502Opcode(0x17, "SLO", AddressingModes.ZeroPageX, timing: 6, length: 2, unofficial: true)]
-        [MOS6502Opcode(0x0F, "SLO", AddressingModes.Absolute, timing: 6, length: 2, unofficial: true)]
+        [MOS6502Opcode(0x0F, "SLO", AddressingModes.Absolute, timing: 6, length: 3, unofficial: true)]
         [MOS6502Opcode(0x1F, "SLO", AddressingModes.AbsoluteX, timing: 7, length: 3, unofficial: true)]
         [MOS6502Opcode(0x1B, "SLO", AddressingModes.AbsoluteY, timing: 7, length: 3, unofficial: true)]
         [MOS6502Opcode(0x03, "SLO", AddressingModes.IndirectX, timing: 8, length: 2, unofficial: true)]
@@ -820,7 +813,7 @@ namespace MICE.CPU.MOS6502
 
         [MOS6502Opcode(0x27, "RLA", AddressingModes.ZeroPage, timing: 5, length: 2, unofficial: true)]
         [MOS6502Opcode(0x37, "RLA", AddressingModes.ZeroPageX, timing: 6, length: 2, unofficial: true)]
-        [MOS6502Opcode(0x2F, "RLA", AddressingModes.Absolute, timing: 6, length: 2, unofficial: true)]
+        [MOS6502Opcode(0x2F, "RLA", AddressingModes.Absolute, timing: 6, length: 3, unofficial: true)]
         [MOS6502Opcode(0x3F, "RLA", AddressingModes.AbsoluteX, timing: 7, length: 3, unofficial: true)]
         [MOS6502Opcode(0x3B, "RLA", AddressingModes.AbsoluteY, timing: 7, length: 3, unofficial: true)]
         [MOS6502Opcode(0x23, "RLA", AddressingModes.IndirectX, timing: 8, length: 2, unofficial: true)]
@@ -843,7 +836,7 @@ namespace MICE.CPU.MOS6502
 
         [MOS6502Opcode(0x47, "SRE", AddressingModes.ZeroPage, timing: 5, length: 2, unofficial: true)]
         [MOS6502Opcode(0x57, "SRE", AddressingModes.ZeroPageX, timing: 6, length: 2, unofficial: true)]
-        [MOS6502Opcode(0x4F, "SRE", AddressingModes.Absolute, timing: 6, length: 2, unofficial: true)]
+        [MOS6502Opcode(0x4F, "SRE", AddressingModes.Absolute, timing: 6, length: 3, unofficial: true)]
         [MOS6502Opcode(0x5F, "SRE", AddressingModes.AbsoluteX, timing: 7, length: 3, unofficial: true)]
         [MOS6502Opcode(0x5B, "SRE", AddressingModes.AbsoluteY, timing: 7, length: 3, unofficial: true)]
         [MOS6502Opcode(0x43, "SRE", AddressingModes.IndirectX, timing: 8, length: 2, unofficial: true)]
@@ -864,7 +857,7 @@ namespace MICE.CPU.MOS6502
 
         [MOS6502Opcode(0x67, "RRA", AddressingModes.ZeroPage, timing: 5, length: 2, unofficial: true)]
         [MOS6502Opcode(0x77, "RRA", AddressingModes.ZeroPageX, timing: 6, length: 2, unofficial: true)]
-        [MOS6502Opcode(0x6F, "RRA", AddressingModes.Absolute, timing: 6, length: 2, unofficial: true)]
+        [MOS6502Opcode(0x6F, "RRA", AddressingModes.Absolute, timing: 6, length: 3, unofficial: true)]
         [MOS6502Opcode(0x7F, "RRA", AddressingModes.AbsoluteX, timing: 7, length: 3, unofficial: true)]
         [MOS6502Opcode(0x7B, "RRA", AddressingModes.AbsoluteY, timing: 7, length: 3, unofficial: true)]
         [MOS6502Opcode(0x63, "RRA", AddressingModes.IndirectX, timing: 8, length: 2, unofficial: true)]
@@ -891,7 +884,7 @@ namespace MICE.CPU.MOS6502
 
         [MOS6502Opcode(0xC7, "DCP", AddressingModes.ZeroPage, timing: 5, length: 2, unofficial: true)]
         [MOS6502Opcode(0xD7, "DCP", AddressingModes.ZeroPageX, timing: 6, length: 2, unofficial: true)]
-        [MOS6502Opcode(0xCF, "DCP", AddressingModes.Absolute, timing: 6, length: 2, unofficial: true)]
+        [MOS6502Opcode(0xCF, "DCP", AddressingModes.Absolute, timing: 6, length: 3, unofficial: true)]
         [MOS6502Opcode(0xDF, "DCP", AddressingModes.AbsoluteX, timing: 7, length: 3, unofficial: true)]
         [MOS6502Opcode(0xDB, "DCP", AddressingModes.AbsoluteY, timing: 7, length: 3, unofficial: true)]
         [MOS6502Opcode(0xC3, "DCP", AddressingModes.IndirectX, timing: 7, length: 2, unofficial: true)]

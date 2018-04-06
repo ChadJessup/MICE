@@ -6,12 +6,12 @@ namespace MICE.CPU.MOS6502
     {
         public static AddressingModeResult GetZeroPageY(MOS6502 CPU, bool getValue = true)
         {
-            var intermediateAddress = CPU.ReadNextByte(incrementPC: false);
+            var intermediateAddress = CPU.ReadNextByte();
             var zeroPageYAddress = (byte)(intermediateAddress + CPU.Registers.Y);
 
             if (getValue)
             {
-                return new AddressingModeResult(CPU.ReadByteAt(zeroPageYAddress), intermediateAddress, zeroPageYAddress, null);
+                return new AddressingModeResult(CPU.ReadByteAt(zeroPageYAddress, incrementPC: false), intermediateAddress, zeroPageYAddress, null);
             }
 
             return new AddressingModeResult(0x00, intermediateAddress, zeroPageYAddress, null);
