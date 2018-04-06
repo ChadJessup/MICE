@@ -688,7 +688,7 @@ namespace MICE.CPU.MOS6502
         [MOS6502Opcode(0xEB, "SBC", AddressingModes.Immediate, timing: 2, length: 2, unofficial: true)]
         [MOS6502Opcode(0xE5, "SBC", AddressingModes.ZeroPage, timing: 3, length: 2)]
         [MOS6502Opcode(0xF5, "SBC", AddressingModes.ZeroPageX, timing: 4, length: 2)]
-        [MOS6502Opcode(0xED, "SBC", AddressingModes.AbsoluteX, timing: 4, length: 3)]
+        [MOS6502Opcode(0xED, "SBC", AddressingModes.Absolute, timing: 4, length: 3)]
         [MOS6502Opcode(0xFD, "SBC", AddressingModes.AbsoluteX, timing: 4, length: 3)]
         [MOS6502Opcode(0xF9, "SBC", AddressingModes.AbsoluteY, timing: 4, length: 3)]
         [MOS6502Opcode(0xE1, "SBC", AddressingModes.IndirectX, timing: 6, length: 2)]
@@ -697,16 +697,7 @@ namespace MICE.CPU.MOS6502
         {
             var result = AddressingMode.GetAddressedOperand(CPU, container);
 
-            result.OperandValue = (byte)(~result.OperandValue);
-
-            var originalValue = CPU.Registers.A.Read();
-            var sum = originalValue + result.OperandValue + (CPU.IsCarry ? 1 : 0);
-
-            CPU.IsCarry = sum >> 8 != 0;
-
-            this.WriteByteToRegister(CPU.Registers.A, (byte)sum, S: true, Z: true);
-            this.HandlePageBoundaryCrossed(container, result.IsSamePage);
-            this.HandleOverflow(originalValue, result.OperandValue, (byte)sum);
+            this.ADD(container, (byte)(~result.OperandValue));
         }
 
         #endregion
