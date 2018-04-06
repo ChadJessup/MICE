@@ -81,8 +81,8 @@ namespace MICE.CPU.MOS6502
             var addressWithY = (ushort)(addressWithoutY + CPU.Registers.Y);
 
             return getValue
-                ? new AddressingModeResult(CPU.ReadByteAt(addressWithY, incrementPC: false), addressWithoutY, addressWithY, AreSamePage(addressWithoutY, CPU.Registers.Y))
-                : new AddressingModeResult(0x00, addressWithoutY, addressWithY, AreSamePage(addressWithoutY, CPU.Registers.Y));
+                ? new AddressingModeResult(CPU.ReadByteAt(addressWithY, incrementPC: false), incompleteYAddress, addressWithY, AreSamePage(addressWithoutY, CPU.Registers.Y))
+                : new AddressingModeResult(0x00, incompleteYAddress, addressWithY, AreSamePage(addressWithoutY, CPU.Registers.Y));
         }
 
         public static AddressingModeResult GetIndirectX(MOS6502 CPU, bool getValue = true)
@@ -184,6 +184,7 @@ namespace MICE.CPU.MOS6502
             }
 
             CPU.LastAccessedAddress = AddressingMode.GetAddressAsString(CPU, container, result);
+
             return result;
         }
 

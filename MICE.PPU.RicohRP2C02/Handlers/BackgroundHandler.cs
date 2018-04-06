@@ -1,6 +1,5 @@
 ﻿using MICE.Common.Interfaces;
 using MICE.PPU.RicohRP2C02.Components;
-using System;
 
 namespace MICE.PPU.RicohRP2C02.Handlers
 {
@@ -34,10 +33,7 @@ namespace MICE.PPU.RicohRP2C02.Handlers
             this.internalRegisters = internalRegisters;
         }
 
-        public int BaseNametableAddress
-        {
-            get => (this.registers.PPUCTRL.GetBit(0) ? 1 : 0) | (this.registers.PPUCTRL.GetBit(1) ? 1 : 0) << 2;
-        }
+        public int BaseNametableAddress => (this.registers.PPUCTRL.GetBit(0) ? 1 : 0) | (this.registers.PPUCTRL.GetBit(1) ? 1 : 0) << 2;
 
         public bool DrawLeft8BackgroundPixels
         {

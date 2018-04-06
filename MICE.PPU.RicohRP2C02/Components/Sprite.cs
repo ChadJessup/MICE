@@ -120,15 +120,7 @@ namespace MICE.PPU.RicohRP2C02.Components
         /// </summary>
         /// <param name="x">The Screen-based X coordinate.</param>
         /// <returns>True if visible for a particular Screen based X coordinate.</returns>
-        public bool IsVisible(int x)
-        {
-            if (x - this.Position.X >= 8 || x < this.Position.X)
-            {
-                return false;
-            }
-
-            return true;
-        }
+        public bool IsVisible(int x) => !(x - this.Position.X >= 8 || x < this.Position.X);
 
         /// <summary>
         /// Gets the pixel details for a particular X,Y coordinate on the screen.

@@ -8,6 +8,7 @@ using MICE.Nintendo.Loaders;
 using MICE.PPU.RicohRP2C02;
 using MICE.PPU.RicohRP2C02.Components;
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
@@ -25,6 +26,8 @@ namespace MICE.Nintendo
 
         public string Name { get; } = "Nintendo Entertainment System";
         public long CurrentFrame { get; private set; } = 1;
+
+        public static bool IsDebug { get; set; } = false;
 
         // Create components...
         public DataBus DataBus { get; } = new DataBus();
@@ -47,7 +50,7 @@ namespace MICE.Nintendo
         // Hook them up...
         public void PowerOn()
         {
-            if (File.Exists(Constants.DebugFile))
+            if (NES.IsDebug && File.Exists(Constants.DebugFile))
             {
                 File.Delete(Constants.DebugFile);
             }
@@ -65,7 +68,7 @@ namespace MICE.Nintendo
 
             this.MapToCartridge();
 
-            this.CPU = new Ricoh2A03(this.CPUMemoryMap, NES.traceFileOutput);
+            this.CPU = new Ricoh2A03(this.CPUMemoryMap);
 
             this.CPU.PowerOn();
             this.PPU.PowerOn();
@@ -93,48 +96,65 @@ namespace MICE.Nintendo
 
         public static StringBuilder traceFileOutput = new StringBuilder();
 
+        private Stopwatch frameSW;
         public void Step()
         {
-            var registerState = this.GetRegisterState();
+            string registerState = "";
+            if (NES.IsDebug)
+            {
+                registerState = this.GetRegisterState();
+            }
 
             // 1 Step = 1 Frame to the NES, since we're doing frame-based timing here:
             // 1 System step = 1 CPU step + (3 PPU steps * CPU Cycles in Step) + (2 Audio steps * 1 CPU cycle).
             // Cycles are based on which instructions the CPU ran.
-            var cycleEvent = new NintendoStepArgs();
-            cycleEvent.CPUStepsOccurred = this.CPU.Step();
+            //var cycleEvent = new NintendoStepArgs();
+            //cycleEvent.CPUStepsOccurred = this.CPU.Step();
+            var cpuCycles = this.CPU.Step();
 
-            NES.traceFileOutput.AppendLine(this.GetState(registerState));
-
-            CPU.CurrentCycle += cycleEvent.CPUStepsOccurred;
-
-            cycleEvent.TotalCPUSteps = CPU.CurrentCycle;
-
-            for (int i = 0; i < cycleEvent.CPUStepsOccurred * 3; i++)
+            if (NES.IsDebug)
             {
-                cycleEvent.PPUStepsOccurred = this.PPU.Step();
-                this.ppuTotalCycles += cycleEvent.PPUStepsOccurred;
+                NES.traceFileOutput.AppendLine(this.GetState(registerState));
+            }
 
-                cycleEvent.TotalPPUSteps = this.ppuTotalCycles;
+           // CPU.CurrentCycle += cycleEvent.CPUStepsOccurred;
 
-                if (this.PPU.ShouldNMInterrupt)
-                {
-                    this.CPU.WasNMIRequested = true;
-                    this.PPU.WasNMIRequested = false;
-                    this.PPU.ShouldNMInterrupt = false;
-                }
+            //cycleEvent.TotalCPUSteps = CPU.CurrentCycle;
+
+            for (int i = 0; i < cpuCycles * 3; i++)
+            {
+                this.PPU.Step();
+                //cycleEvent.PPUStepsOccurred = this.PPU.Step();
+
+               // this.ppuTotalCycles += cycleEvent.PPUStepsOccurred;
+
+                //cycleEvent.TotalPPUSteps = this.ppuTotalCycles;
+            }
+
+            if (this.PPU.ShouldNMInterrupt)
+            {
+                this.CPU.WasNMIRequested = true;
+                this.PPU.WasNMIRequested = false;
+                this.PPU.ShouldNMInterrupt = false;
             }
 
             if (this.PPU.FrameNumber > this.CurrentFrame)
             {
+                Console.WriteLine($"Frame took (ms): {this.frameSW.ElapsedMilliseconds}");
+                this.frameSW.Restart();
+
                 this.CurrentFrame = this.PPU.FrameNumber;
                 Array.Copy(this.PPU.ScreenData, this.Screen, this.PPU.ScreenData.Length);
-                File.AppendAllText(Constants.DebugFile, NES.traceFileOutput.ToString());
-                NES.traceFileOutput.Clear();
-            }
 
+                if (NES.IsDebug)
+                {
+                    File.AppendAllText(Constants.DebugFile, NES.traceFileOutput.ToString());
+                    NES.traceFileOutput.Clear();
+                }
+            }
             // TODO: APU Cycles
 
-            this.StepCompleted?.Invoke(this, cycleEvent);
+           // this.StepCompleted?.Invoke(this, cycleEvent);
         }
 
         public void PowerOff()
@@ -163,24 +183,22 @@ namespace MICE.Nintendo
 
             this.CPUMemoryMap.BulkTransfer(readAddress, this.PPU.PrimaryOAM.Data, this.PPU.Registers.OAMADDR, 256);
 
-            NES.traceFileOutput.Append($" - [Sprite DMA Start - Cycle: {lastCycle}] - [Sprite DMA End - Cycle: {this.CPU.CurrentCycle + this.CPU.CurrentOpcode.AddedCycles}]");
+            if (NES.IsDebug)
+            {
+                NES.traceFileOutput.Append($" - [Sprite DMA Start - Cycle: {lastCycle}] - [Sprite DMA End - Cycle: {this.CPU.CurrentCycle + this.CPU.CurrentOpcode.AddedCycles}]");
+            }
         }
 
         public Task Run()
         {
             return Task.Factory.StartNew(() =>
             {
+                this.frameSW = new Stopwatch();
+                this.frameSW.Start();
+
                 while (!this.IsPaused && this.IsPoweredOn)
                 {
-                    try
-                    {
-                        this.Step();
-                    }
-                    catch (Exception e)
-                    {
-                        File.AppendAllText(Constants.DebugFile, NES.traceFileOutput.ToString());
-                        NES.traceFileOutput.Clear();
-                    }
+                    this.Step();
 
                     // TODO: Get RAW Screen data from PPU.
                     // TODO: Audio.

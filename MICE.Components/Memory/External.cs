@@ -1,6 +1,6 @@
-﻿using System;
-using MICE.Common.Interfaces;
+﻿using MICE.Common.Interfaces;
 using MICE.Common.Misc;
+using System;
 
 namespace MICE.Components.Memory
 {

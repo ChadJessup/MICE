@@ -31,15 +31,6 @@ namespace MICE.CPU.MOS6502
         {
             get
             {
-                if (this.opCodeCount.ContainsKey(code))
-                {
-                    this.opCodeCount[code]++;
-                }
-                else
-                {
-                    this.opCodeCount.Add(code, 1);
-                }
-
                 try
                 {
                     return this.OpCodeMap[code];
@@ -363,10 +354,7 @@ namespace MICE.CPU.MOS6502
         public void PLA(OpcodeContainer container) => this.WriteByteToRegister(CPU.Registers.A, CPU.Stack.PopByte(), S: true, Z: true);
 
         [MOS6502Opcode(0x08, "PHP", AddressingModes.Immediate, timing: 3, length: 1)]
-        public void PHP(OpcodeContainer container)
-        {
-            CPU.Stack.Push((byte)(CPU.Registers.P | 0x10));
-        }
+        public void PHP(OpcodeContainer container) => CPU.Stack.Push((byte)(CPU.Registers.P | 0x10));
 
         [MOS6502Opcode(0x28, "PLP", AddressingModes.Immediate, timing: 4, length: 1)]
         public void PLP(OpcodeContainer container)
@@ -454,10 +442,7 @@ namespace MICE.CPU.MOS6502
         [MOS6502Opcode(0xC2, "NOP", AddressingModes.Immediate, timing: 2, length: 2, unofficial: true)]
         [MOS6502Opcode(0xE2, "NOP", AddressingModes.Immediate, timing: 2, length: 2, unofficial: true)]
         [MOS6502Opcode(0x89, "NOP", AddressingModes.Immediate, timing: 2, length: 2, unofficial: true)]
-        public void NOP(OpcodeContainer container)
-        {
-            var result = AddressingMode.GetAddressedOperand(CPU, container);
-        }
+        public void NOP(OpcodeContainer container) => AddressingMode.GetAddressedOperand(CPU, container);
 
         [MOS6502Opcode(0x6C, "JMP", AddressingModes.Indirect, timing: 5, length: 3, verify: false)]
         [MOS6502Opcode(0x4C, "JMP", AddressingModes.Absolute, timing: 3, length: 3, verify: false)]
@@ -680,7 +665,7 @@ namespace MICE.CPU.MOS6502
         public void ADC(OpcodeContainer container)
         {
             var result = AddressingMode.GetAddressedOperand(CPU, container);
-            ADD(container, result.OperandValue);
+            this.ADD(container, result.OperandValue);
             this.HandlePageBoundaryCrossed(container, result.IsSamePage);
         }
 
@@ -762,12 +747,7 @@ namespace MICE.CPU.MOS6502
             byte newValue = (byte)(CPU.Registers.A & CPU.Registers.X);
             newValue -= result.OperandValue;
 
-            CPU.IsCarry = false;
-
-            if ((CPU.Registers.A & CPU.Registers.X) >= result.OperandValue)
-            {
-                CPU.IsCarry = true;
-            }
+            CPU.IsCarry = (CPU.Registers.A & CPU.Registers.X) >= result.OperandValue;
 
             this.WriteByteToRegister(CPU.Registers.X, newValue, S: true, Z: true);
         }
@@ -784,7 +764,7 @@ namespace MICE.CPU.MOS6502
             var result = AddressingMode.GetAddressedOperand(CPU, container);
 
             result.OperandValue++;
-            ADD(container, (byte)(result.OperandValue ^ 0xFF));
+            this.ADD(container, (byte)(result.OperandValue ^ 0xFF));
             CPU.WriteByteAt(result.Address, result.OperandValue, incrementPC: false);
         }
 
@@ -800,8 +780,6 @@ namespace MICE.CPU.MOS6502
             var result = AddressingMode.GetAddressedOperand(CPU, container);
 
             CPU.IsCarry = (result.OperandValue & 0x80) != 0;
-            CPU.IsNegative = false;
-            CPU.IsZero = false;
 
             byte shifted = (byte)(result.OperandValue << 1);
             this.HandleNegative(shifted);
@@ -1110,7 +1088,5 @@ namespace MICE.CPU.MOS6502
                     break;
             }
         }
-
-        private InvalidOperationException ExceptionForUnhandledAddressingMode(OpcodeContainer container) => new InvalidOperationException($"Unhandled AddressMode ({container.AddressingMode}) for Opcode: ({container.Name})");
     }
 }

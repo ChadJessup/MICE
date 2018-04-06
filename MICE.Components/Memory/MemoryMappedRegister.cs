@@ -44,20 +44,6 @@ namespace MICE.Components.Memory
             // TODO: Not the fastest, could do something better here.  Need to rethink the entire Generics setup.
             var convertedType = (T)Convert.ChangeType(value, typeof(T));
             this.mappedRegister.Write(convertedType);
-            /*
-            switch (value)
-            {
-                case ushort newValue:
-                    this.Write(newValue);
-                    break;
-                case byte newValue:
-                    this.Write(newValue);
-                    break;
-                default:
-                    throw new NotImplementedException($"Trying to write as unknown value type for MemoryMappedRegister.{Environment.NewLine}Type: {typeof(T)}{Environment.NewLine}UnexpectedType: {value.GetType()}");
-            }
-            */
         }
-
     }
 }

@@ -37,6 +37,7 @@ namespace MICE.PPU.RicohRP2C02.Handlers
             {
                 return 0;
             }
+
             sprite.PaletteAddress = (ushort)(0x3f10 + 4 * sprite.PaletteNumber + sprite.ColorIndex);
 
             var palette = this.palettes.First(p => p.IsIndexInRange(sprite.PaletteAddress));

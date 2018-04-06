@@ -13,7 +13,6 @@ namespace MICE.Components.Memory
             this.AfterReadAction = afterReadAction;
             this.AfterWriteAction = afterWriteAction;
 
-
             // TODO: fix this in getoffsetinsegment by overriding it...
             this.Data = new byte[length + 1];
         }
@@ -33,10 +32,6 @@ namespace MICE.Components.Memory
         public override ushort ReadShort(int index) => BitConverter.ToUInt16(this.Data, this.GetOffsetInSegment(index));
         public override void Write(int index, byte value)
         {
-            if (index == 0x300 && value !=0x0)
-            {
-
-            }
             this.Data[this.GetOffsetInSegment(index)] = value;
             this.AfterWriteAction?.Invoke(index, value);
         }
@@ -53,8 +48,6 @@ namespace MICE.Components.Memory
             {
                 dstArray[dstIndex++] = this.Data[sourceIndex++];
             }
-
-            //Array.Copy(this.Data, sourceIndex, destinationArray, destinationIndex, length);
         }
     }
 }

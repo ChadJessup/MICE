@@ -75,16 +75,9 @@ namespace MICE.Components.Memory
                 return;
             }
 
-            try
-            {
-                var foundMemorySegment = this.realMemorySegments.First(ms => ms.IsIndexInRange(newIndex));
-                this.cachedMemorySegments.Add(newIndex, foundMemorySegment);
-                foundMemorySegment.Write(newIndex, value);
-            }
-            catch (Exception e)
-            {
-
-            }
+            var foundMemorySegment = this.realMemorySegments.First(ms => ms.IsIndexInRange(newIndex));
+            this.cachedMemorySegments.Add(newIndex, foundMemorySegment);
+            foundMemorySegment.Write(newIndex, value);
         }
 
 

@@ -1,5 +1,4 @@
 ﻿using MICE.Components.CPU;
-using System;
 
 namespace MICE.PPU.RicohRP2C02
 {

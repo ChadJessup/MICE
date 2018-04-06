@@ -2,7 +2,6 @@
 using MICE.Common.Interfaces;
 using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace MICE.CPU.MOS6502
 {
@@ -14,16 +13,10 @@ namespace MICE.CPU.MOS6502
         }
 
         private readonly IMemoryMap memoryMap;
-        private readonly StringBuilder trace;
-        private long ranOpcodeCount = 0;
-        private long stepCount = 1;
         private Opcodes Opcodes;
 
-        public MOS6502(IMemoryMap memoryMap, StringBuilder trace)
-        {
-            this.memoryMap = memoryMap;
-            this.trace = trace;
-        }
+        public MOS6502(IMemoryMap memoryMap) => this.memoryMap = memoryMap;
+
         public IReadOnlyDictionary<InterruptType, int> InterruptOffsets = new Dictionary<InterruptType, int>()
         {
             { InterruptType.BRK, 0xFFFE },
@@ -51,7 +44,7 @@ namespace MICE.CPU.MOS6502
         /// <summary>
         /// Gets or sets the current cycle (or tick) or the CPU.  This increments a specific amount for each instruction that occurs.
         /// </summary>
-        public long CurrentCycle = 0;
+        public long CurrentCycle { get; set; }
 
         /// <summary>
         /// Gets the Stack for the MOS6502.
@@ -140,6 +133,8 @@ namespace MICE.CPU.MOS6502
 
         public bool IsPowered { get; private set; }
 
+        public EventHandler CycleComplete { get; set; }
+
         public OpcodeContainer CurrentOpcode { get; private set; }
 
         public void PowerOn()
@@ -205,33 +200,20 @@ namespace MICE.CPU.MOS6502
                 }
             }
 
-
             this.LastPC = this.Registers.PC.Read();
 
-
-            try
-            {
-                this.CurrentOpcode = this.Opcodes[this.ReadNextByte()];
-                this.CurrentOpcode.Instruction(this.CurrentOpcode);
-            }
-            catch(Exception e)
-            {
-            }
-
-            // Console.WriteLine($"{this.stepCount}:0x{code:X}:0x{this.Registers.PC.Read():X}:{opCode?.Name}:{opCode?.Cycles + opCode?.AddedCycles}-PC:{Registers.PC.Read()}:A:{Registers.A.Read():D4}:X:{Registers.X.Read():D4}:Y:{Registers.Y.Read():D4}:SP:{Registers.SP.Read():D4}:P:{Convert.ToString(Registers.P.Read(), 2).PadLeft(8, '0')}");
+            this.CurrentOpcode = this.Opcodes[this.ReadNextByte()];
+            this.CurrentOpcode.Instruction(this.CurrentOpcode);
 
             if (this.CurrentOpcode.ShouldVerifyResults && (LastPC + this.CurrentOpcode.PCDelta != this.Registers.PC))
             {
                 throw new InvalidOperationException($"Program Counter was not what was expected after executing instruction: {this.CurrentOpcode.Name} (0x{this.CurrentOpcode.Code:X}).{Environment.NewLine}Was: 0x{LastPC:X}{Environment.NewLine}Is: 0x{this.Registers.PC.Read():X}{Environment.NewLine}Expected: 0x{LastPC + this.CurrentOpcode.PCDelta:X}");
             }
 
-            this.stepCount++;
-            this.ranOpcodeCount++;
-
             if (!this.WasNMIRequested && this.shouldHandleNMI)
             {
                 this.shouldHandleNMI = false;
-                trace.Append($" - [NMI - Cycle: {this.CurrentCycle + Constants.ExtraNMIHandledCycles}]");
+                //trace.Append($" - [NMI - Cycle: {this.CurrentCycle + Constants.ExtraNMIHandledCycles}]");
                 this.CurrentOpcode.AddedCycles += Constants.ExtraNMIHandledCycles;
             }
 
@@ -241,20 +223,9 @@ namespace MICE.CPU.MOS6502
         public void WriteByteAt(ushort address, byte value, bool incrementPC = true)
         {
             ushort pc = this.Registers.PC;
+            this.CycleComplete?.Invoke(this, null);
+
             this.memoryMap.Write(address, value);
-
-            if (incrementPC)
-            {
-                this.Registers.PC.Write(++pc);
-            }
-        }
-
-        public void WriteShortAt(ushort address, ushort value, bool incrementPC = true)
-        {
-            ushort pc = this.Registers.PC;
-            var bytes = BitConverter.GetBytes(value);
-            this.memoryMap.Write(address, bytes[0]);
-            this.memoryMap.Write(address + 1, bytes[1]);
 
             if (incrementPC)
             {
@@ -268,6 +239,8 @@ namespace MICE.CPU.MOS6502
         public byte ReadByteAt(ushort address, bool incrementPC = true)
         {
             ushort pc = this.Registers.PC;
+            this.CycleComplete?.Invoke(this, null);
+
             var value = this.memoryMap.ReadByte(address);
 
             if (incrementPC)

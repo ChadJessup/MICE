@@ -96,10 +96,8 @@ namespace MICE.Nintendo.Mappers
         /// </summary>
         /// <param name="index">The index to read from.</param>
         /// <returns>The data that was read.</returns>
-        public override ushort ReadShort(int index)
-        {
+        public override ushort ReadShort(int index) =>
             throw new InvalidOperationException($"Invalid memory range and/or size (ushort) was requested to be read from in NROM Mapper: 0x{index:X4}");
-        }
 
         /// <summary>
         /// Reads a byte from a Cartridge's addressable memory space.
@@ -177,7 +175,6 @@ namespace MICE.Nintendo.Mappers
 
             var incomingValue = Convert.ToString(value, 2).PadLeft(8, '0');
             var existingValue = Convert.ToString(this.LoadRegister.Read(), 2).PadLeft(8, '0');
-            // Console.WriteLine($"Incoming: {incomingValue} Register: {existingValue}");
         }
 
         private void MapNametable(IMemorySegment memorySegment)
@@ -296,8 +293,6 @@ namespace MICE.Nintendo.Mappers
                 default:
                     throw new InvalidOperationException($"Unexpected CharacterROMBankMode: {this.CharacterRomBankMode}");
             }
-
-            // Console.WriteLine($"Switched Character ROM Bank: {this.CharacterRomBankMode}");
         }
 
         private void SetProgramRomBank(byte value)
@@ -319,8 +314,6 @@ namespace MICE.Nintendo.Mappers
                 default:
                     throw new InvalidOperationException($"Unexpected ProgramROMBankMode: {this.ProgramRomBankMode}");
             }
-
-            // Console.WriteLine($"Switched Program ROM Bank: {this.ProgramRomBankMode}");
         }
 
         private void SetNametableMirroring(byte controlByte)
@@ -342,8 +335,6 @@ namespace MICE.Nintendo.Mappers
                 default:
                     throw new InvalidOperationException($"Unexpected Nametable Mirror value: {this.Control & 0x3}");
             }
-
-            Console.WriteLine($"Set cartridge to new nametable mirroring mode: {this.cartridge.MirroringMode}");
         }
 
         private void ResetLoadRegister()

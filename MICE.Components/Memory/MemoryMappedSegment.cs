@@ -12,7 +12,6 @@ namespace MICE.Components.Memory
         public MemoryMappedSegment(int lowerIndex, int upperIndex, string name = "")
         {
             this.Range = new Range<int>(lowerIndex, upperIndex);
-
             this.Name = name;
         }
 

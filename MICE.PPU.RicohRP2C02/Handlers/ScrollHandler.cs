@@ -155,17 +155,12 @@ namespace MICE.PPU.RicohRP2C02.Handlers
         {
             // v: ....F.. ...EDCBA = t: ....F.. ...EDCBA
             this.internalRegisters.v = (ushort)((this.internalRegisters.v & 0xFBE0) | (this.internalRegisters.t & 0x041F));
-            // this.vCoarseXScroll = this.tCoarseXScroll;
-            // this.vNametable = this.tNametable;
         }
 
         public void CopyVerticalBits()
         {
             // v: IHGF.ED CBA..... = t: IHGF.ED CBA.....
             this.internalRegisters.v = (ushort)((this.internalRegisters.v & 0x841F) | (this.internalRegisters.t & 0x7be0));
-            // this.vCoarseYScroll = this.tCoarseYScroll;
-            // this.vFineYScroll = this.tFineYScroll;
-            // this.vNametable = this.tNametable;
         }
 
         // $2005/PPUSCROLL in some docs

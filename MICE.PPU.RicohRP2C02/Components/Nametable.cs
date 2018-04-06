@@ -15,7 +15,6 @@ namespace MICE.PPU.RicohRP2C02.Components
         public Nametable(int lowerIndex, int upperIndex, string name)
             : base(lowerIndex, upperIndex, name)
         {
-            //this.AttributeTable = new AttributeTable(new ArraySegment<byte>(this.Data, this.Data.Length - 64, this.Data.Length - (this.Data.Length - 64)));
         }
 
         public byte[] Data { get; set; } = new byte[0x2000];
@@ -30,14 +29,7 @@ namespace MICE.PPU.RicohRP2C02.Components
             var tile = workingTile;
 
             tile.PPUAddress = (ushort)(0x2000 + x + (y * Constants.NumberOfColumns));
-//            tile.Nametable = this.WhichNametableAmI();
             tile.Location = (x, y);
-//            tile.TileIndex = tileByte; //this.Data[tileX + (tileY * Constants.NumberOfColumns)];
-//            tile.TileAddress = (ushort)(registers.v & 0x0fff);
-
-           // var attrib = this.AttributeTable.GetAttribute(tile, registers.v);
-          //  tile.AttributeData = attrib.RawByte;
-          //  tile.AttributeAddress = attrib.Address;
 
             var colorIndex = this.GetColorIndex(tile, scrollHandler);
 
@@ -92,7 +84,5 @@ namespace MICE.PPU.RicohRP2C02.Components
             // Index into nametable memory, multiplying y by columns so it wraps down.
             return this.ReadByte(byteIndexX + (byteIndexY * Constants.NumberOfColumns));
         }
-
-        //private NametableAttribute GetPalette(int x, int y) => this.AttributeTable.GetAttribute(x, y);
     }
 }

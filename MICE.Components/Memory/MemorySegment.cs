@@ -12,7 +12,6 @@ namespace MICE.Components.Memory
         public MemorySegment(Range<int> memoryRange, string name)
         {
             this.Range = memoryRange;
-
             this.Name = name;
         }
 

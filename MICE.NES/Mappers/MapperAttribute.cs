@@ -9,9 +9,6 @@ namespace MICE.Nintendo.Mappers
         public string Name { get; private set; }
         public string Description { get; private set; }
 
-        public MapperAttribute(MemoryMapperIds id)
-        {
-            this.Id = id;
-        }
+        public MapperAttribute(MemoryMapperIds id) => this.Id = id;
     }
 }

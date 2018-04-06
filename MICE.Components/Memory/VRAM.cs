@@ -1,5 +1,4 @@
-﻿
-namespace MICE.Components.Memory
+﻿namespace MICE.Components.Memory
 {
     public class VRAM : RAM
     {

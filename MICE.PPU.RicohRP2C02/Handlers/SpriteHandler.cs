@@ -27,7 +27,7 @@ namespace MICE.PPU.RicohRP2C02.Handlers
             this.paletteHandler = paletteHandler;
         }
 
-        public int CurrentScanlineSpriteCount { get; private set; }
+        public int CurrentScanlineSpriteCount => this.currentScanlineSprites.Count;
 
         public bool IsSmallSprites
         {
@@ -74,14 +74,7 @@ namespace MICE.PPU.RicohRP2C02.Handlers
 
         public void EvaluateSpritesOnScanline(OAM oam, int scanline, int cycle)
         {
-            if (scanline == 193)
-            {
-
-            }
-
             this.currentScanlineSprites.Clear();
-
-            this.CurrentScanlineSpriteCount = 0;
 
             var spriteHeight = this.IsSmallSprites ? 8 : 16;
 
@@ -95,31 +88,15 @@ namespace MICE.PPU.RicohRP2C02.Handlers
                     continue;
                 }
 
-                if (spriteY != 0)
-                {
-
-                }
-
-                if (scanline >= 192 && scanline <= 200)
-                {
-
-                }
-
                 var newSprite = new Sprite(index, this.IsSmallSprites, this.IsSpritePatternTableAddress1000, oam);
                 newSprite.GatherPattern(spriteRow, this.ppuMemoryMap);
 
-                this.CurrentScanlineSpriteCount++;
                 this.currentScanlineSprites.Add(newSprite);
             }
         }
 
         public (byte, Sprite) GetSpritePixel(int x, int y, OAM primaryOAM)
         {
-            if (y == 192)
-            {
-
-            }
-
             if (x <= 8 && !this.DrawLeft8SpritePixels)
             {
                 return (0, null);
@@ -132,11 +109,6 @@ namespace MICE.PPU.RicohRP2C02.Handlers
                 if (!sprite.IsVisible(x))
                 {
                     continue;
-                }
-
-                if (!sprite.IsBehindBackground)
-                {
-
                 }
 
                 sprite.SetFinalPixel(x, y, this.ppuMemoryMap);

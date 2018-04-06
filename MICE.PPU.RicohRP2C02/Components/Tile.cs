@@ -1,15 +1,7 @@
-﻿using System.Drawing;
-
-namespace MICE.PPU.RicohRP2C02.Components
+﻿namespace MICE.PPU.RicohRP2C02.Components
 {
     public class Tile
     {
-        //public Tile(byte data, NametableAttribute attribute)
-        //{
-        //    this.PatternTableIndex = data;
-        //    this.Attribute = attribute;
-        //}
-
         public ushort PPUAddress { get; set; }
         public int Nametable { get; set; }
         public (int x, int y) Location { get; set; }

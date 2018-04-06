@@ -14,17 +14,9 @@ namespace MICE.Components.CPU
             this.Value = value
             ? (byte)(this.Value | (1 << index))
             : (byte)(this.Value & ~(1 << index));
-
-           // this.AfterWriteAction?.Invoke(null, this.Value);
         }
 
-        public bool GetBit(int bitNumber)
-        {
-            var value = (this.Value & (1 << bitNumber)) != 0;
-            //this.AfterReadAction?.Invoke(null, this.Value);
-
-            return value;
-        }
+        public bool GetBit(int bitNumber) => (this.Value & (1 << bitNumber)) != 0;
 
         public override void Write(byte value)
         {

@@ -2,7 +2,6 @@
 using MICE.Common.Interfaces;
 using MICE.PPU.RicohRP2C02.Components;
 using MICE.PPU.RicohRP2C02.Handlers;
-using System;
 
 namespace MICE.PPU.RicohRP2C02
 {
@@ -16,13 +15,6 @@ namespace MICE.PPU.RicohRP2C02
             public const int CyclesPerScanline = 341;
             public const int NTSCWidth = 256;
             public const int NTSCHeight = 224;
-        }
-
-        private byte registerLatch = 0;
-        public byte RegisterLatch
-        {
-            get => this.registerLatch;
-            set => this.registerLatch = value;
         }
 
         public RicohRP2C02(PPUMemoryMap memoryMap, PPURegisters registers, IMemoryMap cpuMemoryMap)
@@ -39,8 +31,8 @@ namespace MICE.PPU.RicohRP2C02
             this.PixelMuxer = new PixelMuxer(this.Registers);
         }
 
+        public byte RegisterLatch { get; set; }
         public bool IsPowered { get; private set; }
-
         public byte[] ScreenData { get; private set; } = new byte[256 * 240];
 
         /// <summary>
@@ -143,7 +135,7 @@ namespace MICE.PPU.RicohRP2C02
         /// </summary>
         public bool IsFrameEven => this.FrameNumber % 2 == 0;
 
-        public bool IsRenderingEnabled => this.BackgroundHandler.ShowBackground;
+        public bool IsRenderingEnabled => this.BackgroundHandler.ShowBackground || this.SpriteHandler.ShowSprites;
 
         public bool IsPreRenderLine => this.ScanLine == -1;
         public bool IsVisibleLine => this.ScanLine >= 0 && this.ScanLine <= 239;
@@ -178,7 +170,7 @@ namespace MICE.PPU.RicohRP2C02
                 }
                 else if (this.ScanLine == 261)
                 {
-                    this.HandleFinalScanline();
+                    this.ScanLine = -1;
                 }
             }
 
@@ -200,8 +192,7 @@ namespace MICE.PPU.RicohRP2C02
                 {
                     this.SecondaryOAM.Data.Clear(0xFF);
                 }
-
-                if (this.Cycle == 257 && (this.BackgroundHandler.ShowBackground || this.SpriteHandler.ShowSprites))
+                else if (this.Cycle == 257 && (this.BackgroundHandler.ShowBackground || this.SpriteHandler.ShowSprites))
                 {
                     this.SpriteHandler.EvaluateSpritesOnScanline(this.PrimaryOAM, this.ScanLine, this.Cycle);
                 }
@@ -211,8 +202,7 @@ namespace MICE.PPU.RicohRP2C02
             {
                 this.HandleVerticalBlankLines();
             }
-
-            if (this.ScanLine <= 240 && this.Cycle >= 257 && this.Cycle <= 320)
+            else if (this.ScanLine <= 240 && this.Cycle >= 257 && this.Cycle <= 320)
             {
                 this.Registers.OAMADDR.WriteInternal(0);
             }
@@ -287,6 +277,7 @@ namespace MICE.PPU.RicohRP2C02
                 this.MemoryMap.Write(this.InternalRegisters.v, value);
                 this.InternalRegisters.v += (ushort)this.VRAMAddressIncrement;
             };
+
             this.Registers.PPUDATA.ReadByteInsteadAction = (_, value) =>
             {
                 if (this.InternalRegisters.v >= 0x3F00 && this.InternalRegisters.v <= 0x3FFF)
@@ -372,11 +363,6 @@ namespace MICE.PPU.RicohRP2C02
             this.BackgroundHandler.ShowBackground && !this.IsFrameEven && this.ScanLine == 261
                 ? this.Cycle == 340
                 : this.Cycle == 341;
-
-        private void HandleFinalScanline()
-        {
-            this.ScanLine = -1;
-        }
 
         private void DrawPixel(int x, int y)
         {
