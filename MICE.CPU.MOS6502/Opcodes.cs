@@ -734,21 +734,54 @@ namespace MICE.CPU.MOS6502
         [MOS6502Opcode(0x6B, "ARR", AddressingModes.Immediate, timing: 2, length: 2)]
         public void ARR(OpcodeContainer container)
         {
-            if (CPU.CurrentCycle == 1399195)
-            {
+            // Thank you open source community - Mesen's version. No idea how this was determined from the limited docs...
+            var result = AddressingMode.GetAddressedValue(CPU, container);
+            var newA = (((CPU.Registers.A & result.Value) >> 1) | (CPU.IsCarry ? 0x80 : 0x00));
 
+            this.WriteByteToRegister(CPU.Registers.A, (byte)newA, S: true, Z: true);
+            CPU.IsCarry = false;
+            CPU.IsOverflowed = false;
+
+            if ((CPU.Registers.A & 0x40) != 0)
+            {
+                CPU.IsCarry = true;
             }
 
-            var result = AddressingMode.GetAddressedValue(CPU, container);
-            var andedValue = (CPU.Registers.A & result.Value);
-
-            andedValue >>= 1;
-
-            this.WriteByteToRegister(CPU.Registers.A, (byte)andedValue, S: true, Z: true);
-
-            CPU.IsOverflowed = CPU.Registers.A.GetBit(6) ^ CPU.Registers.A.GetBit(5);
-            CPU.IsCarry = CPU.Registers.A.GetBit(6);
+            if (((CPU.IsCarry ? 0x01 : 0x00) ^ ((CPU.Registers.A >> 5) & 0x01)) != 0)
+            {
+                CPU.IsOverflowed = true;
+            }
         }
+
+        [MOS6502Opcode(0xAB, "LAX", AddressingModes.Immediate, timing: 2, length: 2)]
+        public void LAX(OpcodeContainer container)
+        {
+            var result = AddressingMode.GetAddressedValue(CPU, container);
+
+            this.WriteByteToRegister(CPU.Registers.A, result.Value, S: true, Z: true);
+            this.WriteByteToRegister(CPU.Registers.X, result.Value, S: true, Z: true);
+        }
+
+        [MOS6502Opcode(0xCB, "AXS", AddressingModes.Immediate, timing: 2, length: 2)]
+        public void AXS(OpcodeContainer container)
+        {
+            var result = AddressingMode.GetAddressedValue(CPU, container);
+
+            byte newValue = (byte)(CPU.Registers.A & CPU.Registers.X);
+            newValue -= result.Value;
+
+            CPU.IsCarry = false;
+
+            if ((CPU.Registers.A & CPU.Registers.X) >= result.Value)
+            {
+                CPU.IsCarry = true;
+            }
+
+            this.WriteByteToRegister(CPU.Registers.X, newValue, S: true, Z: true);
+        }
+
+        [MOS6502Opcode(0xFF, "ISC", AddressingModes.AbsoluteX, timing: 7, length: 3)]
+        public void ISC(OpcodeContainer container) => throw new NotImplementedException();
 
         #endregion
 

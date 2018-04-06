@@ -18,7 +18,7 @@ namespace MICE.Nintendo
     {
         private static class Constants
         {
-            public const string DebugFile = @"C:\Emulators\NES\MICE - Trace.txt";
+            public const string DebugFile = @"G:\Emulators\NES\MICE - Trace.txt";
         }
 
         private long ppuTotalCycles = 0;
@@ -234,6 +234,8 @@ namespace MICE.Nintendo
             else if (opCodeName == "ANC") { opCodeName = "ANC*"; expectedSpace--; }
             else if (opCodeName == "ALR") { opCodeName = "ALR*"; expectedSpace--; }
             else if (opCodeName == "ARR") { opCodeName = "ARR*"; expectedSpace--; }
+            else if (opCodeName == "LAX") { opCodeName = "LAX*"; expectedSpace--; }
+            else if (opCodeName == "AXS") { opCodeName = "AXS*"; expectedSpace--; }
 
             var output = new StringBuilder($"{CPU.LastPC:X4}");
 
