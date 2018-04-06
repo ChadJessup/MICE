@@ -212,12 +212,6 @@ namespace MICE.CPU.MOS6502
             try
             {
                 this.CurrentOpcode = this.Opcodes[this.ReadNextByte()];
-
-                if (this.CurrentCycle == 1796933)
-                {
-
-                }
-
                 this.CurrentOpcode.Instruction(this.CurrentOpcode);
             }
             catch(Exception e)

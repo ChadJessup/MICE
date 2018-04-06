@@ -79,14 +79,17 @@ namespace MICE.CPU.MOS6502
         {
             // val = PEEK(PEEK((arg + X) % 256) + PEEK((arg + X + 1) % 256) * 256)
             var incompleteXAddress = CPU.ReadNextByte(incrementPC: false);
-            var baseAddress = (ushort)(incompleteXAddress + CPU.Registers.X);
-            baseAddress %= 256;
-            var addressWithX = CPU.ReadShortAt(baseAddress, incrementPC: false);
+            var baseAddress = (byte)(incompleteXAddress + CPU.Registers.X);
 
-            var arg = CPU.ReadNextByte();
-
-            var test = (CPU.ReadByteAt((byte)(arg + CPU.Registers.X), incrementPC: false) % 256) + CPU.ReadByteAt((byte)((arg + CPU.Registers.X + 1) % 256), incrementPC: false);
-            //CPU.ReadByteAt() * 256);
+            ushort addressWithX = 0x0000;
+            if (baseAddress == 0xFF)
+            {
+                addressWithX = (ushort)(CPU.ReadByteAt(0xFF, incrementPC: false) | CPU.ReadByteAt(0x00, incrementPC: false) << 8);
+            }
+            else
+            {
+                addressWithX = CPU.ReadShortAt(baseAddress, incrementPC: false);
+            }
 
             return getValue
                 ? new AddressingModeResult(CPU.ReadByteAt(addressWithX), incompleteXAddress, addressWithX, AreSamePage(addressWithX, baseAddress))
@@ -185,9 +188,9 @@ namespace MICE.CPU.MOS6502
                 case AddressingModes.Indirect:
                     return $"(${result.IntermediateAddress:X4}) @ ${result.Address:X4}";
                 case AddressingModes.IndirectY:
-                    return $"(${result.IntermediateAddress:X2}),Y @ ${result.Address:X4}";
+                    return $"(${result.IntermediateAddress:X2},Y) @ ${result.Address:X4}";
                 case AddressingModes.IndirectX:
-                    return $"(${result.IntermediateAddress:X2}),X @ ${result.Address:X4}";
+                    return $"(${result.IntermediateAddress:X2},X) @ ${result.Address:X4}";
                 case AddressingModes.ZeroPage:
                     return $"${result.Address:X2}";
                 case AddressingModes.ZeroPageX:

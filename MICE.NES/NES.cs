@@ -18,7 +18,7 @@ namespace MICE.Nintendo
     {
         private static class Constants
         {
-            public const string DebugFile = @"C:\Emulators\NES\MICE - Trace.txt";
+            public const string DebugFile = @"G:\Emulators\NES\MICE - Trace.txt";
         }
 
         private long ppuTotalCycles = 0;
