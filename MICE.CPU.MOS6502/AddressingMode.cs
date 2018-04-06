@@ -19,12 +19,12 @@ namespace MICE.CPU.MOS6502
 
         public static AddressingModeResult GetZeroPageX(MOS6502 CPU, bool getValue = true)
         {
-            var intermediateAddress = CPU.ReadNextByte(incrementPC: false);
+            var intermediateAddress = CPU.ReadNextByte(incrementPC: true);
             var zeroPageXAddress = (byte)(intermediateAddress + CPU.Registers.X);
 
             if (getValue)
             {
-                return new AddressingModeResult(CPU.ReadByteAt(zeroPageXAddress), intermediateAddress, zeroPageXAddress, null);
+                return new AddressingModeResult(CPU.ReadByteAt(zeroPageXAddress, incrementPC: false), intermediateAddress, zeroPageXAddress, null);
             }
 
             return new AddressingModeResult(0x00, intermediateAddress, zeroPageXAddress, null);
@@ -32,11 +32,11 @@ namespace MICE.CPU.MOS6502
 
         public static AddressingModeResult GetZeroPage(MOS6502 CPU, bool getValue = true)
         {
-            var zeroPageAddress = CPU.ReadNextByte(incrementPC: false);
+            var zeroPageAddress = CPU.ReadNextByte();
 
             if (getValue)
             {
-                return new AddressingModeResult(CPU.ReadByteAt(zeroPageAddress), zeroPageAddress, null);
+                return new AddressingModeResult(CPU.ReadByteAt(zeroPageAddress, incrementPC: false), zeroPageAddress, null);
             }
 
             return new AddressingModeResult(0x00, zeroPageAddress, null);
@@ -48,7 +48,7 @@ namespace MICE.CPU.MOS6502
 
             if (getValue)
             {
-                return new AddressingModeResult(CPU.ReadByteAt(absoluteAddress), absoluteAddress, null);
+                return new AddressingModeResult(CPU.ReadByteAt(absoluteAddress, incrementPC: false), absoluteAddress, null);
             }
 
             return new AddressingModeResult(0x00, absoluteAddress, null);
@@ -66,19 +66,29 @@ namespace MICE.CPU.MOS6502
 
         public static AddressingModeResult GetIndirectY(MOS6502 CPU, bool getValue = true)
         {
-            var incompleteYAddress = CPU.ReadNextByte(incrementPC: false);
-            var baseAddress = CPU.ReadShortAt(incompleteYAddress, incrementPC: false);
-            var addressWithY = (ushort)(baseAddress + CPU.Registers.Y);
+            var incompleteYAddress = CPU.ReadNextByte(incrementPC: true);
+
+            ushort addressWithoutY = 0x0000;
+            if (incompleteYAddress == 0xFF)
+            {
+                addressWithoutY = (ushort)(CPU.ReadByteAt(0xFF, incrementPC: false) | CPU.ReadByteAt(0x00, incrementPC: false) << 8);
+            }
+            else
+            {
+                addressWithoutY = CPU.ReadShortAt(incompleteYAddress, incrementPC: false);
+            }
+
+            var addressWithY = (ushort)(addressWithoutY + CPU.Registers.Y);
 
             return getValue
-                ? new AddressingModeResult(CPU.ReadByteAt(addressWithY), incompleteYAddress, addressWithY, AreSamePage(addressWithY, baseAddress))
-                : new AddressingModeResult(0x00, incompleteYAddress, addressWithY, AreSamePage(addressWithY, baseAddress));
+                ? new AddressingModeResult(CPU.ReadByteAt(addressWithY, incrementPC: false), addressWithoutY, addressWithY, AreSamePage(addressWithoutY, CPU.Registers.Y))
+                : new AddressingModeResult(0x00, addressWithoutY, addressWithY, AreSamePage(addressWithoutY, CPU.Registers.Y));
         }
 
         public static AddressingModeResult GetIndirectX(MOS6502 CPU, bool getValue = true)
         {
             // val = PEEK(PEEK((arg + X) % 256) + PEEK((arg + X + 1) % 256) * 256)
-            var incompleteXAddress = CPU.ReadNextByte(incrementPC: false);
+            var incompleteXAddress = CPU.ReadNextByte();
             var baseAddress = (byte)(incompleteXAddress + CPU.Registers.X);
 
             ushort addressWithX = 0x0000;
@@ -92,7 +102,7 @@ namespace MICE.CPU.MOS6502
             }
 
             return getValue
-                ? new AddressingModeResult(CPU.ReadByteAt(addressWithX), incompleteXAddress, addressWithX, AreSamePage(addressWithX, baseAddress))
+                ? new AddressingModeResult(CPU.ReadByteAt(addressWithX, incrementPC: false), incompleteXAddress, addressWithX, AreSamePage(addressWithX, baseAddress))
                 : new AddressingModeResult(0x00, incompleteXAddress, addressWithX, AreSamePage(addressWithX, baseAddress));
         }
 
@@ -102,7 +112,7 @@ namespace MICE.CPU.MOS6502
             var nextAddressWithX = (ushort)(nextAddress + CPU.Registers.X);
 
             return getValue
-                ? new AddressingModeResult(CPU.ReadByteAt(nextAddressWithX), nextAddress, nextAddressWithX, AreSamePage(nextAddress, nextAddressWithX))
+                ? new AddressingModeResult(CPU.ReadByteAt(nextAddressWithX, incrementPC: false), nextAddress, nextAddressWithX, AreSamePage(nextAddress, nextAddressWithX))
                 : new AddressingModeResult(0x00, nextAddress, nextAddressWithX, AreSamePage(nextAddress, nextAddressWithX));
         }
 
@@ -112,7 +122,7 @@ namespace MICE.CPU.MOS6502
             var nextAddressWithY = (ushort)(nextAddress + CPU.Registers.Y);
 
             return getValue
-                ? new AddressingModeResult(CPU.ReadByteAt(nextAddressWithY), nextAddress, nextAddressWithY, AreSamePage(nextAddress, nextAddressWithY))
+                ? new AddressingModeResult(CPU.ReadByteAt(nextAddressWithY, incrementPC: false), nextAddress, nextAddressWithY, AreSamePage(nextAddress, nextAddressWithY))
                 : new AddressingModeResult(0x00, nextAddress, nextAddressWithY, AreSamePage(nextAddress, nextAddressWithY));
         }
 
@@ -188,7 +198,7 @@ namespace MICE.CPU.MOS6502
                 case AddressingModes.Indirect:
                     return $"(${result.IntermediateAddress:X4}) @ ${result.Address:X4}";
                 case AddressingModes.IndirectY:
-                    return $"(${result.IntermediateAddress:X2},Y) @ ${result.Address:X4}";
+                    return $"(${result.IntermediateAddress:X2}),Y @ ${result.Address:X4}";
                 case AddressingModes.IndirectX:
                     return $"(${result.IntermediateAddress:X2},X) @ ${result.Address:X4}";
                 case AddressingModes.ZeroPage:

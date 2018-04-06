@@ -389,14 +389,9 @@ namespace MICE.CPU.MOS6502
         [MOS6502Opcode(0x91, "STA", AddressingModes.IndirectY, timing: 6, length: 2)]
         public void STA(OpcodeContainer container)
         {
-            if (container.AddressingMode == AddressingModes.IndirectX)
-            {
-
-            }
-
             var result = AddressingMode.GetAddressedOperand(CPU, container, getValue: false);
 
-            CPU.WriteByteAt(result.Address, CPU.Registers.A, incrementPC: true);
+            CPU.WriteByteAt(result.Address, CPU.Registers.A, incrementPC: false);
         }
 
         [MOS6502Opcode(0x86, "STX", AddressingModes.ZeroPage, timing: 3, length: 2)]
@@ -405,7 +400,7 @@ namespace MICE.CPU.MOS6502
         public void STX(OpcodeContainer container)
         {
             var result = AddressingMode.GetAddressedOperand(CPU, container, getValue: false);
-            CPU.WriteByteAt(result.Address, CPU.Registers.X);
+            CPU.WriteByteAt(result.Address, CPU.Registers.X, incrementPC: false);
         }
 
         [MOS6502Opcode(0x84, "STY", AddressingModes.ZeroPage, timing: 3, length: 2)]
@@ -414,7 +409,7 @@ namespace MICE.CPU.MOS6502
         public void STY(OpcodeContainer container)
         {
             var result = AddressingMode.GetAddressedOperand(CPU, container, getValue: false);
-            CPU.WriteByteAt(result.Address, CPU.Registers.Y);
+            CPU.WriteByteAt(result.Address, CPU.Registers.Y, incrementPC: false);
         }
 
         #endregion
@@ -790,7 +785,7 @@ namespace MICE.CPU.MOS6502
         [MOS6502Opcode(0xFF, "ISC", AddressingModes.AbsoluteX, timing: 7, length: 3, unofficial: true)]
         [MOS6502Opcode(0xFB, "ISC", AddressingModes.AbsoluteY, timing: 7, length: 3, unofficial: true)]
         [MOS6502Opcode(0xE3, "ISC", AddressingModes.IndirectX, timing: 8, length: 2, unofficial: true)]
-        [MOS6502Opcode(0xF3, "ISC", AddressingModes.IndirectY, timing: 8, length: 3, unofficial: true)]
+        [MOS6502Opcode(0xF3, "ISC", AddressingModes.IndirectY, timing: 8, length: 2, unofficial: true)]
         public void ISC(OpcodeContainer container)
         {
             var result = AddressingMode.GetAddressedOperand(CPU, container);
@@ -829,7 +824,7 @@ namespace MICE.CPU.MOS6502
         [MOS6502Opcode(0x3F, "RLA", AddressingModes.AbsoluteX, timing: 7, length: 3, unofficial: true)]
         [MOS6502Opcode(0x3B, "RLA", AddressingModes.AbsoluteY, timing: 7, length: 3, unofficial: true)]
         [MOS6502Opcode(0x23, "RLA", AddressingModes.IndirectX, timing: 8, length: 2, unofficial: true)]
-        [MOS6502Opcode(0x33, "RLA", AddressingModes.IndirectY, timing: 8, length: 3, unofficial: true)]
+        [MOS6502Opcode(0x33, "RLA", AddressingModes.IndirectY, timing: 8, length: 2, unofficial: true)]
         public void RLA(OpcodeContainer container)
         {
             var result = AddressingMode.GetAddressedOperand(CPU, container);
@@ -852,7 +847,7 @@ namespace MICE.CPU.MOS6502
         [MOS6502Opcode(0x5F, "SRE", AddressingModes.AbsoluteX, timing: 7, length: 3, unofficial: true)]
         [MOS6502Opcode(0x5B, "SRE", AddressingModes.AbsoluteY, timing: 7, length: 3, unofficial: true)]
         [MOS6502Opcode(0x43, "SRE", AddressingModes.IndirectX, timing: 8, length: 2, unofficial: true)]
-        [MOS6502Opcode(0x53, "SRE", AddressingModes.IndirectY, timing: 8, length: 3, unofficial: true)]
+        [MOS6502Opcode(0x53, "SRE", AddressingModes.IndirectY, timing: 8, length: 2, unofficial: true)]
         public void SRE(OpcodeContainer container)
         {
             var result = AddressingMode.GetAddressedOperand(CPU, container);
@@ -873,7 +868,7 @@ namespace MICE.CPU.MOS6502
         [MOS6502Opcode(0x7F, "RRA", AddressingModes.AbsoluteX, timing: 7, length: 3, unofficial: true)]
         [MOS6502Opcode(0x7B, "RRA", AddressingModes.AbsoluteY, timing: 7, length: 3, unofficial: true)]
         [MOS6502Opcode(0x63, "RRA", AddressingModes.IndirectX, timing: 8, length: 2, unofficial: true)]
-        [MOS6502Opcode(0x73, "RRA", AddressingModes.IndirectY, timing: 8, length: 3, unofficial: true)]
+        [MOS6502Opcode(0x73, "RRA", AddressingModes.IndirectY, timing: 8, length: 2, unofficial: true)]
         public void RRA(OpcodeContainer container)
         {
             var result = AddressingMode.GetAddressedOperand(CPU, container);
@@ -900,7 +895,7 @@ namespace MICE.CPU.MOS6502
         [MOS6502Opcode(0xDF, "DCP", AddressingModes.AbsoluteX, timing: 7, length: 3, unofficial: true)]
         [MOS6502Opcode(0xDB, "DCP", AddressingModes.AbsoluteY, timing: 7, length: 3, unofficial: true)]
         [MOS6502Opcode(0xC3, "DCP", AddressingModes.IndirectX, timing: 7, length: 2, unofficial: true)]
-        [MOS6502Opcode(0xD3, "DCP", AddressingModes.IndirectY, timing: 7, length: 3, unofficial: true)]
+        [MOS6502Opcode(0xD3, "DCP", AddressingModes.IndirectY, timing: 7, length: 2, unofficial: true)]
         public void DCP(OpcodeContainer container)
         {
             var result = AddressingMode.GetAddressedOperand(CPU, container);

@@ -178,6 +178,8 @@ namespace MICE.Nintendo
                     }
                     catch (Exception e)
                     {
+                        File.AppendAllText(Constants.DebugFile, NES.traceFileOutput.ToString());
+                        NES.traceFileOutput.Clear();
                     }
 
                     // TODO: Get RAW Screen data from PPU.

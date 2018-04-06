@@ -287,6 +287,7 @@ namespace MICE.CPU.MOS6502
             if (incrementPC)
             {
                 this.Registers.PC.Write(++pc);
+                this.Registers.PC.Write(++pc);
             }
 
             return value;
