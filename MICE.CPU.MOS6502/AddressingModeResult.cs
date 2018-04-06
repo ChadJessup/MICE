@@ -7,15 +7,15 @@
         {
         }
 
-        public AddressingModeResult(byte operand, ushort? intermediateAddress, ushort address, bool? samePage)
+        public AddressingModeResult(byte operandValue, ushort? intermediateAddress, ushort address, bool? samePage)
         {
-            this.Operand = operand;
+            this.OperandValue = operandValue;
             this.IntermediateAddress = intermediateAddress;
             this.Address = address;
             this.IsSamePage = samePage;
         }
 
-        public byte Operand;
+        public byte OperandValue;
         public ushort? IntermediateAddress;
         public ushort Address;
         public bool? IsSamePage;

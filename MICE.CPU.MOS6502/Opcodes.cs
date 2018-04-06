@@ -65,9 +65,9 @@ namespace MICE.CPU.MOS6502
         {
             var result = AddressingMode.GetAddressedOperand(CPU, container);
 
-            CPU.IsOverflowed = (result.Operand & 0x40) != 0;
-            CPU.IsNegative = (result.Operand & 0x80) != 0;
-            CPU.IsZero = (result.Operand & CPU.Registers.A) == 0;
+            CPU.IsOverflowed = (result.OperandValue & 0x40) != 0;
+            CPU.IsNegative = (result.OperandValue & 0x80) != 0;
+            CPU.IsZero = (result.OperandValue & CPU.Registers.A) == 0;
         }
 
         [MOS6502Opcode(0x09, "ORA", AddressingModes.Immediate, timing: 2, length: 2)]
@@ -82,7 +82,7 @@ namespace MICE.CPU.MOS6502
         {
             var result = AddressingMode.GetAddressedOperand(CPU, container);
 
-            CPU.Registers.A.Write((byte)(CPU.Registers.A | result.Operand));
+            CPU.Registers.A.Write((byte)(CPU.Registers.A | result.OperandValue));
 
             this.HandleNegative(CPU.Registers.A);
             this.HandleZero(CPU.Registers.A);
@@ -102,7 +102,7 @@ namespace MICE.CPU.MOS6502
         {
             var result = AddressingMode.GetAddressedOperand(CPU, container);
 
-            var newValue = CPU.Registers.A & result.Operand;
+            var newValue = CPU.Registers.A & result.OperandValue;
             this.WriteByteToRegister(CPU.Registers.A, (byte)newValue, S: true, Z: true);
 
             this.HandlePageBoundaryCrossed(container, result.IsSamePage);
@@ -127,8 +127,8 @@ namespace MICE.CPU.MOS6502
                     this.HandleZero(CPU.Registers.A);
                     break;
                 default:
-                    CPU.IsCarry = (result.Operand & 1) == 1;
-                    byte shiftedValue = (byte)(result.Operand >> 1);
+                    CPU.IsCarry = (result.OperandValue & 1) == 1;
+                    byte shiftedValue = (byte)(result.OperandValue >> 1);
                     CPU.WriteByteAt(result.Address, shiftedValue, incrementPC: false);
 
                     CPU.IsNegative = false;
@@ -147,9 +147,9 @@ namespace MICE.CPU.MOS6502
             var result = AddressingMode.GetAddressedOperand(CPU, container);
 
             var originalCarry = CPU.IsCarry ? 1 : 0;
-            var newCarry = (byte)(result.Operand & 1);
+            var newCarry = (byte)(result.OperandValue & 1);
 
-            var newValue = (byte)(originalCarry << 7 | result.Operand >> 1);
+            var newValue = (byte)(originalCarry << 7 | result.OperandValue >> 1);
             CPU.IsCarry = newCarry == 1;
 
             switch (container.AddressingMode)
@@ -176,22 +176,22 @@ namespace MICE.CPU.MOS6502
             var result = AddressingMode.GetAddressedOperand(CPU, container);
 
             byte originalCarry = (byte)(CPU.IsCarry ? 1 : 0);
-            CPU.IsCarry = (result.Operand & 0b10000000) == 0x80;
+            CPU.IsCarry = (result.OperandValue & 0b10000000) == 0x80;
 
-            result.Operand = (byte)(result.Operand << 1 | originalCarry);
+            result.OperandValue = (byte)(result.OperandValue << 1 | originalCarry);
 
             switch (container.AddressingMode)
             {
                 case AddressingModes.Accumulator:
-                    this.WriteByteToRegister(CPU.Registers.A, result.Operand, S: false, Z: false);
+                    this.WriteByteToRegister(CPU.Registers.A, result.OperandValue, S: false, Z: false);
                     break;
                 default:
-                    CPU.WriteByteAt(result.Address, result.Operand, incrementPC: false);
+                    CPU.WriteByteAt(result.Address, result.OperandValue, incrementPC: false);
                     break;
             }
 
-            this.HandleNegative(result.Operand);
-            this.HandleZero(result.Operand);
+            this.HandleNegative(result.OperandValue);
+            this.HandleZero(result.OperandValue);
         }
 
         [MOS6502Opcode(0x0A, "ASL", AddressingModes.Accumulator, timing: 2, length: 1)]
@@ -203,18 +203,18 @@ namespace MICE.CPU.MOS6502
         {
             var result = AddressingMode.GetAddressedOperand(CPU, container);
 
-            CPU.IsCarry = (result.Operand & 0b10000000) == 0b10000000;
-            result.Operand = (byte)(result.Operand << 1);
+            CPU.IsCarry = (result.OperandValue & 0b10000000) == 0b10000000;
+            result.OperandValue = (byte)(result.OperandValue << 1);
 
             if (container.AddressingMode == AddressingModes.Accumulator)
             {
-                this.WriteByteToRegister(CPU.Registers.A, result.Operand, S: true, Z: true);
+                this.WriteByteToRegister(CPU.Registers.A, result.OperandValue, S: true, Z: true);
             }
             else
             {
-                CPU.WriteByteAt(result.Address, result.Operand, incrementPC: false);
-                this.HandleNegative(result.Operand);
-                this.HandleZero(result.Operand);
+                CPU.WriteByteAt(result.Address, result.OperandValue, incrementPC: false);
+                this.HandleNegative(result.OperandValue);
+                this.HandleZero(result.OperandValue);
             }
         }
 
@@ -225,10 +225,10 @@ namespace MICE.CPU.MOS6502
         public void INC(OpcodeContainer container)
         {
             var result = AddressingMode.GetAddressedOperand(CPU, container);
-            CPU.WriteByteAt(result.Address, ++result.Operand, incrementPC: false);
+            CPU.WriteByteAt(result.Address, ++result.OperandValue, incrementPC: false);
 
-            this.HandleNegative(result.Operand);
-            this.HandleZero(result.Operand);
+            this.HandleNegative(result.OperandValue);
+            this.HandleZero(result.OperandValue);
         }
 
         [MOS6502Opcode(0xC6, "DEC", AddressingModes.ZeroPage, timing: 5, length: 2)]
@@ -238,11 +238,11 @@ namespace MICE.CPU.MOS6502
         public void DEC(OpcodeContainer container)
         {
             var result = AddressingMode.GetAddressedOperand(CPU, container);
-            result.Operand--;
-            CPU.WriteByteAt(result.Address, result.Operand, incrementPC: false);
+            result.OperandValue--;
+            CPU.WriteByteAt(result.Address, result.OperandValue, incrementPC: false);
 
-            this.HandleNegative(result.Operand);
-            this.HandleZero(result.Operand);
+            this.HandleNegative(result.OperandValue);
+            this.HandleZero(result.OperandValue);
         }
 
         [MOS6502Opcode(0x49, "EOR", AddressingModes.Immediate, timing: 2, length: 2)]
@@ -257,7 +257,7 @@ namespace MICE.CPU.MOS6502
         {
             var result = AddressingMode.GetAddressedOperand(CPU, container);
 
-            var newValue = CPU.Registers.A ^ result.Operand;
+            var newValue = CPU.Registers.A ^ result.OperandValue;
 
             this.WriteByteToRegister(CPU.Registers.A, (byte)newValue, S: true, Z: true);
         }
@@ -273,7 +273,7 @@ namespace MICE.CPU.MOS6502
         {
             var result = AddressingMode.GetAddressedOperand(CPU, container);
 
-            this.CompareValues(CPU.Registers.Y, result.Operand);
+            this.CompareValues(CPU.Registers.Y, result.OperandValue);
         }
 
         [MOS6502Opcode(0xE0, "CPX", AddressingModes.Immediate, timing: 2, length: 2)]
@@ -283,7 +283,7 @@ namespace MICE.CPU.MOS6502
         {
             var result = AddressingMode.GetAddressedOperand(CPU, container);
 
-            this.CompareValues(CPU.Registers.X, result.Operand);
+            this.CompareValues(CPU.Registers.X, result.OperandValue);
         }
 
         [MOS6502Opcode(0xC9, "CMP", AddressingModes.Immediate, timing: 2, length: 2)]
@@ -298,7 +298,7 @@ namespace MICE.CPU.MOS6502
         {
             var result = AddressingMode.GetAddressedOperand(CPU, container);
 
-            this.CompareValues(CPU.Registers.A, result.Operand, S: true, Z: true, C: true);
+            this.CompareValues(CPU.Registers.A, result.OperandValue, S: true, Z: true, C: true);
 
             this.HandlePageBoundaryCrossed(container, result.IsSamePage);
         }
@@ -315,7 +315,7 @@ namespace MICE.CPU.MOS6502
         public void LDX(OpcodeContainer container)
         {
             var result = AddressingMode.GetAddressedOperand(CPU, container);
-            this.WriteByteToRegister(CPU.Registers.X, result.Operand, S: true, Z: true);
+            this.WriteByteToRegister(CPU.Registers.X, result.OperandValue, S: true, Z: true);
         }
 
         [MOS6502Opcode(0xA4, "LDY", AddressingModes.ZeroPage, timing: 3, length: 2)]
@@ -326,7 +326,7 @@ namespace MICE.CPU.MOS6502
         public void LDY(OpcodeContainer container)
         {
             var result = AddressingMode.GetAddressedOperand(CPU, container);
-            this.WriteByteToRegister(CPU.Registers.Y, result.Operand, S: true, Z: true);
+            this.WriteByteToRegister(CPU.Registers.Y, result.OperandValue, S: true, Z: true);
 
             this.HandlePageBoundaryCrossed(container, result.IsSamePage);
         }
@@ -342,7 +342,7 @@ namespace MICE.CPU.MOS6502
         public void LDA(OpcodeContainer container)
         {
             var result = AddressingMode.GetAddressedOperand(CPU, container);
-            this.WriteByteToRegister(CPU.Registers.A, result.Operand, S: true, Z: true);
+            this.WriteByteToRegister(CPU.Registers.A, result.OperandValue, S: true, Z: true);
 
             this.HandlePageBoundaryCrossed(container, result.IsSamePage);
         }
@@ -681,15 +681,8 @@ namespace MICE.CPU.MOS6502
         public void ADC(OpcodeContainer container)
         {
             var result = AddressingMode.GetAddressedOperand(CPU, container);
-
-            var originalValue = CPU.Registers.A.Read();
-            var sum = originalValue + result.Operand + (CPU.IsCarry ? 1 : 0);
-
-            CPU.IsCarry = sum >> 8 != 0;
-
-            this.WriteByteToRegister(CPU.Registers.A, (byte)sum, S: true, Z: true);
+            ADD(container, result.OperandValue);
             this.HandlePageBoundaryCrossed(container, result.IsSamePage);
-            this.HandleOverflow(originalValue, result.Operand, (byte)sum);
         }
 
         [MOS6502Opcode(0xE9, "SBC", AddressingModes.Immediate, timing: 2, length: 2)]
@@ -705,16 +698,16 @@ namespace MICE.CPU.MOS6502
         {
             var result = AddressingMode.GetAddressedOperand(CPU, container);
 
-            result.Operand = (byte)(~result.Operand);
+            result.OperandValue = (byte)(~result.OperandValue);
 
             var originalValue = CPU.Registers.A.Read();
-            var sum = originalValue + result.Operand + (CPU.IsCarry ? 1 : 0);
+            var sum = originalValue + result.OperandValue + (CPU.IsCarry ? 1 : 0);
 
             CPU.IsCarry = sum >> 8 != 0;
 
             this.WriteByteToRegister(CPU.Registers.A, (byte)sum, S: true, Z: true);
             this.HandlePageBoundaryCrossed(container, result.IsSamePage);
-            this.HandleOverflow(originalValue, result.Operand, (byte)sum);
+            this.HandleOverflow(originalValue, result.OperandValue, (byte)sum);
         }
 
         #endregion
@@ -727,7 +720,7 @@ namespace MICE.CPU.MOS6502
         {
             var result = AddressingMode.GetAddressedOperand(CPU, container);
 
-            this.WriteByteToRegister(CPU.Registers.A, (byte)(CPU.Registers.A & result.Operand), S: true, Z: true);
+            this.WriteByteToRegister(CPU.Registers.A, (byte)(CPU.Registers.A & result.OperandValue), S: true, Z: true);
             CPU.IsCarry = (CPU.Registers.A & 0x80) != 0;
         }
 
@@ -736,7 +729,7 @@ namespace MICE.CPU.MOS6502
         {
             var result = AddressingMode.GetAddressedOperand(CPU, container);
 
-            var andedValue = (CPU.Registers.A & result.Operand);
+            var andedValue = (CPU.Registers.A & result.OperandValue);
             CPU.IsCarry = (andedValue & 0x01) != 0;
 
             andedValue >>= 1;
@@ -748,7 +741,7 @@ namespace MICE.CPU.MOS6502
         {
             // Thank you open source community - Mesen's version. No idea how this was determined from the limited docs...
             var result = AddressingMode.GetAddressedOperand(CPU, container);
-            var newA = (((CPU.Registers.A & result.Operand) >> 1) | (CPU.IsCarry ? 0x80 : 0x00));
+            var newA = (((CPU.Registers.A & result.OperandValue) >> 1) | (CPU.IsCarry ? 0x80 : 0x00));
 
             this.WriteByteToRegister(CPU.Registers.A, (byte)newA, S: true, Z: true);
             CPU.IsCarry = false;
@@ -776,8 +769,8 @@ namespace MICE.CPU.MOS6502
         {
             var result = AddressingMode.GetAddressedOperand(CPU, container);
 
-            this.WriteByteToRegister(CPU.Registers.A, result.Operand, S: true, Z: true);
-            this.WriteByteToRegister(CPU.Registers.X, result.Operand, S: true, Z: true);
+            this.WriteByteToRegister(CPU.Registers.A, result.OperandValue, S: true, Z: true);
+            this.WriteByteToRegister(CPU.Registers.X, result.OperandValue, S: true, Z: true);
         }
 
         [MOS6502Opcode(0xCB, "AXS", AddressingModes.Immediate, timing: 2, length: 2, unofficial: true)]
@@ -786,11 +779,11 @@ namespace MICE.CPU.MOS6502
             var result = AddressingMode.GetAddressedOperand(CPU, container);
 
             byte newValue = (byte)(CPU.Registers.A & CPU.Registers.X);
-            newValue -= result.Operand;
+            newValue -= result.OperandValue;
 
             CPU.IsCarry = false;
 
-            if ((CPU.Registers.A & CPU.Registers.X) >= result.Operand)
+            if ((CPU.Registers.A & CPU.Registers.X) >= result.OperandValue)
             {
                 CPU.IsCarry = true;
             }
@@ -821,11 +814,11 @@ namespace MICE.CPU.MOS6502
         {
             var result = AddressingMode.GetAddressedOperand(CPU, container);
 
-            CPU.IsCarry = (result.Operand & 0x80) != 0;
+            CPU.IsCarry = (result.OperandValue & 0x80) != 0;
             CPU.IsNegative = false;
             CPU.IsZero = false;
 
-            byte shifted = (byte)(result.Operand << 1);
+            byte shifted = (byte)(result.OperandValue << 1);
             this.HandleNegative(shifted);
             this.HandleZero(shifted);
 
@@ -843,6 +836,17 @@ namespace MICE.CPU.MOS6502
         public void RLA(OpcodeContainer container)
         {
             var result = AddressingMode.GetAddressedOperand(CPU, container);
+
+            byte oldCarry = (byte)(CPU.IsCarry ? 0x0b00000001 : 0x0);
+            CPU.IsCarry = (result.OperandValue & 0b10000000) != 0;
+
+            byte shifted = (byte)(result.OperandValue << 1 | oldCarry);
+            this.HandleNegative(shifted);
+            this.HandleZero(shifted);
+
+            this.WriteByteToRegister(CPU.Registers.A, (byte)(CPU.Registers.A & shifted), S: true, Z: true);
+
+            CPU.WriteByteAt(result.Address, shifted, incrementPC: false);
         }
 
         [MOS6502Opcode(0x47, "SRE", AddressingModes.ZeroPage, timing: 5, length: 2, unofficial: true)]
@@ -855,6 +859,15 @@ namespace MICE.CPU.MOS6502
         public void SRE(OpcodeContainer container)
         {
             var result = AddressingMode.GetAddressedOperand(CPU, container);
+
+            CPU.IsCarry = (result.OperandValue & 0b00000001) != 0;
+
+            var shifted = (byte)(result.OperandValue >> 1);
+            this.HandleNegative(shifted);
+            this.HandleZero(shifted);
+
+            this.WriteByteToRegister(CPU.Registers.A, (byte)(CPU.Registers.A ^ shifted), S: true, Z: true);
+            CPU.WriteByteAt(result.Address, shifted, incrementPC: false);
         }
 
         [MOS6502Opcode(0x67, "RRA", AddressingModes.ZeroPage, timing: 5, length: 2, unofficial: true)]
@@ -867,6 +880,13 @@ namespace MICE.CPU.MOS6502
         public void RRA(OpcodeContainer container)
         {
             var result = AddressingMode.GetAddressedOperand(CPU, container);
+
+            var oldCarry = CPU.IsCarry;
+            CPU.IsCarry = (result.OperandValue & 0b00000001) != 0;
+            var shifted = (byte)(result.OperandValue >> 1 | (oldCarry ? 0b1000000 : 0x00));
+            this.ADD(container, shifted);
+
+            CPU.WriteByteAt(result.Address, shifted, incrementPC: false);
         }
 
         [MOS6502Opcode(0x87, "SAX", AddressingModes.ZeroPage, timing: 5, length: 2, unofficial: true)]
@@ -903,6 +923,17 @@ namespace MICE.CPU.MOS6502
         }
 
         #endregion
+
+        private void ADD(OpcodeContainer container, byte operand)
+        {
+            var originalValue = CPU.Registers.A.Read();
+            var sum = originalValue + operand + (CPU.IsCarry ? 1 : 0);
+
+            CPU.IsCarry = sum >> 8 != 0;
+
+            this.WriteByteToRegister(CPU.Registers.A, (byte)sum, S: true, Z: true);
+            this.HandleOverflow(originalValue, operand, (byte)sum);
+        }
 
         private void HandleNegative(byte operand) => CPU.IsNegative = operand >= 0x80;
 

@@ -194,7 +194,7 @@ namespace MICE.CPU.MOS6502
                 case AddressingModes.Absolute:
                     return $"${result.Address:X4}";
                 case AddressingModes.Immediate:
-                    return $"#${result.Operand:X2}";
+                    return $"#${result.OperandValue:X2}";
                 default:
                     return $"0x{result.Address:X4}";
             }
