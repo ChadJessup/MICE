@@ -1,18 +1,19 @@
 ﻿using MICE.Common.Interfaces;
 using MICE.Common.Misc;
+using MICE.Components.CPU;
 using MICE.Components.Memory;
 using MICE.Nintendo.Handlers;
-using MICE.CPU.MOS6502;
+using MICE.Nintendo.Interfaces;
 using MICE.PPU.RicohRP2C02;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using MICE.Components.CPU;
 
 namespace MICE.Nintendo
 {
     /// <summary>
-    /// As basic of a memory map as possible, testing out speed over readability/maintainability.
+    /// As basic of a memory map as possible, with the existing API.
+    /// Testing out speed over readability/maintainability.
     /// </summary>
     public class NESRawMemoryMap : IMemoryMap, IMemorySegment
     {
@@ -25,9 +26,9 @@ namespace MICE.Nintendo
         private static class MemoryRanges
         {
             // http://nesdev.com/NESDoc.pdf - Figure 2-3 CPU memory map
-            public static Range<int> ZeroPage = new Range<int>(0x0000, 0x00FF);
-            public static Range<int> Stack = new Range<int>(0x0100, 0x01FF);
-            public static Range<int> RAM = new Range<int>(0x0200, 0x07FF);
+            public static Range<int> ZeroPage = new Range<int>(0x0000, 0x0100);
+            public static Range<int> Stack = new Range<int>(0x0100, 0x0200);
+            public static Range<int> RAM = new Range<int>(0x0200, 0x0800);
 
             /// Above mirrored... until 0x1FFF...
 
@@ -35,11 +36,13 @@ namespace MICE.Nintendo
 
             // Expansion Memory @ 0x4020 - 0x5FFF
 
-            public static Range<int> SRAM = new Range<int>(0x6000, 0x7FFF);
-
+            public static Range<int> SRAM = new Range<int>(0x6000, 0x8000);
 
             public static Range<int> ProgramRomLowerBank = new Range<int>(0x8000, 0xBFFF);
             public static Range<int> ProgramRomUpperBank = new Range<int>(0xC000, 0xFFFF);
+
+            public static Range<int> Controller1 = new Range<int>(4016, 4016);
+            public static Range<int> Controller2 = new Range<int>(4017, 4017);
         }
 
         private static class PPURegisterAddresses
@@ -65,11 +68,13 @@ namespace MICE.Nintendo
         private readonly PPURegisters ppuRegisters;
         private readonly InputHandler inputHandler;
 
-        // These memory segments are asked for specifically by the NES system 
-        private SRAM sram;
+        // These memory segments are asked for specifically by the NES system
         private ExternalFacade prgROMLowerBank = null;
         private ExternalFacade prgROMUpperBank = null;
         private CPU.MOS6502.Stack stack;
+        private SRAM sram;
+        private INESInput Controller1;
+        private INESInput Controller2;
 
         public NESRawMemoryMap(PPURegisters ppuRegisters, InputHandler inputHandler) : base()
         {
@@ -101,25 +106,32 @@ namespace MICE.Nintendo
 
         public byte ReadByte(int index)
         {
-            if (MemoryRanges.ProgramRomUpperBank.IsInRange(index))
+            try
             {
-                return this.prgROMUpperBank.ReadByte(index);
+                if (MemoryRanges.ProgramRomUpperBank.IsInRange(index))
+                {
+                    return this.prgROMUpperBank.ReadByte(this.GetOffset(MemoryRanges.ProgramRomUpperBank, index));
+                }
+                else if (MemoryRanges.ProgramRomLowerBank.IsInRange(index))
+                {
+                    return this.prgROMLowerBank.ReadByte(this.GetOffset(MemoryRanges.ProgramRomLowerBank, index));
+                }
+                else if (this.ppuRegisterLookup.ContainsKey(index))
+                {
+                    return this.ppuRegisterLookup[index].Read();
+                }
+                else if (MemoryRanges.ZeroPage.IsInRange(index))
+                {
+                    return this.ZeroPage.Span[index];
+                }
+                else if (MemoryRanges.RAM.IsInRange(index))
+                {
+                    return this.RAM.Span[this.GetOffset(MemoryRanges.RAM, index)];
+                }
             }
-            else if (MemoryRanges.ProgramRomLowerBank.IsInRange(index))
+            catch (Exception e)
             {
-                return this.prgROMLowerBank.ReadByte(index);
-            }
-            else if (this.ppuRegisterLookup.ContainsKey(index))
-            {
-                return this.ppuRegisterLookup[index].Read();
-            }
-            else if (MemoryRanges.ZeroPage.IsInRange(index))
-            {
-                return this.ZeroPage.Span[index];
-            }
-            else if (MemoryRanges.RAM.IsInRange(index))
-            {
-                return this.RAM.Span[this.GetOffset(MemoryRanges.RAM, index)];
+
             }
 
             switch (index)
@@ -136,7 +148,7 @@ namespace MICE.Nintendo
 
             throw new NotImplementedException();
         }
-        
+
         public ushort ReadShort(int index)
         {
             if (MemoryRanges.ProgramRomUpperBank.IsInRange(index))
@@ -163,21 +175,36 @@ namespace MICE.Nintendo
 
         public void Write(int index, byte value)
         {
-            if (MemoryRanges.RegisterRanges.IsInRange(index))
+            try
             {
-                this.WriteRegister(index, value);
+                if (MemoryRanges.RegisterRanges.IsInRange(index))
+                {
+                    this.WriteRegister(index, value);
+                }
+                else if (MemoryRanges.ZeroPage.IsInRange(index))
+                {
+                    this.ZeroPage.Span[this.GetOffset(MemoryRanges.ZeroPage, index)] = value;
+                }
+                else if (MemoryRanges.RAM.IsInRange(index))
+                {
+                    this.RAM.Span[this.GetOffset(MemoryRanges.RAM, index)] = value;
+                }
+                else if (MemoryRanges.ProgramRomUpperBank.IsInRange(index))
+                {
+                    this.prgROMUpperBank.Write(this.GetOffset(MemoryRanges.RAM, index), value);
+                }
+                else if (MemoryRanges.ProgramRomLowerBank.IsInRange(index))
+                {
+                    this.prgROMLowerBank.Write(this.GetOffset(MemoryRanges.RAM, index), value);
+                }
+                else
+                {
+                    throw new NotImplementedException();
+                }
             }
-            else if (MemoryRanges.ZeroPage.IsInRange(index))
+            catch (Exception e)
             {
-                this.ZeroPage.Span[this.GetOffset(MemoryRanges.ZeroPage, index)] = value;
-            }
-            else if (MemoryRanges.RAM.IsInRange(index))
-            {
-                this.RAM.Span[this.GetOffset(MemoryRanges.RAM, index)] = value;
-            }
-            else
-            {
-                throw new NotImplementedException();
+
             }
         }
 
@@ -205,9 +232,21 @@ namespace MICE.Nintendo
         {
             this.ZeroPage = this.GetMemory(MemoryRanges.ZeroPage);
             this.RAM = this.GetMemory(MemoryRanges.RAM);
+
+            this.Controller1 = this.inputHandler.GetController1(0x4016, 0x4016, "Control Input 1");
+            this.Controller2 = this.inputHandler.GetController2(0x4017, 0x4017, "Control Input 2");
+
         }
 
-        private int GetOffset(Range<int> range, int index) => index - range.Min - 1;
+        private int GetOffset(Range<int> range, int index)
+        {
+            if (range.Min == 0)
+            {
+                return index;
+            }
+
+            return index - range.Min;
+        }
 
         private Memory<byte> GetMemory(Range<int> range) => new Memory<byte>(this.memory, range.Min, range.Max - range.Min);
 
@@ -233,6 +272,7 @@ namespace MICE.Nintendo
             return (T)(IMemorySegment)this;
         }
 
+        // TODO: How about some base classes Chad?  No need to interface it all to hell.
         public int Count => throw new NotImplementedException();
         public string Name => throw new NotImplementedException();
         public void Clear() => throw new NotImplementedException();
