@@ -6,7 +6,7 @@ namespace MICE.Common.Interfaces
     /// <summary>
     /// Interface that represents memory that is mapped to various memory segments.
     /// </summary>
-    public interface IMemoryMap
+    public interface IMemoryMap : ICollection<IMemorySegment>
     {
         ushort ReadShort(int index);
         byte ReadByte(int index);

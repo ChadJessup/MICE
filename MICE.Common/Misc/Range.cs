@@ -26,7 +26,7 @@ namespace MICE.Common.Misc
         public override int GetHashCode() => this.min.GetHashCode() + this.max.GetHashCode();
         public override bool Equals(object obj)
         {
-            if(!(obj is Range<T>))
+            if (!(obj is Range<T>))
             {
                 return false;
             }
@@ -37,5 +37,10 @@ namespace MICE.Common.Misc
         }
 
         public override string ToString() => $"Min: 0x{this.min:X4} Max: 0x{this.max:X4}";
+
+        public bool IsInRange(int index)
+        {
+            return this.min.CompareTo(index) <= 0 && this.max.CompareTo(index) >= 0;
+        }
     }
 }

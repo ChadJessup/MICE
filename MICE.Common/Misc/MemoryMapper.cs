@@ -6,7 +6,7 @@ using System.Linq;
 
 namespace MICE.Common.Misc
 {
-    public class MemoryMapper : ICollection<IMemorySegment>, IMemoryMap
+    public class MemoryMapper : IMemoryMap
     {
         private Dictionary<int, IMemorySegment> memorySegmentCache = new Dictionary<int, IMemorySegment>();
 

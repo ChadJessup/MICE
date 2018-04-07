@@ -9,6 +9,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="System.Memory" Version="4.5.0-preview1-26216-02" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\MICE.Common\MICE.Common.csproj" />
     <ProjectReference Include="..\MICE.Components\MICE.Components.csproj" />
   </ItemGroup>

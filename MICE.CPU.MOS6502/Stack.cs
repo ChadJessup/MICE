@@ -16,8 +16,13 @@ namespace MICE.CPU.MOS6502
             public const int StackPointerStart = 0xFF;
         }
 
+        public Stack(Range<int> range, string name)
+            : base(range, name)
+        {
+        }
+
         public Stack(int lowerIndex, int upperIndex, string name)
-            : base(new Range<int>(lowerIndex, upperIndex), name)
+            : this(new Range<int>(lowerIndex, upperIndex), name)
         {
         }
 

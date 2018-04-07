@@ -35,7 +35,7 @@ namespace MICE.Nintendo
         public ControlBus ControlBus { get; } = new ControlBus();
 
         public RicohRP2C02 PPU { get; private set; }
-        public NESMemoryMap CPUMemoryMap { get; private set; }
+        public IMemoryMap CPUMemoryMap { get; private set; }
 
         public NESCartridge Cartridge { get; private set; }
         public Ricoh2A03 CPU { get; private set; }
@@ -61,7 +61,7 @@ namespace MICE.Nintendo
             }
 
             var ppuRegisters = new PPURegisters();
-            this.CPUMemoryMap = new NESMemoryMap(ppuRegisters, this.InputHandler);
+            this.CPUMemoryMap = new NESRawMemoryMap(ppuRegisters, this.InputHandler);
             this.PPU = new RicohRP2C02(new PPUMemoryMap(), ppuRegisters, this.CPUMemoryMap);
 
             this.PPU.Registers.OAMDMA.AfterWriteAction = this.DMATransfer;
@@ -81,8 +81,8 @@ namespace MICE.Nintendo
             this.CPUMemoryMap.GetMemorySegment<SRAM>("SRAM").AttachHandler(this.Cartridge.Mapper);
 
             // Various parts of a cartridge are mapped into the NES's CPU memory map.
-            this.CPUMemoryMap.GetMemorySegment<External>("PRG-ROM Lower Bank").AttachHandler(this.Cartridge.Mapper);
-            this.CPUMemoryMap.GetMemorySegment<External>("PRG-ROM Upper Bank").AttachHandler(this.Cartridge.Mapper);
+            this.CPUMemoryMap.GetMemorySegment<IExternal>("PRG-ROM Lower Bank").AttachHandler(this.Cartridge.Mapper);
+            this.CPUMemoryMap.GetMemorySegment<IExternal>("PRG-ROM Upper Bank").AttachHandler(this.Cartridge.Mapper);
 
             // Various parts of a cartridge are mapped into the NES's PPU memory map.
             this.PPU.MemoryMap.GetMemorySegment<PatternTable>("Pattern Table 0").AttachHandler(this.Cartridge.Mapper);

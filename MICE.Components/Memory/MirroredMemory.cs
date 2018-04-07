@@ -8,13 +8,13 @@ namespace MICE.Components.Memory
 {
     public class MirroredMemory : MemorySegment
     {
-        private readonly MemoryMapper memoryMapper;
+        private readonly IMemoryMap memoryMapper;
         private readonly int moduloValue;
         private List<IMemorySegment> realMemorySegments = new List<IMemorySegment>();
         private Dictionary<int, IMemorySegment> cachedMemorySegments = new Dictionary<int, IMemorySegment>();
         private Range<int> mirroredRange;
 
-        public MirroredMemory(int lowerIndex, int upperIndex, int mirroredLowerIndex, int mirroredUpperIndex, MemoryMapper memoryMapper, string name)
+        public MirroredMemory(int lowerIndex, int upperIndex, int mirroredLowerIndex, int mirroredUpperIndex, IMemoryMap memoryMapper, string name)
             : base(new Range<int>(lowerIndex, upperIndex), name)
         {
             this.mirroredRange = new Range<int>(mirroredLowerIndex, mirroredUpperIndex);

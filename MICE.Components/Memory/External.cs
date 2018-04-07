@@ -4,7 +4,7 @@ using System;
 
 namespace MICE.Components.Memory
 {
-    public class External : MemorySegment
+    public class External : MemorySegment, IExternal
     {
         private IExternalHandler mapper;
 
