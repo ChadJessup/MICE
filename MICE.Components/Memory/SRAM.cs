@@ -5,7 +5,7 @@ namespace MICE.Components.Memory
 {
     public class SRAM : External, ISRAM
     {
-        public SRAM(Range<int> range, string name)
+        public SRAM(Range range, string name)
             : base(range.Min, range.Max, name)
         {
         }

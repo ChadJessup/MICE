@@ -16,7 +16,7 @@ namespace MICE.Common.Misc
             throw new NotImplementedException();
         }
 
-        public void BulkTransfer(ushort startAddress, Array destinationArray, int destinationIndex, int size)
+        public void BulkTransfer(ushort startAddress, Span<byte> destinationArray, int destinationIndex, int size)
         {
             throw new NotImplementedException();
         }

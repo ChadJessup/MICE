@@ -9,7 +9,7 @@ namespace MICE.Nintendo.Components
     {
         private int readCount = 0;
 
-        public KeyboardController(Range<int> memoryRange, string name)
+        public KeyboardController(Range memoryRange, string name)
             : base(memoryRange, name)
         {
         }
@@ -62,6 +62,6 @@ namespace MICE.Nintendo.Components
         public override byte[] GetBytes() => throw new NotImplementedException();
         public override ushort ReadShort(int index) => throw new NotImplementedException();
         public override void Write(int index, ushort value) => throw new NotImplementedException();
-        public override void CopyBytes(ushort startAddress, Array destination, int destinationIndex, int length) => throw new NotImplementedException();
+        public override void CopyBytes(ushort startAddress, Span<byte> destination, int destinationIndex, int length) => throw new NotImplementedException();
     }
 }

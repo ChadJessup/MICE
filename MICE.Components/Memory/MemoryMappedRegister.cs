@@ -23,10 +23,6 @@ namespace MICE.Components.Memory
         public Func<int?, T, byte> ReadByteInsteadAction { get; set; }
         public Func<int?, T, ushort> ReadShortInsteadAction { get; set; }
 
-        public override void CopyBytes(ushort startAddress, Array destination, int destinationIndex, int length) => throw new NotImplementedException();
-
-        public override int GetOffsetInSegment(int index) => throw new System.NotImplementedException();
-
         public T Read() => this.mappedRegister.Read();
         public override byte ReadByte(int index) => (byte)(object)this.mappedRegister.Read();
         public override ushort ReadShort(int index) => (ushort)(object)this.mappedRegister.Read();
@@ -45,5 +41,8 @@ namespace MICE.Components.Memory
             var convertedType = (T)Convert.ChangeType(value, typeof(T));
             this.mappedRegister.Write(convertedType);
         }
+
+        public override void CopyBytes(ushort startAddress, Span<byte> destination, int destinationIndex, int length) => throw new NotImplementedException();
+        public override int GetOffsetInSegment(int index) => throw new NotImplementedException();
     }
 }

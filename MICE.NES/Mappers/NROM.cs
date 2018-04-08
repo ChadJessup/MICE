@@ -165,7 +165,7 @@ namespace MICE.Nintendo.Mappers
             bytes[arrayOffset] = value;
         }
 
-        public override void CopyBytes(ushort startAddress, Array destination, int destinationIndex, int length) => throw new NotImplementedException();
+        public override void CopyBytes(ushort startAddress, Span<byte> destination, int destinationIndex, int length) => throw new NotImplementedException();
         public override void Write(int index, ushort value) => throw new NotImplementedException();
     }
 }

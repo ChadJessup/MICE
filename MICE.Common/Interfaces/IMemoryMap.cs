@@ -13,6 +13,6 @@ namespace MICE.Common.Interfaces
         void Write(int index, byte value);
         T GetMemorySegment<T>(string segmentName) where T : IMemorySegment;
         IEnumerable<IMemorySegment> GetMemorySegments();
-        void BulkTransfer(ushort startAddress, Array destinationArray, int destinationIndex, int size);
+        void BulkTransfer(ushort startAddress, Span<byte> destinationArray, int destinationIndex, int size);
     }
 }

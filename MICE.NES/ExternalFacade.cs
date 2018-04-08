@@ -7,17 +7,17 @@ namespace MICE.Nintendo
     public class ExternalFacade : IExternal
     {
         private readonly IMemoryMap memoryMap;
-        private readonly Range<int> range;
+        private readonly Range range;
         private IExternalHandler mapper;
 
-        public ExternalFacade(IMemoryMap memoryMap, Range<int> range, string name)
+        public ExternalFacade(IMemoryMap memoryMap, Range range, string name)
         {
             this.memoryMap = memoryMap;
             this.range = range;
             this.Name = name;
         }
 
-        public Range<int> Range => this.range;
+        public Range Range => this.range;
 
         public string Name { get; private set; }
 
@@ -36,28 +36,12 @@ namespace MICE.Nintendo
         public void Write(int index, byte value) => this.mapper.Write(index, value);
         public void Write(int index, ushort value) => this.mapper.Write(index, value);
 
-        public bool ContainsIndex(int index)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void CopyBytes(ushort startAddress, Array destination, int destinationIndex, int length)
-        {
-            throw new NotImplementedException();
-        }
-
-        public byte[] GetBytes()
-        {
-            throw new NotImplementedException();
-        }
-
         public int GetOffsetInSegment(int index) => index - this.range.Min;
-
-        public Range<int> GetRange()
-        {
-            throw new NotImplementedException();
-        }
-
         public bool IsIndexInRange(int index) => this.range.IsInRange(index);
+
+        public Range GetRange() => throw new NotImplementedException();
+        public byte[] GetBytes() => throw new NotImplementedException();
+        public bool ContainsIndex(int index) => throw new NotImplementedException();
+        public void CopyBytes(ushort startAddress, Span<byte> destination, int destinationIndex, int length) => throw new NotImplementedException();
     }
 }

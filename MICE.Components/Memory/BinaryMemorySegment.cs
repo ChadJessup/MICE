@@ -5,7 +5,7 @@ namespace MICE.Components.Memory
 {
     public abstract class BinaryMemorySegment : MemorySegment
     {
-        public BinaryMemorySegment(Range<int> range, string name, Action<int, byte> afterWriteAction = null, Action<int, byte> afterReadAction = null)
+        public BinaryMemorySegment(Range range, string name, Action<int, byte> afterWriteAction = null, Action<int, byte> afterReadAction = null)
             : base(range, name)
         {
             var length = this.Range.Max - this.Range.Min;
@@ -37,16 +37,15 @@ namespace MICE.Components.Memory
         }
 
         public override void Write(int index, ushort value) => throw new NotImplementedException();
-        public override void CopyBytes(ushort startAddress, Array destinationArray, int destinationIndex, int length)
+        public override void CopyBytes(ushort startAddress, Span<byte> destinationArray, int destinationIndex, int length)
         {
             byte sourceIndex = (byte)this.GetOffsetInSegment(startAddress);
 
             byte dstIndex = (byte)destinationIndex;
-            var dstArray = (byte[])destinationArray;
 
             for (int i = 0; i < length; i++)
             {
-                dstArray[dstIndex++] = this.Data[sourceIndex++];
+                destinationArray[dstIndex++] = this.Data[sourceIndex++];
             }
         }
     }

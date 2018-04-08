@@ -202,6 +202,12 @@ namespace MICE.CPU.MOS6502
 
             this.LastPC = this.Registers.PC.Read();
 
+            //Console.WriteLine($"PC: 0x{this.LastPC:X4} Cycle: {this.CurrentCycle}");
+            if (this.CurrentCycle == 18)
+            {
+
+            }
+
             this.CurrentOpcode = this.Opcodes[this.ReadNextByte()];
             this.CurrentOpcode.Instruction(this.CurrentOpcode);
 
@@ -217,7 +223,10 @@ namespace MICE.CPU.MOS6502
                 this.CurrentOpcode.AddedCycles += Constants.ExtraNMIHandledCycles;
             }
 
-            return this.CurrentOpcode.Cycles + this.CurrentOpcode.AddedCycles;
+            var newCycles = this.CurrentOpcode.Cycles + this.CurrentOpcode.AddedCycles;
+            this.CurrentCycle += newCycles;
+
+            return newCycles;
         }
 
         public void WriteByteAt(ushort address, byte value, bool incrementPC = true)

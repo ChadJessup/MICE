@@ -9,7 +9,7 @@ namespace MICE.Components.Memory
         private IExternalHandler mapper;
 
         public External(int lowerIndex, int upperIndex, string name)
-            : base(new Range<int>(lowerIndex, upperIndex), name)
+            : base(new Range(lowerIndex, upperIndex), name)
         {
         }
 
@@ -25,6 +25,6 @@ namespace MICE.Components.Memory
         public override void Write(int index, ushort value) => this.mapper.Write(index, value);
 
         public override byte[] GetBytes() => throw new NotImplementedException();
-        public override void CopyBytes(ushort startAddress, Array destination, int destinationIndex, int length) => throw new NotImplementedException();
+        public override void CopyBytes(ushort startAddress, Span<byte> destination, int destinationIndex, int length) => throw new NotImplementedException();
     }
 }

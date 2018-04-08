@@ -12,12 +12,12 @@ namespace MICE.Components.Memory
         private readonly int moduloValue;
         private List<IMemorySegment> realMemorySegments = new List<IMemorySegment>();
         private Dictionary<int, IMemorySegment> cachedMemorySegments = new Dictionary<int, IMemorySegment>();
-        private Range<int> mirroredRange;
+        private Range mirroredRange;
 
         public MirroredMemory(int lowerIndex, int upperIndex, int mirroredLowerIndex, int mirroredUpperIndex, IMemoryMap memoryMapper, string name)
-            : base(new Range<int>(lowerIndex, upperIndex), name)
+            : base(new Range(lowerIndex, upperIndex), name)
         {
-            this.mirroredRange = new Range<int>(mirroredLowerIndex, mirroredUpperIndex);
+            this.mirroredRange = new Range(mirroredLowerIndex, mirroredUpperIndex);
 
             this.moduloValue = this.mirroredRange.Max - this.mirroredRange.Min;
 
@@ -81,7 +81,7 @@ namespace MICE.Components.Memory
         }
 
 
-        public override void CopyBytes(ushort startAddress, Array destination, int destinationIndex, int length)
+        public override void CopyBytes(ushort startAddress, Span<byte> destination, int destinationIndex, int length)
         {
             var newIndex = (startAddress - this.Range.Min) + this.mirroredRange.Min;
 

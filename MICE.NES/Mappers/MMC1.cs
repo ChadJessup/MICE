@@ -152,7 +152,7 @@ namespace MICE.Nintendo.Mappers
 
         public override void Write(int index, ushort value) => throw new NotImplementedException();
 
-        public override void CopyBytes(ushort startAddress, Array destination, int destinationIndex, int length) => throw new NotImplementedException();
+        public override void CopyBytes(ushort startAddress, Span<byte> destination, int destinationIndex, int length) => throw new NotImplementedException();
 
         private int loadRegisterWriteCount = 0;
         private void HandleLoadRegister(int address, byte value)

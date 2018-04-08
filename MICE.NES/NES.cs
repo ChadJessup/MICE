@@ -19,15 +19,13 @@ namespace MICE.Nintendo
     {
         private static class Constants
         {
-            public const string DebugFile = @"G:\Emulators\NES\MICE - Trace.txt";
+            public const string DebugFile = @"C:\Emulators\NES\MICE - Trace.txt";
         }
-
-        private long ppuTotalCycles = 0;
 
         public string Name { get; } = "Nintendo Entertainment System";
         public long CurrentFrame { get; private set; } = 1;
 
-        public static bool IsDebug { get; set; } = false;
+        public static bool IsDebug { get; set; } = true;
 
         // Create components...
         public DataBus DataBus { get; } = new DataBus();
@@ -61,7 +59,7 @@ namespace MICE.Nintendo
             }
 
             var ppuRegisters = new PPURegisters();
-            this.CPUMemoryMap = new NESRawMemoryMap(ppuRegisters, this.InputHandler);
+            this.CPUMemoryMap = new NESMemoryMap(ppuRegisters, this.InputHandler);
             this.PPU = new RicohRP2C02(new PPUMemoryMap(), ppuRegisters, this.CPUMemoryMap);
 
             this.PPU.Registers.OAMDMA.AfterWriteAction = this.DMATransfer;
@@ -152,6 +150,7 @@ namespace MICE.Nintendo
                     NES.traceFileOutput.Clear();
                 }
             }
+
             // TODO: APU Cycles
 
            // this.StepCompleted?.Invoke(this, cycleEvent);

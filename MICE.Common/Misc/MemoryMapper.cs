@@ -19,7 +19,7 @@ namespace MICE.Common.Misc
         public (int min, int max) GetMaxRange() => (min: this.minimumRange, max: this.maximumRange);
         public IEnumerable<IMemorySegment> GetSegmentsInRange(int min, int max)
         {
-            var range = new Range<int>(min, max);
+            var range = new Range(min, max);
             return this.memorySegments.Where(seg => seg.Range.IsOverlapped(range));
         }
 
@@ -100,7 +100,7 @@ namespace MICE.Common.Misc
             segment.Write(index, value);
         }
 
-        public virtual void BulkTransfer(ushort startAddress, Array destinationArray, int destinationIndex, int size)
+        public virtual void BulkTransfer(ushort startAddress, Span<byte> destinationArray, int destinationIndex, int size)
         {
             var segments = this.GetSegmentsInRange(startAddress, startAddress + size);
 

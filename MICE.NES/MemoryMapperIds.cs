@@ -2,7 +2,8 @@
 {
     public enum MemoryMapperIds
     {
-        NROM = 0, // No mapper
+        NROM = 99, // No mapper
+        NROM2 = 0, // No mapper
         MMC1 = 1,
         UNROM = 2,
         CNROM = 3,

@@ -26,23 +26,23 @@ namespace MICE.Nintendo
         private static class MemoryRanges
         {
             // http://nesdev.com/NESDoc.pdf - Figure 2-3 CPU memory map
-            public static Range<int> ZeroPage = new Range<int>(0x0000, 0x0100);
-            public static Range<int> Stack = new Range<int>(0x0100, 0x0200);
-            public static Range<int> RAM = new Range<int>(0x0200, 0x0800);
+            public static Range ZeroPage = new Range(0x0000, 0x0100);
+            public static Range Stack = new Range(0x0100, 0x0200);
+            public static Range RAM = new Range(0x0200, 0x0800);
 
             /// Above mirrored... until 0x1FFF...
 
-            public static Range<int> RegisterRanges = new Range<int>(0x2000, 0x401F);
+            public static Range RegisterRanges = new Range(0x2000, 0x401F);
 
             // Expansion Memory @ 0x4020 - 0x5FFF
 
-            public static Range<int> SRAM = new Range<int>(0x6000, 0x8000);
+            public static Range SRAM = new Range(0x6000, 0x8000);
 
-            public static Range<int> ProgramRomLowerBank = new Range<int>(0x8000, 0xBFFF);
-            public static Range<int> ProgramRomUpperBank = new Range<int>(0xC000, 0xFFFF);
+            public static Range ProgramRomLowerBank = new Range(0x8000, 0xBFFF);
+            public static Range ProgramRomUpperBank = new Range(0xC000, 0xFFFF);
 
-            public static Range<int> Controller1 = new Range<int>(4016, 4016);
-            public static Range<int> Controller2 = new Range<int>(4017, 4017);
+            public static Range Controller1 = new Range(0x4016, 0x4016);
+            public static Range Controller2 = new Range(0x4017, 0x4017);
         }
 
         private static class PPURegisterAddresses
@@ -55,6 +55,8 @@ namespace MICE.Nintendo
             public const int PPUSCROLL = 0x2005;
             public const int PPUADDR = 0x2006;
             public const int PPUDATA = 0x2007;
+
+            public const int OAMDMA = 0x4014;
         }
 
         private static class APURegisterAddresses
@@ -96,6 +98,7 @@ namespace MICE.Nintendo
                 { PPURegisterAddresses.OAMDATA, ppuRegisters.OAMDATA },
                 { PPURegisterAddresses.PPUADDR, ppuRegisters.PPUADDR },
                 { PPURegisterAddresses.PPUDATA, ppuRegisters.PPUDATA},
+                { PPURegisterAddresses.OAMDMA, ppuRegisters.OAMDMA }
             };
 
             this.ScopeMemoryRanges();
@@ -108,25 +111,29 @@ namespace MICE.Nintendo
         {
             try
             {
-                if (MemoryRanges.ProgramRomUpperBank.IsInRange(index))
-                {
-                    return this.prgROMUpperBank.ReadByte(this.GetOffset(MemoryRanges.ProgramRomUpperBank, index));
-                }
-                else if (MemoryRanges.ProgramRomLowerBank.IsInRange(index))
-                {
-                    return this.prgROMLowerBank.ReadByte(this.GetOffset(MemoryRanges.ProgramRomLowerBank, index));
-                }
-                else if (this.ppuRegisterLookup.ContainsKey(index))
-                {
-                    return this.ppuRegisterLookup[index].Read();
-                }
-                else if (MemoryRanges.ZeroPage.IsInRange(index))
+                if (MemoryRanges.ZeroPage.IsInRange(index))
                 {
                     return this.ZeroPage.Span[index];
+                }
+                else if (MemoryRanges.Stack.IsInRange(index))
+                {
+                    return this.stack.PopByte();
                 }
                 else if (MemoryRanges.RAM.IsInRange(index))
                 {
                     return this.RAM.Span[this.GetOffset(MemoryRanges.RAM, index)];
+                }
+                else if (MemoryRanges.ProgramRomUpperBank.IsInRange(index))
+                {
+                    return this.prgROMUpperBank.ReadByte(index);
+                }
+                else if (MemoryRanges.ProgramRomLowerBank.IsInRange(index))
+                {
+                    return this.prgROMLowerBank.ReadByte(index);
+                }
+                else if (this.ppuRegisterLookup.ContainsKey(index))
+                {
+                    return this.ppuRegisterLookup[index].Read();
                 }
             }
             catch (Exception e)
@@ -136,10 +143,11 @@ namespace MICE.Nintendo
 
             switch (index)
             {
-                case PPURegisterAddresses.PPUSCROLL:
-                    // Shouldn't happen for this particular register.
-                    //return this.ppuRegisters.PPUSCROLL.Read();
-                    break;
+                case var _ when MemoryRanges.Controller1.IsInRange(index):
+                    return this.Controller1.ReadByte(index);
+                case var _ when MemoryRanges.Controller2.IsInRange(index):
+                    return this.Controller2.ReadByte(index);
+                case PPURegisterAddresses.PPUSCROLL: // Shouldn't happen for this particular register.
                 case APURegisterAddresses.APUChannelStatus:
                     break;
                 default:
@@ -151,68 +159,53 @@ namespace MICE.Nintendo
 
         public ushort ReadShort(int index)
         {
-            if (MemoryRanges.ProgramRomUpperBank.IsInRange(index))
+            switch (index)
             {
-                return this.prgROMUpperBank.ReadShort(index);
-            }
-            else if (MemoryRanges.ProgramRomLowerBank.IsInRange(index))
-            {
-                return this.prgROMLowerBank.ReadShort(index);
-            }
-            else if (MemoryRanges.ZeroPage.IsInRange(index))
-            {
-                return this.ZeroPage.Span.NonPortableCast<byte, ushort>()[this.GetOffset(MemoryRanges.ZeroPage, index)];
-            }
-            else if (MemoryRanges.RAM.IsInRange(index))
-            {
-                return this.RAM.Span.NonPortableCast<byte, ushort>()[this.GetOffset(MemoryRanges.RAM, index)];
-            }
-            else
-            {
-                throw new NotImplementedException();
+                case var _ when MemoryRanges.ZeroPage.TryGetOffset(index, out int offset):
+                    return (ushort)(this.ZeroPage.Span[offset + 1] << 8 | this.ZeroPage.Span[offset]); ;
+                case var _ when MemoryRanges.RAM.TryGetOffset(index, out int offset):
+                    return (ushort)(this.RAM.Span[offset + 1] << 8 | this.RAM.Span[offset]);
+                case var _ when MemoryRanges.ProgramRomUpperBank.IsInRange(index):
+                    return this.prgROMUpperBank.ReadShort(index);
+                case var _ when MemoryRanges.ProgramRomLowerBank.IsInRange(index):
+                    return this.prgROMLowerBank.ReadShort(index);
+                default:
+                    throw new NotImplementedException();
             }
         }
 
         public void Write(int index, byte value)
         {
-            try
+            switch (index)
             {
-                if (MemoryRanges.RegisterRanges.IsInRange(index))
-                {
+                case var _ when MemoryRanges.RegisterRanges.IsInRange(index):
                     this.WriteRegister(index, value);
-                }
-                else if (MemoryRanges.ZeroPage.IsInRange(index))
-                {
-                    this.ZeroPage.Span[this.GetOffset(MemoryRanges.ZeroPage, index)] = value;
-                }
-                else if (MemoryRanges.RAM.IsInRange(index))
-                {
-                    this.RAM.Span[this.GetOffset(MemoryRanges.RAM, index)] = value;
-                }
-                else if (MemoryRanges.ProgramRomUpperBank.IsInRange(index))
-                {
-                    this.prgROMUpperBank.Write(this.GetOffset(MemoryRanges.RAM, index), value);
-                }
-                else if (MemoryRanges.ProgramRomLowerBank.IsInRange(index))
-                {
-                    this.prgROMLowerBank.Write(this.GetOffset(MemoryRanges.RAM, index), value);
-                }
-                else
-                {
+                    break;
+                case var _ when MemoryRanges.ZeroPage.TryGetOffset(index, out int offset):
+                    this.ZeroPage.Span[offset] = value;
+                    break;
+                case var _ when MemoryRanges.RAM.TryGetOffset(index, out int offset):
+                    this.RAM.Span[offset] = value;
+                    break;
+                case var _ when MemoryRanges.ProgramRomUpperBank.IsInRange(index):
+                    this.prgROMUpperBank.Write(index, value);
+                    break;
+                case var _ when MemoryRanges.ProgramRomLowerBank.IsInRange(index):
+                    this.prgROMLowerBank.Write(index, value);
+                    break;
+                case var _ when MemoryRanges.Stack.IsInRange(index):
+                    this.stack.Write(index, value);
+                    break;
+                default:
                     throw new NotImplementedException();
-                }
-            }
-            catch (Exception e)
-            {
-
             }
         }
 
         private void WriteRegister(int index, byte value)
         {
-            if (this.ppuRegisterLookup.ContainsKey(index))
+            if (this.ppuRegisterLookup.TryGetValue(index, out Register8Bit register))
             {
-                this.ppuRegisterLookup[index].Write(value);
+                register.Write(value);
                 return;
             }
 
@@ -222,6 +215,12 @@ namespace MICE.Nintendo
                     this.ppuRegisters.PPUSCROLL.Write(value);
                     break;
                 case APURegisterAddresses.APUChannelStatus:
+                    break;
+                case var _ when MemoryRanges.Controller1.IsInRange(index):
+                    this.Controller1.Write(index, value);
+                    break;
+                case var _ when MemoryRanges.Controller2.IsInRange(index):
+                    this.Controller2.Write(index, value);
                     break;
                 default:
                     throw new NotImplementedException();
@@ -238,7 +237,7 @@ namespace MICE.Nintendo
 
         }
 
-        private int GetOffset(Range<int> range, int index)
+        private int GetOffset(Range range, int index)
         {
             if (range.Min == 0)
             {
@@ -248,7 +247,7 @@ namespace MICE.Nintendo
             return index - range.Min;
         }
 
-        private Memory<byte> GetMemory(Range<int> range) => new Memory<byte>(this.memory, range.Min, range.Max - range.Min);
+        private Memory<byte> GetMemory(Range range) => new Memory<byte>(this.memory, range.Min, 1 + (range.Max - range.Min));
 
         public T GetMemorySegment<T>(string segmentName) where T : IMemorySegment
         {
@@ -272,14 +271,39 @@ namespace MICE.Nintendo
             return (T)(IMemorySegment)this;
         }
 
+        public void BulkTransfer(ushort startAddress, Span<byte> destinationArray, int destinationIndex, int size)
+        {
+            if (MemoryRanges.RAM.IsInRange(startAddress))
+            {
+                var ramSlice = this.RAM.Slice(startAddress, size);
+                var oamSlice = destinationArray.Slice(destinationIndex, size);
+
+                ramSlice.Span.CopyTo(oamSlice);
+            }
+            else
+            {
+                throw new NotImplementedException();
+            }
+            /*
+            var segments = this.GetSegmentsInRange(startAddress, startAddress + size);
+
+            if (segments.Count() > 1)
+            {
+                throw new NotImplementedException("Sorry, don't handle bulk transfer across multiple segments...hope it's not actually needed...");
+            }
+
+            segments.First().CopyBytes(startAddress, destinationArray, destinationIndex, size);
+            */
+        }
+
         // TODO: How about some base classes Chad?  No need to interface it all to hell.
         public int Count => throw new NotImplementedException();
         public string Name => throw new NotImplementedException();
+        public Range Range => throw new NotImplementedException();
         public void Clear() => throw new NotImplementedException();
         public bool IsReadOnly => throw new NotImplementedException();
-        public Range<int> Range => throw new NotImplementedException();
+        public Range GetRange() => throw new NotImplementedException();
         public byte[] GetBytes() => throw new NotImplementedException();
-        public Range<int> GetRange() => throw new NotImplementedException();
         public void Add(IMemorySegment item) => throw new NotImplementedException();
         public bool ContainsIndex(int index) => throw new NotImplementedException();
         public bool IsIndexInRange(int index) => throw new NotImplementedException();
@@ -294,7 +318,6 @@ namespace MICE.Nintendo
         public IEnumerable<IMemorySegment> GetMemorySegments() => throw new NotImplementedException();
         public void CopyTo(IMemorySegment[] array, int arrayIndex) => throw new NotImplementedException();
         IEnumerable<IMemorySegment> IMemoryMap.GetMemorySegments() => throw new NotImplementedException();
-        public void CopyBytes(ushort startAddress, Array destination, int destinationIndex, int length) => throw new NotImplementedException();
-        public void BulkTransfer(ushort startAddress, Array destinationArray, int destinationIndex, int size) => throw new NotImplementedException();
+        public void CopyBytes(ushort startAddress, Span<byte> destination, int destinationIndex, int length) => throw new NotImplementedException();
     }
 }
