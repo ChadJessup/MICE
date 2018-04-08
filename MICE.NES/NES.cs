@@ -25,7 +25,7 @@ namespace MICE.Nintendo
         public string Name { get; } = "Nintendo Entertainment System";
         public long CurrentFrame { get; private set; } = 1;
 
-        public static bool IsDebug { get; set; } = true;
+        public static bool IsDebug { get; set; } = false;
 
         // Create components...
         public DataBus DataBus { get; } = new DataBus();
@@ -138,17 +138,17 @@ namespace MICE.Nintendo
 
             if (this.PPU.FrameNumber > this.CurrentFrame)
             {
-                Console.WriteLine($"Frame took (ms): {this.frameSW.ElapsedMilliseconds}");
-                this.frameSW.Restart();
-
-                this.CurrentFrame = this.PPU.FrameNumber;
-                Array.Copy(this.PPU.ScreenData, this.Screen, this.PPU.ScreenData.Length);
-
                 if (NES.IsDebug)
                 {
+                    Console.WriteLine($"Frame took (ms): {this.frameSW.ElapsedMilliseconds}");
+                    this.frameSW.Restart();
+
                     File.AppendAllText(Constants.DebugFile, NES.traceFileOutput.ToString());
                     NES.traceFileOutput.Clear();
                 }
+
+                this.CurrentFrame = this.PPU.FrameNumber;
+                Array.Copy(this.PPU.ScreenData, this.Screen, this.PPU.ScreenData.Length);
             }
 
             // TODO: APU Cycles
@@ -193,7 +193,11 @@ namespace MICE.Nintendo
             return Task.Factory.StartNew(() =>
             {
                 this.frameSW = new Stopwatch();
-                this.frameSW.Start();
+
+                if (NES.IsDebug)
+                {
+                    this.frameSW.Start();
+                }
 
                 while (!this.IsPaused && this.IsPoweredOn)
                 {

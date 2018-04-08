@@ -3,7 +3,9 @@ using MICE.Nintendo.Loaders;
 using MICE.PPU.RicohRP2C02.Components;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Text;
 
 namespace MICE.Nintendo.Mappers
 {
@@ -146,15 +148,18 @@ namespace MICE.Nintendo.Mappers
         public override byte ReadByte(int index)
         {
             var (segment, bytes) = this.bankLinkage.First(linkage => linkage.segment.IsIndexInRange(index));
-
+            byte readByte;
             if (index < 0x2000)
             {
-                return bytes[index];
+                readByte = bytes[index];
+            }
+            else
+            {
+                var arrayOffset = segment.GetOffsetInSegment(index);
+                readByte = bytes[arrayOffset];
             }
 
-            var arrayOffset = segment.GetOffsetInSegment(index);
-
-            return bytes[arrayOffset];
+            return readByte;
         }
 
         public override void Write(int index, byte value)

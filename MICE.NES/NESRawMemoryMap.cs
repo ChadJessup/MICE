@@ -8,6 +8,7 @@ using MICE.PPU.RicohRP2C02;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
 namespace MICE.Nintendo
 {
@@ -107,6 +108,7 @@ namespace MICE.Nintendo
         public Memory<byte> ZeroPage { get; private set; }
         public Memory<byte> RAM { get; private set; }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public byte ReadByte(int index)
         {
             try
@@ -157,6 +159,7 @@ namespace MICE.Nintendo
             throw new NotImplementedException();
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ushort ReadShort(int index)
         {
             switch (index)
@@ -174,6 +177,7 @@ namespace MICE.Nintendo
             }
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Write(int index, byte value)
         {
             switch (index)
@@ -201,6 +205,7 @@ namespace MICE.Nintendo
             }
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void WriteRegister(int index, byte value)
         {
             if (this.ppuRegisterLookup.TryGetValue(index, out Register8Bit register))
@@ -234,9 +239,9 @@ namespace MICE.Nintendo
 
             this.Controller1 = this.inputHandler.GetController1(0x4016, 0x4016, "Control Input 1");
             this.Controller2 = this.inputHandler.GetController2(0x4017, 0x4017, "Control Input 2");
-
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private int GetOffset(Range range, int index)
         {
             if (range.Min == 0)
@@ -284,16 +289,6 @@ namespace MICE.Nintendo
             {
                 throw new NotImplementedException();
             }
-            /*
-            var segments = this.GetSegmentsInRange(startAddress, startAddress + size);
-
-            if (segments.Count() > 1)
-            {
-                throw new NotImplementedException("Sorry, don't handle bulk transfer across multiple segments...hope it's not actually needed...");
-            }
-
-            segments.First().CopyBytes(startAddress, destinationArray, destinationIndex, size);
-            */
         }
 
         // TODO: How about some base classes Chad?  No need to interface it all to hell.

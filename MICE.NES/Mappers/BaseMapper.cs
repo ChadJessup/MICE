@@ -3,6 +3,7 @@ using MICE.Common.Misc;
 using MICE.Components.Memory;
 using MICE.Nintendo.Interfaces;
 using MICE.Nintendo.Loaders;
+using System.Runtime.CompilerServices;
 
 namespace MICE.Nintendo.Mappers
 {
@@ -19,6 +20,7 @@ namespace MICE.Nintendo.Mappers
         public override byte[] GetBytes() => new byte[] { 0x0 };
         public abstract void AddMemorySegment(IMemorySegment memorySegment);
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int GetOffset(Range range, int index)
         {
             if (range.Min == 0)

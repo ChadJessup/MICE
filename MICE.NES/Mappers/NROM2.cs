@@ -3,7 +3,10 @@ using MICE.Common.Misc;
 using MICE.Nintendo.Loaders;
 using MICE.PPU.RicohRP2C02.Components;
 using System;
+using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Text;
 
 namespace MICE.Nintendo.Mappers
 {
@@ -12,20 +15,20 @@ namespace MICE.Nintendo.Mappers
     {
         private static class MemoryRanges
         {
-            public static Range ProgramRAM = new Range(0x6000, 0x7FFF);
-            public static Range ProgramROMFirstBank = new Range(0x8000, 0xBFFF);
-            public static Range ProgramROMLastBank = new Range(0xC000, 0xFFFF);
+            public static Range CharacterROM0Range = new Range(0x0000, 0x0FFF);
+            public static Range CharacterROM1Range = new Range(0x1000, 0x1FFF);
 
-            public static Range ProgramROMRange = new Range(0x8000, 0xFFFF);
-            public static Range NametableRange = new Range(0x2000, 0x2EFF);
-
-            public static Range CharacterROM0Range = new Range(0x0000, 0x1000);
-            public static Range CharacterROM1Range = new Range(0x1000, 0x2000);
-
+            public static Range NametableRange = new Range(0x2000, 0x2FFF);
             public static Range Nametable0Range = new Range(0x2000, 0x23FF);
             public static Range Nametable1Range = new Range(0x2400, 0x27FF);
             public static Range Nametable2Range = new Range(0x2800, 0x2BFF);
             public static Range Nametable3Range = new Range(0x2C00, 0x2FFF);
+
+            public static Range ProgramRAM = new Range(0x6000, 0x7FFF);
+
+            public static Range ProgramROMRange = new Range(0x8000, 0xFFFF);
+            public static Range ProgramROMFirstBank = new Range(0x8000, 0xBFFF);
+            public static Range ProgramROMLastBank = new Range(0xC000, 0xFFFF);
         }
 
         private Nametable nametable2000;
@@ -104,14 +107,16 @@ namespace MICE.Nintendo.Mappers
                 switch (nametable.Range.Min)
                 {
                     case 0x2000:
-                    case 0x2400:
-                        this.nametable2400 = nametable;
                         this.nametable2000 = nametable;
                         break;
+                    case 0x2400:
+                        this.nametable2400 = this.nametable2000;
+                        break;
                     case 0x2800:
-                    case 0x2C00:
-                        this.nametable2C00 = nametable;
                         this.nametable2800 = nametable;
+                        break;
+                    case 0x2C00:
+                        this.nametable2C00 = this.nametable2800;
                         break;
                 }
             }
@@ -120,14 +125,16 @@ namespace MICE.Nintendo.Mappers
                 switch (nametable.Range.Min)
                 {
                     case 0x2000:
-                    case 0x2800:
                         this.nametable2000 = nametable;
-                        this.nametable2800 = nametable;
+                        break;
+                    case 0x2800:
+                        this.nametable2800 = this.nametable2000;
                         break;
                     case 0x2400:
-                    case 0x2C00:
                         this.nametable2400 = nametable;
-                        this.nametable2C00 = nametable;
+                        break;
+                    case 0x2C00:
+                        this.nametable2C00 = this.nametable2400;
                         break;
                 }
             }
@@ -139,6 +146,7 @@ namespace MICE.Nintendo.Mappers
         /// </summary>
         /// <param name="index">The index to read from.</param>
         /// <returns>The data that was read.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override ushort ReadShort(int index)
         {
             switch (index)
@@ -158,6 +166,7 @@ namespace MICE.Nintendo.Mappers
         /// </summary>
         /// <param name="index">The index to read from.</param>
         /// <returns>The data that was read.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override byte ReadByte(int index)
         {
             switch (index)
@@ -169,20 +178,21 @@ namespace MICE.Nintendo.Mappers
                 case var _ when MemoryRanges.Nametable0Range.TryGetOffset(index, out int offset):
                     return this.nametable2000.Data[offset];
                 case var _ when MemoryRanges.Nametable1Range.TryGetOffset(index, out int offset):
-                    return this.nametable2000.Data[offset];
+                    return this.nametable2400.Data[offset];
                 case var _ when MemoryRanges.Nametable2Range.TryGetOffset(index, out int offset):
-                    return this.nametable2000.Data[offset];
+                    return this.nametable2800.Data[offset];
                 case var _ when MemoryRanges.Nametable3Range.TryGetOffset(index, out int offset):
-                    return this.nametable2000.Data[offset];
+                    return this.nametable2C00.Data[offset];
                 case var _ when MemoryRanges.CharacterROM0Range.TryGetOffset(index, out int offset):
                     return this.CharacterROM0Bank.Span[offset];
                 case var _ when MemoryRanges.CharacterROM1Range.TryGetOffset(index, out int offset):
-                    return this.CharacterROM1Bank.Span[offset];
+                    return this.CharacterROM1Bank.Span[index];
                 default:
                     throw new NotImplementedException();
             }
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override void Write(int index, byte value)
         {
             switch (index)
