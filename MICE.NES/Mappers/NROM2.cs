@@ -187,6 +187,8 @@ namespace MICE.Nintendo.Mappers
                     return this.CharacterROM0Bank.Span[offset];
                 case var _ when MemoryRanges.CharacterROM1Range.TryGetOffset(index, out int offset):
                     return this.CharacterROM1Bank.Span[index];
+                case var _ when MemoryRanges.ProgramRAM.TryGetOffset(index, out int offset):
+                    return this.SRAM.Span[offset];
                 default:
                     throw new NotImplementedException();
             }
@@ -214,6 +216,15 @@ namespace MICE.Nintendo.Mappers
                     break;
                 case var _ when MemoryRanges.Nametable3Range.TryGetOffset(index, out int offset):
                     this.nametable2C00.Data[offset] = value;
+                    break;
+                case var _ when MemoryRanges.ProgramRAM.TryGetOffset(index, out int offset):
+                    this.SRAM.Span[offset] = value;
+                    break;
+                case var _ when MemoryRanges.CharacterROM0Range.TryGetOffset(index, out int offset):
+                    this.CharacterROM0Bank.Span[offset] = value;
+                    break;
+                case var _ when MemoryRanges.CharacterROM1Range.TryGetOffset(index, out int offset):
+                    this.CharacterROM1Bank.Span[offset] = value;
                     break;
                 default:
                     throw new NotImplementedException();

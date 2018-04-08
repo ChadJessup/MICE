@@ -202,8 +202,7 @@ namespace MICE.CPU.MOS6502
 
             this.LastPC = this.Registers.PC.Read();
 
-            //Console.WriteLine($"PC: 0x{this.LastPC:X4} Cycle: {this.CurrentCycle}");
-            if (this.CurrentCycle == 18)
+            if (this.CurrentCycle >= 176316)
             {
 
             }
@@ -219,6 +218,7 @@ namespace MICE.CPU.MOS6502
             if (!this.WasNMIRequested && this.shouldHandleNMI)
             {
                 this.shouldHandleNMI = false;
+
                 //trace.Append($" - [NMI - Cycle: {this.CurrentCycle + Constants.ExtraNMIHandledCycles}]");
                 this.CurrentOpcode.AddedCycles += Constants.ExtraNMIHandledCycles;
             }

@@ -24,6 +24,7 @@ namespace MICE.PPU.RicohRP2C02.Handlers
 
             if (colorIndex == 0)
             {
+
                 return this.BackgroundPalette0.GetColor(0);
             }
 

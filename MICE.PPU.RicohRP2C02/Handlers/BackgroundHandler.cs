@@ -119,7 +119,7 @@ namespace MICE.PPU.RicohRP2C02.Handlers
         {
             var baseAddress = this.IsBackgroundPatternTableAddress1000
                 ? 0x1000
-                : 0x1000;
+                : 0x0000;
 
             ushort address = (ushort)(baseAddress + (this.nameTableByte * 16) + this.scrollHandler.vFineYScroll + 8);
             this.highTileByte = this.ppuMemoryMap.ReadByte(address);
