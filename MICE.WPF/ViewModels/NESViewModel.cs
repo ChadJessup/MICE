@@ -12,7 +12,7 @@ namespace MICE.WPF.ViewModels
     {
         public NESViewModel()
         {
-            this.NES = new NES();
+            this.NES = new NES(null);
 
             this.NES.StepCompleted += this.OnStepCompleted;
             this.NES.FrameFinished += this.OnFrameFinished;

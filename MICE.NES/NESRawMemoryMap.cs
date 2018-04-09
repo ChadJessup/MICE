@@ -27,9 +27,9 @@ namespace MICE.Nintendo
         private static class MemoryRanges
         {
             // http://nesdev.com/NESDoc.pdf - Figure 2-3 CPU memory map
-            public static Range ZeroPage = new Range(0x0000, 0x0100);
-            public static Range Stack = new Range(0x0100, 0x0200);
-            public static Range RAM = new Range(0x0200, 0x0800);
+            public static Range ZeroPage = new Range(0x0000, 0x0FF);
+            public static Range Stack = new Range(0x0100, 0x01FF);
+            public static Range RAM = new Range(0x0200, 0x07FF);
 
             /// Above mirrored... until 0x1FFF...
 
@@ -37,7 +37,7 @@ namespace MICE.Nintendo
 
             // Expansion Memory @ 0x4020 - 0x5FFF
 
-            public static Range SRAM = new Range(0x6000, 0x8000);
+            public static Range SRAM = new Range(0x6000, 0x7FFF);
 
             public static Range ProgramRomLowerBank = new Range(0x8000, 0xBFFF);
             public static Range ProgramRomUpperBank = new Range(0xC000, 0xFFFF);
@@ -62,7 +62,8 @@ namespace MICE.Nintendo
 
         private static class APURegisterAddresses
         {
-            public const ushort APUChannelStatus = 0x4015;
+            public const ushort DirectLoad = 0x4011;
+            public const ushort ChannelStatus = 0x4015;
         }
 
         private Dictionary<int, Register8Bit> ppuRegisterLookup;
@@ -75,9 +76,9 @@ namespace MICE.Nintendo
         private ExternalFacade prgROMLowerBank = null;
         private ExternalFacade prgROMUpperBank = null;
         private CPU.MOS6502.Stack stack;
-        private SRAM sram;
         private INESInput Controller1;
         private INESInput Controller2;
+        private SRAM sram;
 
         public NESRawMemoryMap(PPURegisters ppuRegisters, InputHandler inputHandler) : base()
         {
@@ -119,11 +120,15 @@ namespace MICE.Nintendo
                 }
                 else if (MemoryRanges.Stack.IsInRange(index))
                 {
-                    return this.stack.PopByte();
+                    return this.stack.ReadByte(index);
                 }
-                else if (MemoryRanges.RAM.IsInRange(index))
+                else if (MemoryRanges.RAM.TryGetOffset(index, out int ramOffset))
                 {
-                    return this.RAM.Span[this.GetOffset(MemoryRanges.RAM, index)];
+                    return this.RAM.Span[ramOffset];
+                }
+                else if(MemoryRanges.SRAM.TryGetOffset(index, out int sramOffset))
+                {
+                    return this.sram.ReadByte(sramOffset);
                 }
                 else if (MemoryRanges.ProgramRomUpperBank.IsInRange(index))
                 {
@@ -149,9 +154,9 @@ namespace MICE.Nintendo
                     return this.Controller1.ReadByte(index);
                 case var _ when MemoryRanges.Controller2.IsInRange(index):
                     return this.Controller2.ReadByte(index);
-                case PPURegisterAddresses.PPUSCROLL: // Shouldn't happen for this particular register.
-                case APURegisterAddresses.APUChannelStatus:
-                    break;
+                case APURegisterAddresses.DirectLoad:
+                case APURegisterAddresses.ChannelStatus:
+                    return 0x0;
                 default:
                     throw new NotImplementedException();
             }
@@ -191,6 +196,9 @@ namespace MICE.Nintendo
                 case var _ when MemoryRanges.RAM.TryGetOffset(index, out int offset):
                     this.RAM.Span[offset] = value;
                     break;
+                case var _ when MemoryRanges.SRAM.IsInRange(index):
+                    this.sram.Write(index, value);
+                    break;
                 case var _ when MemoryRanges.ProgramRomUpperBank.IsInRange(index):
                     this.prgROMUpperBank.Write(index, value);
                     break;
@@ -219,7 +227,8 @@ namespace MICE.Nintendo
                 case PPURegisterAddresses.PPUSCROLL:
                     this.ppuRegisters.PPUSCROLL.Write(value);
                     break;
-                case APURegisterAddresses.APUChannelStatus:
+                case APURegisterAddresses.DirectLoad:
+                case APURegisterAddresses.ChannelStatus:
                     break;
                 case var _ when MemoryRanges.Controller1.IsInRange(index):
                     this.Controller1.Write(index, value);
@@ -278,9 +287,9 @@ namespace MICE.Nintendo
 
         public void BulkTransfer(ushort startAddress, Span<byte> destinationArray, int destinationIndex, int size)
         {
-            if (MemoryRanges.RAM.IsInRange(startAddress))
+            if (MemoryRanges.RAM.TryGetOffset(startAddress, out int offset))
             {
-                var ramSlice = this.RAM.Slice(startAddress, size);
+                var ramSlice = this.RAM.Slice(offset, size);
                 var oamSlice = destinationArray.Slice(destinationIndex, size);
 
                 ramSlice.Span.CopyTo(oamSlice);

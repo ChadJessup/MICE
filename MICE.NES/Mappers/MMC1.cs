@@ -96,8 +96,7 @@ namespace MICE.Nintendo.Mappers
         /// </summary>
         /// <param name="index">The index to read from.</param>
         /// <returns>The data that was read.</returns>
-        public override ushort ReadShort(int index) =>
-            throw new InvalidOperationException($"Invalid memory range and/or size (ushort) was requested to be read from in NROM Mapper: 0x{index:X4}");
+        public override ushort ReadShort(int index) => (ushort) (this.ReadByte(index + 1) << 8 | this.ReadByte(index));
 
         /// <summary>
         /// Reads a byte from a Cartridge's addressable memory space.

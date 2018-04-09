@@ -1,6 +1,7 @@
 ﻿using MICE.Nintendo;
 using MICE.Nintendo.Components;
 using MICE.Nintendo.Loaders;
+using Ninject;
 using System;
 using System.Drawing;
 using System.Drawing.Drawing2D;
@@ -19,10 +20,13 @@ namespace MICE.TestApp
         private Bitmap bitmap;
         private Graphics graphics;
         private NESInputs inputs;
+        private IKernel injectionKernel;
 
         public Form1()
         {
             this.InitializeComponent();
+
+            this.injectionKernel = new StandardKernel(new NintendoModule());
 
             this.KeyPreview = true;
             this.KeyDown += this.OnInputDownChanged;
@@ -104,12 +108,15 @@ namespace MICE.TestApp
 
         private void Go()
         {
-            this.nes = new NES();
+            this.nes = new NES(null);
             //var cartridge = NESLoader.CreateCartridge(@"C:\Emulators\NES\Games\World\Donkey Kong (JU).nes");
             //var cartridge = NESLoader.CreateCartridge(@"C:\Emulators\NES\Games\Super Mario Bros.nes");
             //var cartridge = NESLoader.CreateCartridge(@"G:\Emulators\NES\Games\USA\Legend of Zelda, The (U) (PRG 1).nes");
             //var cartridge = NESLoader.CreateCartridge(@"C:\Emulators\NES\Games\USA\Bionic Commando (U).nes");
             //var cartridge = NESLoader.CreateCartridge(@"g:\Emulators\NES\Games\USA\Slalom (U).nes");
+
+            // Controller Tests
+            var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\read_joy3\test_buttons.nes");
 
             // CPU Tests
             // PASSING
@@ -166,7 +173,7 @@ namespace MICE.TestApp
             //var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\blargg_ppu_tests_2005.09.15b\vbl_clear_time.nes");
             //var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\blargg_ppu_tests_2005.09.15b\vram_access.nes");
             //var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\full_palette\full_palette.nes");
-            var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\scrolltest\scroll.nes");
+            //var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\scrolltest\scroll.nes");
 
             // needs CNROM
             //var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\cpu_dummy_reads\cpu_dummy_reads.nes");
@@ -244,10 +251,10 @@ namespace MICE.TestApp
             switch (e.KeyData)
             {
                 case Keys.Z:
-                    this.SetInput(NESInputs.A);
+                    this.SetInput(NESInputs.B);
                     break;
                 case Keys.X:
-                    this.SetInput(NESInputs.B);
+                    this.SetInput(NESInputs.A);
                     break;
                 case Keys.Tab:
                     this.SetInput(NESInputs.Select);
@@ -293,10 +300,10 @@ namespace MICE.TestApp
             switch (e.KeyData)
             {
                 case Keys.Z:
-                    this.RemoveInput(NESInputs.A);
+                    this.RemoveInput(NESInputs.B);
                     break;
                 case Keys.X:
-                    this.RemoveInput(NESInputs.B);
+                    this.RemoveInput(NESInputs.A);
                     break;
                 case Keys.Tab:
                     this.RemoveInput(NESInputs.Select);

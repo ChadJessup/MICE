@@ -12,12 +12,12 @@ namespace MICE.PPU.RicohRP2C02.Handlers
             public const int MaxSpritesOnLine = 8;
         }
 
+        private readonly PPURegisters registers;
         private readonly IMemoryMap ppuMemoryMap;
         private readonly IMemoryMap cpuMemoryMap;
-        private readonly PPURegisters registers;
+        private readonly PaletteHandler paletteHandler;
         private readonly List<Sprite> currentSprites = new List<Sprite>(Constants.MaxSprites);
         private readonly List<Sprite> currentScanlineSprites = new List<Sprite>(Constants.MaxSprites);
-        private readonly PaletteHandler paletteHandler;
 
         public SpriteHandler(IMemoryMap ppuMemoryMap, PPURegisters registers, PaletteHandler paletteHandler, IMemoryMap cpuMemoryMap)
         {
@@ -116,7 +116,7 @@ namespace MICE.PPU.RicohRP2C02.Handlers
                     continue;
                 }
 
-                sprite.SetFinalPixel(x, y, this.ppuMemoryMap);
+                sprite.SetFinalPixel(this.ppuMemoryMap, x, y);
 
                 var finalPixel = this.paletteHandler.GetSpriteColor(sprite);
                 return (finalPixel, sprite);
@@ -141,7 +141,7 @@ namespace MICE.PPU.RicohRP2C02.Handlers
                     continue;
                 }
 
-                sprite.SetFinalPixel(x, y, this.ppuMemoryMap);
+                sprite.SetFinalPixel(this.ppuMemoryMap, x, y);
 
                 var finalPixel = this.paletteHandler.GetSpriteColor(sprite);
                 return (finalPixel, sprite);

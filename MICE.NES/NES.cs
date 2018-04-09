@@ -22,6 +22,10 @@ namespace MICE.Nintendo
             public const string DebugFile = @"C:\Emulators\NES\MICE - Trace.txt";
         }
 
+        private readonly NESContext context;
+
+        public NES(NESContext context) => this.context = context;
+
         public string Name { get; } = "Nintendo Entertainment System";
         public long CurrentFrame { get; private set; } = 1;
 
@@ -33,6 +37,7 @@ namespace MICE.Nintendo
         public ControlBus ControlBus { get; } = new ControlBus();
 
         public RicohRP2C02 PPU { get; private set; }
+        public PPURegisters PPURegisters { get; private set; }
         public IMemoryMap CPUMemoryMap { get; private set; }
 
         public NESCartridge Cartridge { get; private set; }
@@ -58,9 +63,9 @@ namespace MICE.Nintendo
                 throw new InvalidOperationException("Cartridge must be loaded first, unable to power on.");
             }
 
-            var ppuRegisters = new PPURegisters();
-            this.CPUMemoryMap = new NESMemoryMap(ppuRegisters, this.InputHandler);
-            this.PPU = new RicohRP2C02(new PPUMemoryMap(), ppuRegisters, this.CPUMemoryMap);
+            this.PPURegisters = new PPURegisters();
+            this.CPUMemoryMap = new NESMemoryMap(this.PPURegisters, this.InputHandler);
+            this.PPU = new RicohRP2C02(new PPUMemoryMap(), this.PPURegisters, this.CPUMemoryMap);
 
             this.PPU.Registers.OAMDMA.AfterWriteAction = this.DMATransfer;
 

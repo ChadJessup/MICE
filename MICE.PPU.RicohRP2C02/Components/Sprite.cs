@@ -111,7 +111,7 @@ namespace MICE.PPU.RicohRP2C02.Components
                 : spriteRow;
 
             this.lowBits = memoryMap.ReadByte(this.TileAddress + spriteRow);
-            this.highBits = memoryMap.ReadByte(this.TileAddress + 8 + spriteRow);
+            this.highBits = memoryMap.ReadByte(this.TileAddress + spriteRow + 8);
         }
 
         /// <summary>
@@ -125,11 +125,11 @@ namespace MICE.PPU.RicohRP2C02.Components
         /// <summary>
         /// Gets the pixel details for a particular X,Y coordinate on the screen.
         /// </summary>
+        /// <param name="ppuMemoryMap">The PPU memory bank that would contain pixel details.</param>
         /// <param name="x">The screen-based X coordinate.</param>
         /// <param name="y">The screen-based Y coordinate.</param>
-        /// <param name="ppuMemoryMap">The PPU memory bank that would contain pixel details.</param>
         /// <returns>The pixel details that contain the final palette details that need to be muxed to the screen.</returns>
-        public void SetFinalPixel(int x, int y, IMemoryMap ppuMemoryMap)
+        public void SetFinalPixel(IMemoryMap ppuMemoryMap, int x, int y)
         {
             int offsetX = x - this.Position.X;
             int screenX = this.IsFlippedHorizontally ? 7 - offsetX : offsetX;
@@ -139,8 +139,14 @@ namespace MICE.PPU.RicohRP2C02.Components
 
         private byte GetColorIndex(int x)
         {
-            byte lowBit = (byte)((this.lowBits >> (7 - x)) & 1);
-            byte highBit = (byte)((this.highBits >> (7 - x)) & 1);
+            var offset = 7 - x;
+            byte lowBit = (byte)((this.lowBits >> offset) & 0b00000001);
+            byte highBit = (byte)((this.highBits >> offset) & 0b00000001);
+
+            if (this.lowBits != 0x00 || this.highBits != 0x00)
+            {
+
+            }
 
             return (byte)(lowBit + highBit * 2);
         }

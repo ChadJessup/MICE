@@ -204,7 +204,8 @@ namespace MICE.PPU.RicohRP2C02
             {
                 this.HandleVerticalBlankLines();
             }
-            else if (this.ScanLine <= 240 && this.Cycle >= 257 && this.Cycle <= 320)
+
+            if (this.ScanLine <= 240 && this.Cycle >= 257 && this.Cycle <= 320)
             {
                 this.Registers.OAMADDR.WriteInternal(0);
             }
@@ -303,28 +304,28 @@ namespace MICE.PPU.RicohRP2C02
                 this.IsVBlank = false;
             };
 
-            this.Registers.PPUSTATUS.ReadByteInsteadAction = (_, value) =>
+           /* this.Registers.PPUSTATUS.ReadByteInsteadAction = (_, value) =>
             {
-                byte result = (byte)(this.RegisterLatch & 0b00011111);
+                //byte result = (byte)(this.RegisterLatch & 0b00011111);
 
-                if (this.SpriteHandler.WasSpriteOverflow)
-                {
-                    result |= 0b00100000;
-                }
+                //if (this.SpriteHandler.WasSpriteOverflow)
+                //{
+                //    result |= 0b00100000;
+                //}
 
-                if (this.SpriteHandler.WasSprite0Hit)
-                {
-                    result |= 0b01000000;
-                }
+                //if (this.SpriteHandler.WasSprite0Hit)
+                //{
+                //    result |= 0b01000000;
+                //}
 
-                if (this.IsVBlank)
-                {
-                    result |= 0b10000000;
-                }
+                //if (this.IsVBlank)
+                //{
+                //    result |= 0b10000000;
+                //}
 
                 return (byte)value;
             };
-
+            */
             this.Registers.OAMADDR.ReadByteInsteadAction = (_, value) => this.RegisterLatch;
             this.Registers.OAMADDR.AfterWriteAction = (_, value) => this.RegisterLatch = value;
 
