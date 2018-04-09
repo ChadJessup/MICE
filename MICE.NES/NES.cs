@@ -29,8 +29,11 @@ namespace MICE.Nintendo
             this.context = context;
 
             this.PPU = this.context.PPU;
+
             this.CPU = (Ricoh2A03)this.context.CPU;
             this.CPUMemoryMap = this.CPU.MemoryMap;
+
+            this.InputHandler = context.InputHandler;
         }
 
         public string Name { get; } = "Nintendo Entertainment System";

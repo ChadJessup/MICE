@@ -97,6 +97,8 @@ namespace MICE.PPU.RicohRP2C02.Components
 
         public bool IsSmallSprite { get; private set; }
 
+        public bool IsTransparentPixel => this.ColorIndex % 4 == 0;
+
         public bool IsOnScanline(int scanline, int offset) => scanline >= this.Position.Y && scanline < this.Position.Y + offset;
 
         public int Width { get; } = 8;
@@ -143,18 +145,13 @@ namespace MICE.PPU.RicohRP2C02.Components
             byte lowBit = (byte)((this.lowBits >> offset) & 0b00000001);
             byte highBit = (byte)((this.highBits >> offset) & 0b00000001);
 
-            if (this.lowBits != 0x00 || this.highBits != 0x00)
-            {
-
-            }
-
             return (byte)(lowBit + highBit * 2);
         }
 
         // Certain sprite details are changed per frame, so we don't want the mutable data as part of the comparison.
         // The TileIndex and TileAddress are the only values that are not mutable.
-        public static bool operator ==(Sprite a, Sprite b) => a.TileIndex == b.TileIndex && a.TileAddress == b.TileAddress;
-        public static bool operator !=(Sprite a, Sprite b) => !(a.TileIndex == b.TileIndex && a.TileAddress == b.TileAddress);
+        public static bool operator ==(Sprite a, Sprite b) => a?.TileIndex == b?.TileIndex && a?.TileAddress == b?.TileAddress;
+        public static bool operator !=(Sprite a, Sprite b) => !(a?.TileIndex == b?.TileIndex && a?.TileAddress == b?.TileAddress);
         public override bool Equals(object obj) => this.TileIndex == (obj as Sprite)?.TileIndex && this.TileAddress == (obj as Sprite)?.TileAddress;
         public bool Equals(Sprite other) => this.TileIndex == other?.TileIndex && this.TileAddress == other?.TileAddress;
         public override int GetHashCode() => this.TileIndex.GetHashCode() + this.TileAddress.GetHashCode();

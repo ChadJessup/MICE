@@ -21,13 +21,15 @@ namespace MICE.PPU.RicohRP2C02.Handlers
             this.palettes.AddRange(memoryMap.GetSegmentsInRange(0x3F00, 0x3F1F));
         }
 
+        public byte UniversalBackgroundColor => this.BackgroundPalette0.GetColor(0);
+
         public byte GetBackgroundColor(int paletteId, byte colorIndex)
         {
             var address = (ushort)(0x3f00 + 4 * paletteId + colorIndex);
 
             if (colorIndex == 0)
             {
-                this.memoryMap.ReadBuffer = this.BackgroundPalette0.GetColor(0);
+                this.memoryMap.ReadBuffer = this.UniversalBackgroundColor;
             }
             else
             {
@@ -42,7 +44,7 @@ namespace MICE.PPU.RicohRP2C02.Handlers
         {
             if (sprite.ColorIndex == 0)
             {
-                this.memoryMap.ReadBuffer = 0;
+                this.memoryMap.ReadBuffer = this.UniversalBackgroundColor;
             }
             else
             {

@@ -65,23 +65,22 @@ namespace MICE.PPU.RicohRP2C02.Handlers
 
             var tileByte = (byte)(data & 0x0F);
 
-            var colorIndex = tileByte;
-
             var tile = new Tile();
+            tile.ColorIndex = tileByte;
 
             // Transparent background.
             if (tileByte % 4 == 0)
             {
-                colorIndex = 0;
+                tile.ColorIndex = 0;
             }
 
             tile.TileByte = tileByte;
 
             var paletteId = this.attribute.GetPaletteOffset();
 
-            tile.PaletteAddress = (ushort)(0x3f00 + 4 * paletteId + colorIndex);
+            tile.PaletteAddress = (ushort)(0x3f00 + 4 * paletteId + tile.ColorIndex);
 
-            var palette = this.paletteHandler.GetBackgroundColor(paletteId, colorIndex);
+            var palette = this.paletteHandler.GetBackgroundColor(paletteId, tile.ColorIndex);
             return (palette, tile);
         }
 
@@ -99,7 +98,7 @@ namespace MICE.PPU.RicohRP2C02.Handlers
         public void FetchAttributeByte()
         {
             var address = (ushort)(0x23C0 | (this.internalRegisters.v & 0x0C00) | ((this.internalRegisters.v >> 4) & 0x38) | ((this.internalRegisters.v >> 2) & 0x07));
-            int shift = ((this.internalRegisters.v >> 4) & 0b00000100) | (this.internalRegisters.v & 0b00000010);
+            //int shift = ((this.internalRegisters.v >> 4) & 0b00000100) | (this.internalRegisters.v & 0b00000010);
 
             var value = this.ppuMemoryMap.ReadByte(address);
             this.attribute = new NametableAttribute(value, this.internalRegisters.v);

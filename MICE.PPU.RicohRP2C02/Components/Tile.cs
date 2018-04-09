@@ -14,6 +14,10 @@
         public NametableAttribute Attribute { get; private set; }
         public byte TileByte { get; set; }
 
+        public byte ColorIndex { get; set; }
+
+        public bool IsTransparentPixel => this.ColorIndex % 4 == 0;
+
         public byte nameTableByte = 0;
         public byte attributeByte = 0;
         public byte highTileByte = 0;

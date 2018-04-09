@@ -118,6 +118,11 @@ namespace MICE.PPU.RicohRP2C02.Handlers
 
                 sprite.SetFinalPixel(this.ppuMemoryMap, x, y);
 
+                if (sprite.IsTransparentPixel)
+                {
+                    continue;
+                }
+
                 var finalPixel = this.paletteHandler.GetSpriteColor(sprite);
                 return (finalPixel, sprite);
             }
