@@ -193,7 +193,8 @@ namespace MICE.PPU.RicohRP2C02
                 {
                     this.SecondaryOAM.Data.Clear(0xFF);
                 }
-                else if (this.Cycle == 257 && (this.BackgroundHandler.ShowBackground || this.SpriteHandler.ShowSprites))
+
+                if (this.Cycle == 140 && (this.BackgroundHandler.ShowBackground || this.SpriteHandler.ShowSprites))
                 {
                     this.SpriteHandler.EvaluateSpritesOnScanline(this.PrimaryOAM, this.ScanLine, this.Cycle);
                 }
@@ -421,11 +422,6 @@ namespace MICE.PPU.RicohRP2C02
                 return;
             }
 
-            if (x == 255)
-            {
-                return;
-            }
-
             if (!this.BackgroundHandler.ShowBackground || !this.SpriteHandler.ShowSprites)
             {
                 return;
@@ -437,6 +433,11 @@ namespace MICE.PPU.RicohRP2C02
             }
 
             if (x <= 7 && this.Registers.PPUMASK.ReadInternal() != 0x1e)
+            {
+                return;
+            }
+
+            if (x == 255)
             {
                 return;
             }

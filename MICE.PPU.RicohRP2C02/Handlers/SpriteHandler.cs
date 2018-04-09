@@ -78,7 +78,7 @@ namespace MICE.PPU.RicohRP2C02.Handlers
 
             var spriteHeight = this.IsSmallSprites ? 8 : 16;
 
-            for (byte index = 0; index < Constants.MaxSprites; index++)
+            for (byte index = 0; index < Constants.MaxSprites && this.CurrentScanlineSpriteCount <= 8; index++)
             {
                 var spriteY = oam[index * 4];
                 var spriteRow = scanline - spriteY;
@@ -92,6 +92,11 @@ namespace MICE.PPU.RicohRP2C02.Handlers
                 newSprite.GatherPattern(spriteRow, this.ppuMemoryMap);
 
                 this.currentScanlineSprites.Add(newSprite);
+            }
+
+            if (this.CurrentScanlineSpriteCount >= 9)
+            {
+                this.WasSpriteOverflow = true;
             }
         }
 
@@ -165,7 +170,7 @@ namespace MICE.PPU.RicohRP2C02.Handlers
 
             var spriteHeight = this.IsSmallSprites ? 8 : 16;
 
-            for (; n < Constants.MaxSprites; n++, m = 0)
+            for (; n < Constants.MaxSprites && foundSprites < 8; n++, m = 0)
             {
                 byte spriteY = primaryOAM[4 * n + m++];
 
