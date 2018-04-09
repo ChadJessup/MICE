@@ -97,7 +97,7 @@ namespace MICE.PPU.RicohRP2C02.Handlers
 
         public (byte, Sprite) GetSpritePixel(int x, int y, OAM primaryOAM)
         {
-            if (x <= 8 && !this.DrawLeft8SpritePixels)
+            if (x <= 7 && !this.DrawLeft8SpritePixels)
             {
                 return (0, null);
             }

@@ -2,6 +2,7 @@
 using MICE.Common.Interfaces;
 using MICE.PPU.RicohRP2C02.Components;
 using MICE.PPU.RicohRP2C02.Handlers;
+using System;
 
 namespace MICE.PPU.RicohRP2C02
 {
@@ -267,7 +268,6 @@ namespace MICE.PPU.RicohRP2C02
             };
 
 
-            byte bufferedRead = 0;
             this.Registers.PPUDATA.ReadShortInsteadAction = (_, value) => this.InternalRegisters.v;
             this.Registers.PPUDATA.AfterReadAction = (_, value) => this.InternalRegisters.v += (ushort)this.VRAMAddressIncrement;
             this.Registers.PPUDATA.AfterWriteAction = (_, value) =>
@@ -282,12 +282,14 @@ namespace MICE.PPU.RicohRP2C02
             {
                 if (this.InternalRegisters.v >= 0x3F00 && this.InternalRegisters.v <= 0x3FFF)
                 {
-                    bufferedRead = this.MemoryMap.ReadByte(this.InternalRegisters.v);
-                    return bufferedRead;
+                    var paletteByte = this.MemoryMap.ReadByte(this.InternalRegisters.v);
+                    this.MemoryMap.ReadBuffer = this.MemoryMap.ReadByte((ushort)(this.InternalRegisters.v - 0x1000));
+
+                    return paletteByte;
                 }
 
-                var temp = bufferedRead;
-                bufferedRead = this.MemoryMap.ReadByte(this.InternalRegisters.v);
+                var temp = this.MemoryMap.ReadBuffer;
+                this.MemoryMap.ReadBuffer = this.MemoryMap.ReadByte(this.InternalRegisters.v);
 
                 return temp;
             };
@@ -373,10 +375,7 @@ namespace MICE.PPU.RicohRP2C02
 
             this.ScreenData[(y * Constants.NTSCWidth) + x] = muxedPixel;
 
-            if (drawnTile.tile?.TileByte % 4 != 0 && drawnSprite.spritePixel % 4 != 0)
-            {
-                this.HandleSprite0Hit(drawnTile, drawnSprite);
-            }
+            this.HandleSprite0Hit(x, y, drawnTile, drawnSprite);
         }
 
         private void Fetch()
@@ -403,8 +402,6 @@ namespace MICE.PPU.RicohRP2C02
             }
         }
 
-        byte[] oam_temp = new byte[8];
-
         private void HandleVerticalBlankLines()
         {
             this.IsVBlank = true;
@@ -416,10 +413,30 @@ namespace MICE.PPU.RicohRP2C02
             }
         }
 
-        private void HandleSprite0Hit((byte backgroundPixel, Tile tile) drawnTile, (byte spritePixel, Sprite sprite) drawnSprite)
+        private void HandleSprite0Hit(int x, int y, (byte backgroundPixel, Tile tile) drawnTile, (byte spritePixel, Sprite sprite) drawnSprite)
         {
             // Sprite0 hit flag gets reset in cycle 1 of prerender line.
             if (this.SpriteHandler.WasSprite0Hit)
+            {
+                return;
+            }
+
+            if (x == 255)
+            {
+                return;
+            }
+
+            if (!this.BackgroundHandler.ShowBackground || !this.SpriteHandler.ShowSprites)
+            {
+                return;
+            }
+
+            if (drawnTile.tile?.TileByte % 4 == 0 || drawnSprite.spritePixel % 4 == 0)
+            {
+                return;
+            }
+
+            if (x <= 7 && this.Registers.PPUMASK.ReadInternal() != 0x1e)
             {
                 return;
             }

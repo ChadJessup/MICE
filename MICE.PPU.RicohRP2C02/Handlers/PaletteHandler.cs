@@ -9,9 +9,12 @@ namespace MICE.PPU.RicohRP2C02.Handlers
     {
         private List<IMemorySegment> palettes = new List<IMemorySegment>();
         private Palette BackgroundPalette0;
+        private readonly PPUMemoryMap memoryMap;
 
         public PaletteHandler(PPUMemoryMap memoryMap)
         {
+            this.memoryMap = memoryMap;
+
             var memorySegments = memoryMap.GetSegmentsInRange(0x3F00, 0x3FFF);
 
             this.BackgroundPalette0 = memoryMap.GetMemorySegment<Palette>("Background palette 0");
@@ -24,25 +27,32 @@ namespace MICE.PPU.RicohRP2C02.Handlers
 
             if (colorIndex == 0)
             {
-
-                return this.BackgroundPalette0.GetColor(0);
+                this.memoryMap.ReadBuffer = this.BackgroundPalette0.GetColor(0);
+            }
+            else
+            {
+                var palette = this.palettes.First(p => p.IsIndexInRange(address));
+                this.memoryMap.ReadBuffer = palette.ReadByte(address);
             }
 
-            var palette = this.palettes.First(p => p.IsIndexInRange(address));
-            return palette.ReadByte(address);
+            return this.memoryMap.ReadBuffer;
         }
 
         public byte GetSpriteColor(Sprite sprite)
         {
             if (sprite.ColorIndex == 0)
             {
-                return 0;
+                this.memoryMap.ReadBuffer = 0;
+            }
+            else
+            {
+                sprite.PaletteAddress = (ushort)(0x3f10 + 4 * sprite.PaletteNumber + sprite.ColorIndex);
+
+                var palette = this.palettes.First(p => p.IsIndexInRange(sprite.PaletteAddress));
+                this.memoryMap.ReadBuffer = palette.ReadByte(sprite.PaletteAddress);
             }
 
-            sprite.PaletteAddress = (ushort)(0x3f10 + 4 * sprite.PaletteNumber + sprite.ColorIndex);
-
-            var palette = this.palettes.First(p => p.IsIndexInRange(sprite.PaletteAddress));
-            return palette.ReadByte(sprite.PaletteAddress);
+            return this.memoryMap.ReadBuffer;
         }
     }
 }

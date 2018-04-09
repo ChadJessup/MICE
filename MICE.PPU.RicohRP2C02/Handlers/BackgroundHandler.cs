@@ -55,7 +55,7 @@ namespace MICE.PPU.RicohRP2C02.Handlers
 
         public (byte drawnPixel, Tile backgroundTile) GetBackgroundPixel(int x, int y)
         {
-            if (x <= 8 && !this.DrawLeft8BackgroundPixels)
+            if (x <= 7 && !this.DrawLeft8BackgroundPixels)
             {
                 return (0, null);
             }

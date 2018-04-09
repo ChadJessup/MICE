@@ -47,5 +47,15 @@ namespace MICE.PPU.RicohRP2C02
             // Mirrors
             this.Add(new MirroredMemory(0x4000, 0xFFFF, 0x0000, 0x3FFF, this, "Mirrored PPU"));
         }
+
+        /// <summary>
+        /// Gets or sets the read buffer that is buffered by certain PPU Reads/Writes.
+        /// </summary>
+        public byte ReadBuffer { get; set; }
+
+        public override byte ReadByte(int index)
+        {
+            return base.ReadByte(index);
+        }
     }
 }
