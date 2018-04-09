@@ -2,7 +2,7 @@
 using MICE.Common.Interfaces;
 using MICE.PPU.RicohRP2C02.Components;
 using MICE.PPU.RicohRP2C02.Handlers;
-using System;
+using Ninject;
 
 namespace MICE.PPU.RicohRP2C02
 {
@@ -18,12 +18,19 @@ namespace MICE.PPU.RicohRP2C02
             public const int NTSCHeight = 224;
         }
 
-        public RicohRP2C02(PPUMemoryMap memoryMap, PPURegisters registers, IMemoryMap cpuMemoryMap)
+        public RicohRP2C02
+            (
+                [Named("PPU")] IMemoryMap memoryMap,
+                [Named("CPU")] IMemoryMap cpuMemoryMap,
+                PPURegisters registers,
+                PPUInternalRegisters internalRegisters,
+                ScrollHandler scrollHandler
+            )
         {
-            this.InternalRegisters = new PPUInternalRegisters();
+            this.InternalRegisters = internalRegisters;
 
             this.Registers = registers;
-            this.MemoryMap = memoryMap;
+            this.MemoryMap = (PPUMemoryMap)memoryMap;
             this.ScrollHandler = new ScrollHandler(this.Registers, this.InternalRegisters);
 
             this.PaletteHandler = new PaletteHandler(this.MemoryMap);

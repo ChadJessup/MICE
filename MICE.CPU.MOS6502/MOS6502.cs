@@ -1,5 +1,6 @@
 ﻿using MICE.Common;
 using MICE.Common.Interfaces;
+using Ninject;
 using System;
 using System.Collections.Generic;
 
@@ -12,10 +13,9 @@ namespace MICE.CPU.MOS6502
             public const int ExtraNMIHandledCycles = 7;
         }
 
-        private readonly IMemoryMap memoryMap;
         private Opcodes Opcodes;
 
-        public MOS6502(IMemoryMap memoryMap) => this.memoryMap = memoryMap;
+        public MOS6502([Named("CPU")] IMemoryMap memoryMap) => this.MemoryMap = memoryMap;
 
         public IReadOnlyDictionary<InterruptType, int> InterruptOffsets = new Dictionary<InterruptType, int>()
         {
@@ -27,6 +27,7 @@ namespace MICE.CPU.MOS6502
 
         public Endianness Endianness { get; } = Endianness.LittleEndian;
 
+        public IMemoryMap MemoryMap { get; }
         public ushort LastPC { get; set; }
 
         private string lastAccessedAddress;
@@ -55,7 +56,7 @@ namespace MICE.CPU.MOS6502
         /// <summary>
         /// Gets the MOS6502 Registers.
         /// </summary>
-        public Registers Registers { get; private set; } = new Registers();
+        public Registers Registers { get; private set; }
 
         /// <summary>
         /// Gets a value indicating if the result of the last calculation needs to be carried over to allow for larger calculations.
@@ -149,9 +150,9 @@ namespace MICE.CPU.MOS6502
         {
             this.Opcodes = new Opcodes(this);
             this.Registers = new Registers();
-            this.Registers.PC.Write(this.memoryMap.ReadShort(this.InterruptOffsets[InterruptType.Reset]));
+            this.Registers.PC.Write(this.MemoryMap.ReadShort(this.InterruptOffsets[InterruptType.Reset]));
 
-            this.Stack = this.memoryMap.GetMemorySegment<Stack>("Stack");
+            this.Stack = this.MemoryMap.GetMemorySegment<Stack>("Stack");
             this.Stack.SetInitialStackPointer(this.Registers.SP);
             this.Stack.Push(0x00);
             this.Stack.Push(0x00);
@@ -173,7 +174,7 @@ namespace MICE.CPU.MOS6502
             // this.memoryMap.Write(0x4017, 0x00);
 
             // All channels disabled.
-            this.memoryMap.Write(0x4015, 0x00);
+            this.MemoryMap.Write(0x4015, 0x00);
         }
 
         private bool shouldHandleNMI = false;
@@ -234,7 +235,7 @@ namespace MICE.CPU.MOS6502
             ushort pc = this.Registers.PC;
             this.CycleComplete?.Invoke(this, null);
 
-            this.memoryMap.Write(address, value);
+            this.MemoryMap.Write(address, value);
 
             if (incrementPC)
             {
@@ -250,7 +251,7 @@ namespace MICE.CPU.MOS6502
             ushort pc = this.Registers.PC;
             this.CycleComplete?.Invoke(this, null);
 
-            var value = this.memoryMap.ReadByte(address);
+            var value = this.MemoryMap.ReadByte(address);
 
             if (incrementPC)
             {
@@ -264,7 +265,7 @@ namespace MICE.CPU.MOS6502
         public ushort ReadShortAt(ushort address, bool incrementPC = true)
         {
             ushort pc = this.Registers.PC;
-            var value = this.memoryMap.ReadShort(address);
+            var value = this.MemoryMap.ReadShort(address);
 
             if (incrementPC)
             {
@@ -284,7 +285,7 @@ namespace MICE.CPU.MOS6502
             this.Stack.Push(this.Registers.P);
 
             // Set PC to Interrupt vector.
-            this.Registers.PC.Write(this.memoryMap.ReadShort(this.InterruptOffsets[interruptType]));
+            this.Registers.PC.Write(this.MemoryMap.ReadShort(this.InterruptOffsets[interruptType]));
         }
     }
 }

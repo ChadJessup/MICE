@@ -24,7 +24,14 @@ namespace MICE.Nintendo
 
         private readonly NESContext context;
 
-        public NES(NESContext context) => this.context = context;
+        public NES(NESContext context)
+        {
+            this.context = context;
+
+            this.PPU = this.context.PPU;
+            this.CPU = (Ricoh2A03)this.context.CPU;
+            this.CPUMemoryMap = this.CPU.MemoryMap;
+        }
 
         public string Name { get; } = "Nintendo Entertainment System";
         public long CurrentFrame { get; private set; } = 1;
@@ -43,7 +50,7 @@ namespace MICE.Nintendo
         public NESCartridge Cartridge { get; private set; }
         public Ricoh2A03 CPU { get; private set; }
 
-        public InputHandler InputHandler { get; } = new InputHandler();
+        public InputHandler InputHandler { get; }
         public byte[] Screen { get; private set; } = new byte[256 * 240];
 
         public bool IsPoweredOn => (this.CPU?.IsPowered ?? false) && (this.PPU?.IsPowered ?? false);
@@ -63,15 +70,15 @@ namespace MICE.Nintendo
                 throw new InvalidOperationException("Cartridge must be loaded first, unable to power on.");
             }
 
-            this.PPURegisters = new PPURegisters();
-            this.CPUMemoryMap = new NESMemoryMap(this.PPURegisters, this.InputHandler);
-            this.PPU = new RicohRP2C02(new PPUMemoryMap(), this.PPURegisters, this.CPUMemoryMap);
+            //this.PPURegisters = new PPURegisters();
+            //this.CPUMemoryMap = new NESMemoryMap(this.PPURegisters, this.InputHandler);
+            //this.PPU = new RicohRP2C02(new PPUMemoryMap(), this.PPURegisters, this.CPUMemoryMap);
 
             this.PPU.Registers.OAMDMA.AfterWriteAction = this.DMATransfer;
 
             this.MapToCartridge();
 
-            this.CPU = new Ricoh2A03(this.CPUMemoryMap);
+            //this.CPU = new Ricoh2A03(this.CPUMemoryMap);
 
             this.CPU.PowerOn();
             this.PPU.PowerOn();
