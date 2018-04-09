@@ -15,7 +15,7 @@ namespace MICE.Nintendo
             Bind<NESContext>().To<NESContext>().InSingletonScope();
 
             Bind<ICPU>().To<Ricoh2A03>().InSingletonScope();
-            Bind<IMemoryMap>().To<NESMemoryMap>().InSingletonScope().Named("CPU");
+            Bind<IMemoryMap>().To<NESRawMemoryMap>().InSingletonScope().Named("CPU");
 
             Bind<Registers>().To<Registers>().InSingletonScope();
             Bind<RicohRP2C02>().To<RicohRP2C02>().InSingletonScope();

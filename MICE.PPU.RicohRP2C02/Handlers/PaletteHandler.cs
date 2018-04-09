@@ -1,5 +1,6 @@
 ﻿using MICE.Common.Interfaces;
 using MICE.PPU.RicohRP2C02.Components;
+using Ninject;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -11,14 +12,14 @@ namespace MICE.PPU.RicohRP2C02.Handlers
         private Palette BackgroundPalette0;
         private readonly PPUMemoryMap memoryMap;
 
-        public PaletteHandler(PPUMemoryMap memoryMap)
+        public PaletteHandler([Named("PPU")] IMemoryMap memoryMap)
         {
-            this.memoryMap = memoryMap;
+            this.memoryMap = (PPUMemoryMap)memoryMap;
 
-            var memorySegments = memoryMap.GetSegmentsInRange(0x3F00, 0x3FFF);
+            var memorySegments = this.memoryMap.GetSegmentsInRange(0x3F00, 0x3FFF);
 
-            this.BackgroundPalette0 = memoryMap.GetMemorySegment<Palette>("Background palette 0");
-            this.palettes.AddRange(memoryMap.GetSegmentsInRange(0x3F00, 0x3F1F));
+            this.BackgroundPalette0 = this.memoryMap.GetMemorySegment<Palette>("Background palette 0");
+            this.palettes.AddRange(this.memoryMap.GetSegmentsInRange(0x3F00, 0x3F1F));
         }
 
         public byte UniversalBackgroundColor => this.BackgroundPalette0.GetColor(0);

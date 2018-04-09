@@ -111,10 +111,10 @@ namespace MICE.TestApp
             this.nes = this.injectionKernel.Get<NES>();
 
             //var cartridge = NESLoader.CreateCartridge(@"C:\Emulators\NES\Games\World\Donkey Kong (JU).nes");
-            var cartridge = NESLoader.CreateCartridge(@"C:\Emulators\NES\Games\Super Mario Bros.nes");
-            //var cartridge = NESLoader.CreateCartridge(@"G:\Emulators\NES\Games\USA\Legend of Zelda, The (U) (PRG 1).nes");
-            //var cartridge = NESLoader.CreateCartridge(@"C:\Emulators\NES\Games\USA\Bionic Commando (U).nes");
-            //var cartridge = NESLoader.CreateCartridge(@"g:\Emulators\NES\Games\USA\Slalom (U).nes");
+            //var cartridge = NESLoader.CreateCartridge(@"C:\Emulators\NES\Games\Super Mario Bros.nes");
+            //var cartridge = NESLoader.CreateCartridge(@"C:\Emulators\NES\Games\USA\Legend of Zelda, The (U) (PRG 1).nes");
+            var cartridge = NESLoader.CreateCartridge(@"C:\Emulators\NES\Games\USA\Bionic Commando (U).nes");
+            //var cartridge = NESLoader.CreateCartridge(@"C:\Emulators\NES\Games\USA\Slalom (U).nes");
 
             // Controller Tests
             //var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\read_joy3\test_buttons.nes");

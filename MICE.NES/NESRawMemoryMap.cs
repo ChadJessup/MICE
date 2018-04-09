@@ -34,6 +34,7 @@ namespace MICE.Nintendo
             /// Above mirrored... until 0x1FFF...
 
             public static Range RegisterRanges = new Range(0x2000, 0x401F);
+            public static Range APURegisterRange = new Range(0x4000, 0x4017);
 
             // Expansion Memory @ 0x4020 - 0x5FFF
 
@@ -62,11 +63,21 @@ namespace MICE.Nintendo
 
         private static class APURegisterAddresses
         {
+            public const ushort Pulse1TimerLow = 0x4002;
+            public const ushort Pulse1TimerHigh = 0x4003;
+
+            public const ushort Pulse2TimerLow = 0x4006;
+            public const ushort Pulse2TimerHigh = 0x4007;
+
+            public const ushort TriangleTimerLow = 0x400A;
+            public const ushort TriangleTimerHigh = 0x400B;
+
             public const ushort DirectLoad = 0x4011;
             public const ushort ChannelStatus = 0x4015;
         }
 
         private Dictionary<int, Register8Bit> ppuRegisterLookup;
+        private Dictionary<int, Register8Bit> apuRegisterLookup;
 
         private byte[] memory = new byte[0x10000];
         private readonly PPURegisters ppuRegisters;
@@ -101,6 +112,18 @@ namespace MICE.Nintendo
                 { PPURegisterAddresses.PPUADDR, ppuRegisters.PPUADDR },
                 { PPURegisterAddresses.PPUDATA, ppuRegisters.PPUDATA},
                 { PPURegisterAddresses.OAMDMA, ppuRegisters.OAMDMA }
+            };
+
+            this.apuRegisterLookup = new Dictionary<int, Register8Bit>()
+            {
+                { APURegisterAddresses.Pulse1TimerLow, null },
+                { APURegisterAddresses.Pulse1TimerHigh, null },
+                { APURegisterAddresses.Pulse2TimerLow, null },
+                { APURegisterAddresses.Pulse2TimerHigh, null },
+                { APURegisterAddresses.DirectLoad, null },
+                { APURegisterAddresses.ChannelStatus, null},
+                { APURegisterAddresses.TriangleTimerLow, null},
+                { APURegisterAddresses.TriangleTimerHigh, null},
             };
 
             this.ScopeMemoryRanges();
@@ -216,9 +239,14 @@ namespace MICE.Nintendo
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void WriteRegister(int index, byte value)
         {
-            if (this.ppuRegisterLookup.TryGetValue(index, out Register8Bit register))
+            if (this.ppuRegisterLookup.TryGetValue(index, out Register8Bit ppuRegister))
             {
-                register.Write(value);
+                ppuRegister.Write(value);
+                return;
+            }
+
+            if (MemoryRanges.APURegisterRange.IsInRange(index))
+            {
                 return;
             }
 
@@ -226,9 +254,6 @@ namespace MICE.Nintendo
             {
                 case PPURegisterAddresses.PPUSCROLL:
                     this.ppuRegisters.PPUSCROLL.Write(value);
-                    break;
-                case APURegisterAddresses.DirectLoad:
-                case APURegisterAddresses.ChannelStatus:
                     break;
                 case var _ when MemoryRanges.Controller1.IsInRange(index):
                     this.Controller1.Write(index, value);
