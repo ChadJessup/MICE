@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace MICE.PPU.RicohRP2C02.Handlers
+﻿namespace MICE.PPU.RicohRP2C02.Handlers
 {
     public class ScrollHandler
     {

@@ -2,10 +2,10 @@
 
 namespace MICE.Nintendo.Mappers
 {
-    [Mapper(MemoryMapperIds.CNROM)]
-    public class CNROM : NROM2
+    [Mapper(MemoryMapperIds.UNROM)]
+    public class UNROM : NROM2
     {
-        public CNROM(NESCartridge cartridge)
+        public UNROM(NESCartridge cartridge)
             : base(cartridge)
         {
         }

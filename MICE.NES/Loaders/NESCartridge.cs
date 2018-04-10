@@ -23,11 +23,13 @@ namespace MICE.Nintendo.Loaders
 
         public byte[] SRAM { get; set; }
 
+        public string Crc32 { get; private set; }
+
         public IList<byte[]> ProgramRAMBanks { get; set; }
         public IList<byte[]> ProgramROMBanks { get; set; }
         public IList<byte[]> CharacterRomBanks { get; set; }
 
-        public MemoryMapperIds MapperId { get; private set; }
+        public MemoryMapperIds MapperId { get; private set; } = MemoryMapperIds.UNKNOWN;
         public IMemoryManagementController Mapper { get; set; }
 
         public void InitializeMapper(MemoryMapperIds memoryMapperId)
@@ -41,6 +43,9 @@ namespace MICE.Nintendo.Loaders
             {
                 this.Mapper = (IMemoryManagementController)Activator.CreateInstance(mappedTuple.Mapper, this);
                 this.WasMapperInitialized = true;
+
+                this.MapperId = memoryMapperId;
+
                 // TODO: Logging, log what mapper, the name, etc, was used...
             }
             else

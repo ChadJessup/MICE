@@ -128,8 +128,6 @@ namespace MICE.TestApp
                     }
 
                     this.inputHandler.InputChanged(this.Inputs);
-
-                    Console.WriteLine(state);
                 }
             }
         });

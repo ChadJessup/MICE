@@ -3,49 +3,29 @@ using MICE.Common.Misc;
 using MICE.Nintendo.Loaders;
 using MICE.PPU.RicohRP2C02.Components;
 using System;
-using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Text;
 
 namespace MICE.Nintendo.Mappers
 {
     [Mapper(MemoryMapperIds.NROM2)]
     public class NROM2 : BaseMapper
     {
-        private static class MemoryRanges
-        {
-            public static Range CharacterROM0Range = new Range(0x0000, 0x0FFF);
-            public static Range CharacterROM1Range = new Range(0x1000, 0x1FFF);
+        protected Nametable nametable2000;
+        protected Nametable nametable2400;
+        protected Nametable nametable2800;
+        protected Nametable nametable2C00;
 
-            public static Range NametableRange = new Range(0x2000, 0x2FFF);
-            public static Range Nametable0Range = new Range(0x2000, 0x23FF);
-            public static Range Nametable1Range = new Range(0x2400, 0x27FF);
-            public static Range Nametable2Range = new Range(0x2800, 0x2BFF);
-            public static Range Nametable3Range = new Range(0x2C00, 0x2FFF);
+        protected Memory<byte> programROMFirstBank;
+        protected Memory<byte> programROMLastBank;
 
-            public static Range ProgramRAM = new Range(0x6000, 0x7FFF);
+        protected Memory<byte> SRAM;
 
-            public static Range ProgramROMRange = new Range(0x8000, 0xFFFF);
-            public static Range ProgramROMFirstBank = new Range(0x8000, 0xBFFF);
-            public static Range ProgramROMLastBank = new Range(0xC000, 0xFFFF);
-        }
+        protected Memory<byte> CharacterROM0Bank;
+        protected Memory<byte> CharacterROM1Bank;
 
-        private Nametable nametable2000;
-        private Nametable nametable2400;
-        private Nametable nametable2800;
-        private Nametable nametable2C00;
-
-        private Memory<byte> programROMFirstBank;
-        private Memory<byte> programROMLastBank;
-
-        private Memory<byte> SRAM;
-
-        private Memory<byte> CharacterROM0Bank;
-        private Memory<byte> CharacterROM1Bank;
-
-        public NROM2(NESCartridge cartridge)
-            : base(MemoryMapperIds.NROM2.ToString(), cartridge)
+        public NROM2(NESCartridge cartridge, MemoryMapperIds id = MemoryMapperIds.NROM2)
+            : base(id.ToString(), cartridge)
         {
         }
 

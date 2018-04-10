@@ -40,5 +40,7 @@
         Camerica = 71,
         Irem74HC16132 = 78,
         HKSF3 = 91,
+
+        UNKNOWN = 255,
     }
 }
