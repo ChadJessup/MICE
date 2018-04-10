@@ -126,6 +126,8 @@ namespace MICE.Nintendo
                 { APURegisterAddresses.TriangleTimerHigh, null},
             };
 
+            this.inputHandler.ControllerChanged += this.OnControllerChanged;
+
             this.ScopeMemoryRanges();
         }
 
@@ -135,40 +137,33 @@ namespace MICE.Nintendo
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public byte ReadByte(int index)
         {
-            try
+            if (MemoryRanges.ZeroPage.IsInRange(index))
             {
-                if (MemoryRanges.ZeroPage.IsInRange(index))
-                {
-                    return this.ZeroPage.Span[index];
-                }
-                else if (MemoryRanges.Stack.IsInRange(index))
-                {
-                    return this.stack.ReadByte(index);
-                }
-                else if (MemoryRanges.RAM.TryGetOffset(index, out int ramOffset))
-                {
-                    return this.RAM.Span[ramOffset];
-                }
-                else if(MemoryRanges.SRAM.TryGetOffset(index, out int sramOffset))
-                {
-                    return this.sram.ReadByte(sramOffset);
-                }
-                else if (MemoryRanges.ProgramRomUpperBank.IsInRange(index))
-                {
-                    return this.prgROMUpperBank.ReadByte(index);
-                }
-                else if (MemoryRanges.ProgramRomLowerBank.IsInRange(index))
-                {
-                    return this.prgROMLowerBank.ReadByte(index);
-                }
-                else if (this.ppuRegisterLookup.ContainsKey(index))
-                {
-                    return this.ppuRegisterLookup[index].Read();
-                }
+                return this.ZeroPage.Span[index];
             }
-            catch (Exception e)
+            else if (MemoryRanges.Stack.IsInRange(index))
             {
-
+                return this.stack.ReadByte(index);
+            }
+            else if (MemoryRanges.RAM.TryGetOffset(index, out int ramOffset))
+            {
+                return this.RAM.Span[ramOffset];
+            }
+            else if (MemoryRanges.SRAM.TryGetOffset(index, out int sramOffset))
+            {
+                return this.sram.ReadByte(sramOffset);
+            }
+            else if (MemoryRanges.ProgramRomUpperBank.IsInRange(index))
+            {
+                return this.prgROMUpperBank.ReadByte(index);
+            }
+            else if (MemoryRanges.ProgramRomLowerBank.IsInRange(index))
+            {
+                return this.prgROMLowerBank.ReadByte(index);
+            }
+            else if (this.ppuRegisterLookup.ContainsKey(index))
+            {
+                return this.ppuRegisterLookup[index].Read();
             }
 
             switch (index)
@@ -176,7 +171,7 @@ namespace MICE.Nintendo
                 case var _ when MemoryRanges.Controller1.IsInRange(index):
                     return this.Controller1.ReadByte(index);
                 case var _ when MemoryRanges.Controller2.IsInRange(index):
-                    return this.Controller2.ReadByte(index);
+                    return this.Controller2?.ReadByte(index) ?? 0x0;
                 case APURegisterAddresses.DirectLoad:
                 case APURegisterAddresses.ChannelStatus:
                     return 0x0;
@@ -245,34 +240,32 @@ namespace MICE.Nintendo
                 return;
             }
 
-            if (MemoryRanges.APURegisterRange.IsInRange(index))
-            {
-                return;
-            }
-
             switch (index)
             {
                 case PPURegisterAddresses.PPUSCROLL:
                     this.ppuRegisters.PPUSCROLL.Write(value);
                     break;
                 case var _ when MemoryRanges.Controller1.IsInRange(index):
-                    this.Controller1.Write(index, value);
+                    this.Controller1?.Write(index, value);
                     break;
                 case var _ when MemoryRanges.Controller2.IsInRange(index):
-                    this.Controller2.Write(index, value);
+                    this.Controller2?.Write(index, value);
                     break;
                 default:
+                    if (MemoryRanges.APURegisterRange.IsInRange(index))
+                    {
+                        return;
+                    }
+
                     throw new NotImplementedException();
             }
+
         }
 
         private void ScopeMemoryRanges()
         {
             this.ZeroPage = this.GetMemory(MemoryRanges.ZeroPage);
             this.RAM = this.GetMemory(MemoryRanges.RAM);
-
-            this.Controller1 = this.inputHandler.GetController1(0x4016, 0x4016, "Control Input 1");
-            this.Controller2 = this.inputHandler.GetController2(0x4017, 0x4017, "Control Input 2");
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -322,6 +315,24 @@ namespace MICE.Nintendo
             else
             {
                 throw new NotImplementedException();
+            }
+        }
+
+        private void OnControllerChanged(object sender, ControllerChangedArgs e)
+        {
+            var args = e;
+
+            switch (args.ControllerId)
+            {
+                case ControllerId.Controller1:
+                    this.Controller1 = args.Controller;
+                    break;
+                case ControllerId.Controller2:
+                    this.Controller2 = args.Controller;
+                    break;
+                case ControllerId.Unknown:
+                default:
+                    throw new InvalidOperationException();
             }
         }
 

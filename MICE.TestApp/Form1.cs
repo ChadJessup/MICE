@@ -1,4 +1,5 @@
-﻿using MICE.Nintendo;
+﻿using MICE.Common.Misc;
+using MICE.Nintendo;
 using MICE.Nintendo.Components;
 using MICE.Nintendo.Loaders;
 using Ninject;
@@ -19,7 +20,6 @@ namespace MICE.TestApp
         private NES nes;
         private Bitmap bitmap;
         private Graphics graphics;
-        private NESInputs inputs;
         private IKernel injectionKernel;
 
         public Form1()
@@ -27,10 +27,6 @@ namespace MICE.TestApp
             this.InitializeComponent();
 
             this.injectionKernel = new StandardKernel(new NintendoModule());
-
-            this.KeyPreview = true;
-            this.KeyDown += this.OnInputDownChanged;
-            this.KeyUp += this.OnInputUpChanged;
 
             this.graphics = this.CreateGraphics();
             this.graphics.InterpolationMode = InterpolationMode.NearestNeighbor;
@@ -110,10 +106,13 @@ namespace MICE.TestApp
         {
             this.nes = this.injectionKernel.Get<NES>();
 
+            this.nes.InputHandler.SetController1(new KeyboardController(this.nes.InputHandler, new Range(0x4016, 0x4016), "Control Input 1"));
+            //this.nes.InputHandler.SetController2(new KeyboardController(new Range(0x4017, 0x4017), "Control Input 2"));
+
             //var cartridge = NESLoader.CreateCartridge(@"C:\Emulators\NES\Games\World\Donkey Kong (JU).nes");
-            //var cartridge = NESLoader.CreateCartridge(@"C:\Emulators\NES\Games\Super Mario Bros.nes");
+            var cartridge = NESLoader.CreateCartridge(@"C:\Emulators\NES\Games\Super Mario Bros.nes");
             //var cartridge = NESLoader.CreateCartridge(@"C:\Emulators\NES\Games\USA\Legend of Zelda, The (U) (PRG 1).nes");
-            var cartridge = NESLoader.CreateCartridge(@"C:\Emulators\NES\Games\USA\Bionic Commando (U).nes");
+            //var cartridge = NESLoader.CreateCartridge(@"C:\Emulators\NES\Games\USA\Bionic Commando (U).nes");
             //var cartridge = NESLoader.CreateCartridge(@"C:\Emulators\NES\Games\USA\Slalom (U).nes");
 
             // Controller Tests
@@ -245,88 +244,6 @@ namespace MICE.TestApp
             CancellationToken.None,
             TaskCreationOptions.LongRunning,
             TaskScheduler.Current);
-        }
-
-        private void OnInputDownChanged(object sender, KeyEventArgs e)
-        {
-            switch (e.KeyData)
-            {
-                case Keys.Z:
-                    this.SetInput(NESInputs.B);
-                    break;
-                case Keys.X:
-                    this.SetInput(NESInputs.A);
-                    break;
-                case Keys.Tab:
-                    this.SetInput(NESInputs.Select);
-                    break;
-                case Keys.Enter:
-                    this.SetInput(NESInputs.Start);
-                    break;
-                case Keys.Up:
-                    this.SetInput(NESInputs.Up);
-                    break;
-                case Keys.Down:
-                    this.SetInput(NESInputs.Down);
-                    break;
-                case Keys.Left:
-                    this.SetInput(NESInputs.Left);
-                    break;
-                case Keys.Right:
-                    this.SetInput(NESInputs.Right);
-                    break;
-            }
-
-            this.nes.InputChanged(this.inputs);
-        }
-
-        private void SetInput(NESInputs input)
-        {
-            if (!this.inputs.HasFlag(input))
-            {
-                this.inputs |= input;
-            }
-        }
-
-        private void RemoveInput(NESInputs input)
-        {
-            if (this.inputs.HasFlag(input))
-            {
-                this.inputs &= ~input;
-            }
-        }
-
-        private void OnInputUpChanged(object sender, KeyEventArgs e)
-        {
-            switch (e.KeyData)
-            {
-                case Keys.Z:
-                    this.RemoveInput(NESInputs.B);
-                    break;
-                case Keys.X:
-                    this.RemoveInput(NESInputs.A);
-                    break;
-                case Keys.Tab:
-                    this.RemoveInput(NESInputs.Select);
-                    break;
-                case Keys.Enter:
-                    this.RemoveInput(NESInputs.Start);
-                    break;
-                case Keys.Up:
-                    this.RemoveInput(NESInputs.Up);
-                    break;
-                case Keys.Down:
-                    this.RemoveInput(NESInputs.Down);
-                    break;
-                case Keys.Left:
-                    this.RemoveInput(NESInputs.Left);
-                    break;
-                case Keys.Right:
-                    this.RemoveInput(NESInputs.Right);
-                    break;
-            }
-
-            this.nes.InputChanged(this.inputs);
         }
 
         private Rectangle bitmapRectangle = new Rectangle(0, 0, 256, 240);

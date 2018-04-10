@@ -1,11 +1,12 @@
 ﻿using MICE.Common.Interfaces;
 using MICE.CPU.MOS6502;
+using MICE.Nintendo;
 using MICE.Nintendo.Handlers;
 using MICE.PPU.RicohRP2C02;
 using MICE.PPU.RicohRP2C02.Handlers;
 using Ninject.Modules;
 
-namespace MICE.Nintendo
+namespace MICE.TestApp
 {
     public class NintendoModule : NinjectModule
     {

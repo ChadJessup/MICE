@@ -32,6 +32,8 @@ namespace MICE.PPU.RicohRP2C02.Components
 
             this.IsSmallSprite = isSmallSprite;
 
+            this.SpriteIndex = spriteIndex;
+
             this.TileAddress = (ushort)((isSpritePattern1000 ? 0x1000 : 0x0000) + this.TileIndex * 16);
         }
 

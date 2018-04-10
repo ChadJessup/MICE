@@ -24,19 +24,23 @@ namespace MICE.PPU.RicohRP2C02
                 [Named("CPU")] IMemoryMap cpuMemoryMap,
                 PPURegisters registers,
                 PPUInternalRegisters internalRegisters,
-                ScrollHandler scrollHandler
+                ScrollHandler scrollHandler,
+                PaletteHandler paletteHandler,
+                BackgroundHandler backgroundHandler,
+                PixelMuxer pixelMuxer,
+                SpriteHandler spriteHandler
             )
         {
             this.InternalRegisters = internalRegisters;
 
             this.Registers = registers;
             this.MemoryMap = (PPUMemoryMap)memoryMap;
-            this.ScrollHandler = new ScrollHandler(this.Registers, this.InternalRegisters);
+            this.ScrollHandler = scrollHandler;
 
-            this.PaletteHandler = new PaletteHandler(this.MemoryMap);
-            this.BackgroundHandler = new BackgroundHandler(this.MemoryMap, this.Registers, this.InternalRegisters, this.ScrollHandler, this.PaletteHandler, cpuMemoryMap);
-            this.SpriteHandler = new SpriteHandler(this.MemoryMap, this.Registers, this.PaletteHandler, cpuMemoryMap);
-            this.PixelMuxer = new PixelMuxer(this.Registers);
+            this.PaletteHandler = paletteHandler;
+            this.BackgroundHandler = backgroundHandler;
+            this.SpriteHandler = spriteHandler;
+            this.PixelMuxer = pixelMuxer;
         }
 
         public byte RegisterLatch { get; set; }

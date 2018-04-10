@@ -1,4 +1,5 @@
-﻿using MICE.Common.Misc;
+﻿using System;
+using MICE.Common.Misc;
 using MICE.Components.Memory;
 using MICE.CPU.MOS6502;
 using MICE.Nintendo.Handlers;
@@ -12,6 +13,9 @@ namespace MICE.Nintendo
     {
         public NESMemoryMap(PPU.RicohRP2C02.PPURegisters ppuRegisters, InputHandler inputHandler) : base()
         {
+
+            inputHandler.ControllerChanged += this.OnControllerChanged;
+
             // The NES CPU's memory is mapped out like below - with some trickery possible in the ROM itself to further map out memory.
 
             // http://nesdev.com/NESDoc.pdf - Figure 2-3 CPU memory map
@@ -59,10 +63,10 @@ namespace MICE.Nintendo
             // $4014 - I/O - I/O Registers (DMA for sprites)
             this.Add(new MemoryMappedRegister<byte>(0x4014, 0x4014, ppuRegisters.OAMDMA, "Mapped PPU Sprite DMA Register"));
 
-            this.Add(inputHandler.GetController1(0x4016, 0x4016, "Control Input 1"));
+            //this.Add(inputHandler.GetController1());
 
             // Duplicated with APU register.
-            this.Add(inputHandler.GetController2(0x4017, 0x4017, "Control Input 2"));
+            //this.Add(inputHandler.GetController2());
 
             // Expansion Memory - seems to be able to be used by various Mappers for various reasons
             // TODO: Route into cartridge as well?
@@ -76,6 +80,14 @@ namespace MICE.Nintendo
             // However, we assume there is always a Mapper which is essentially the noop (NROM) Mapper.
             this.Add(new External(0x8000, 0xBFFF, "PRG-ROM Lower Bank"));
             this.Add(new External(0xC000, 0xFFFF, "PRG-ROM Upper Bank"));
+        }
+
+        private void OnControllerChanged(object sender, ControllerChangedArgs e)
+        {
+            if (e.WasInserted)
+            {
+                this.Add(e.Controller);
+            }
         }
     }
 }

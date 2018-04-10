@@ -56,6 +56,8 @@
     <Compile Include="Form1.Designer.cs">
       <DependentUpon>Form1.cs</DependentUpon>
     </Compile>
+    <Compile Include="Inputs\KeyboardController.cs" />
+    <Compile Include="NintendoModule.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="Form1.resx">
@@ -89,15 +91,34 @@
       <Project>{6f9d83f1-abc5-4fee-a358-28f3bd5309a4}</Project>
       <Name>MICE.Common</Name>
     </ProjectReference>
+    <ProjectReference Include="..\MICE.Components\MICE.Components.csproj">
+      <Project>{949FFBF4-4E43-439A-A218-CABAF48E32C9}</Project>
+      <Name>MICE.Components</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\MICE.CPU.MOS6502\MICE.CPU.MOS6502.csproj">
+      <Project>{099A3D39-9B43-412B-8B04-BCACA2C281F1}</Project>
+      <Name>MICE.CPU.MOS6502</Name>
+    </ProjectReference>
     <ProjectReference Include="..\MICE.NES\MICE.Nintendo.csproj">
       <Project>{30E26A15-7C9F-4602-811E-96D6E27F189C}</Project>
       <Name>MICE.Nintendo</Name>
     </ProjectReference>
+    <ProjectReference Include="..\MICE.PPU.RicohRP2C02\MICE.PPU.RicohRP2C02.csproj">
+      <Project>{1c6429e4-5df1-4789-948c-8f076e3aba4e}</Project>
+      <Name>MICE.PPU.RicohRP2C02</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="SharpDX.DirectInput">
+      <Version>4.0.1</Version>
+    </PackageReference>
+    <PackageReference Include="SharpDX.XInput">
+      <Version>4.0.1</Version>
+    </PackageReference>
     <PackageReference Include="System.Memory">
       <Version>4.5.0-preview1-26216-02</Version>
     </PackageReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

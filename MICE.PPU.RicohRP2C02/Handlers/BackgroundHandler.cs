@@ -1,5 +1,6 @@
 ﻿using MICE.Common.Interfaces;
 using MICE.PPU.RicohRP2C02.Components;
+using Ninject;
 
 namespace MICE.PPU.RicohRP2C02.Handlers
 {
@@ -23,7 +24,7 @@ namespace MICE.PPU.RicohRP2C02.Handlers
         public Tile PreviousTile { get; set; }
         public Tile CurrentTile { get; set; } = new Tile();
 
-        public BackgroundHandler(IMemoryMap ppuMemoryMap, PPURegisters registers, PPUInternalRegisters internalRegisters, ScrollHandler scrollHandler, PaletteHandler paletteHandler, IMemoryMap cpuMemoryMap)
+        public BackgroundHandler([Named("PPU")] IMemoryMap ppuMemoryMap, PPURegisters registers, PPUInternalRegisters internalRegisters, ScrollHandler scrollHandler, PaletteHandler paletteHandler, [Named("CPU")] IMemoryMap cpuMemoryMap)
         {
             this.registers = registers;
             this.ppuMemoryMap = ppuMemoryMap;

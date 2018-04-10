@@ -5,11 +5,11 @@ using System;
 
 namespace MICE.Nintendo.Components
 {
-    public class KeyboardController : MemorySegment, INESInput
+    public class KeyboardController2 : MemorySegment, INESInput
     {
         private int readCount = 0;
 
-        public KeyboardController(Range memoryRange, string name)
+        public KeyboardController2(Range memoryRange, string name)
             : base(memoryRange, name)
         {
         }

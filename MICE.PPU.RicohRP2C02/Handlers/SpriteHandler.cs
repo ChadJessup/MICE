@@ -1,5 +1,6 @@
 ﻿using MICE.Common.Interfaces;
 using MICE.PPU.RicohRP2C02.Components;
+using Ninject;
 using System.Collections.Generic;
 
 namespace MICE.PPU.RicohRP2C02.Handlers
@@ -19,7 +20,7 @@ namespace MICE.PPU.RicohRP2C02.Handlers
         private readonly List<Sprite> currentSprites = new List<Sprite>(Constants.MaxSprites);
         private readonly List<Sprite> currentScanlineSprites = new List<Sprite>(Constants.MaxSprites);
 
-        public SpriteHandler(IMemoryMap ppuMemoryMap, PPURegisters registers, PaletteHandler paletteHandler, IMemoryMap cpuMemoryMap)
+        public SpriteHandler([Named("PPU")] IMemoryMap ppuMemoryMap, PPURegisters registers, PaletteHandler paletteHandler, [Named("CPU")] IMemoryMap cpuMemoryMap)
         {
             this.registers = registers;
             this.cpuMemoryMap = cpuMemoryMap;
