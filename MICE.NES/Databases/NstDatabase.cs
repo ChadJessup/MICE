@@ -1,28 +1,27 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
+using System.ComponentModel;
+using System.Xml.Serialization;
 
-namespace MICE.Nintendo.NstDatabase
+namespace MICE.Nintendo.Databases.NstDatabase
 {
 
     // NOTE: Generated code may require at least .NET Framework 4.5 or .NET Core/Standard 2.0.
     /// <remarks/>
-    [System.SerializableAttribute()]
-    [System.ComponentModel.DesignerCategoryAttribute("code")]
-    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
-    [System.Xml.Serialization.XmlRootAttribute(Namespace = "", IsNullable = false)]
+    [Serializable]
+    [DesignerCategory("code")]
+    [XmlType(AnonymousType = true)]
+    [XmlRoot(Namespace = "", IsNullable = false)]
     public partial class database
     {
-
-        private databaseGame[] gameField;
+        private DatabaseGame[] gameField;
 
         private decimal versionField;
 
         private string conformanceField;
 
         /// <remarks/>
-        [System.Xml.Serialization.XmlElementAttribute("game")]
-        public databaseGame[] game
+        [XmlElement("game")]
+        public DatabaseGame[] game
         {
             get
             {
@@ -35,7 +34,7 @@ namespace MICE.Nintendo.NstDatabase
         }
 
         /// <remarks/>
-        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [XmlAttribute]
         public decimal version
         {
             get
@@ -49,7 +48,7 @@ namespace MICE.Nintendo.NstDatabase
         }
 
         /// <remarks/>
-        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [XmlAttribute]
         public string conformance
         {
             get
@@ -64,21 +63,21 @@ namespace MICE.Nintendo.NstDatabase
     }
 
     /// <remarks/>
-    [System.SerializableAttribute()]
-    [System.ComponentModel.DesignerCategoryAttribute("code")]
-    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
-    public partial class databaseGame
+    [Serializable]
+    [DesignerCategory("code")]
+    [XmlType(AnonymousType = true)]
+    public partial class DatabaseGame
     {
 
-        private databaseGameDevice[] peripheralsField;
+        private DatabaseGameDevice[] peripheralsField;
 
-        private databaseGameArcade arcadeField;
+        private DatabaseGameArcade arcadeField;
 
-        private databaseGameCartridge[] cartridgeField;
+        private DatabaseGameCartridge[] cartridgeField;
 
         /// <remarks/>
-        [System.Xml.Serialization.XmlArrayItemAttribute("device", IsNullable = false)]
-        public databaseGameDevice[] peripherals
+        [XmlArrayItem("device", IsNullable = false)]
+        public DatabaseGameDevice[] peripherals
         {
             get
             {
@@ -91,7 +90,7 @@ namespace MICE.Nintendo.NstDatabase
         }
 
         /// <remarks/>
-        public databaseGameArcade arcade
+        public DatabaseGameArcade arcade
         {
             get
             {
@@ -104,8 +103,8 @@ namespace MICE.Nintendo.NstDatabase
         }
 
         /// <remarks/>
-        [System.Xml.Serialization.XmlElementAttribute("cartridge")]
-        public databaseGameCartridge[] cartridge
+        [XmlElement("cartridge")]
+        public DatabaseGameCartridge[] cartridge
         {
             get
             {
@@ -119,16 +118,16 @@ namespace MICE.Nintendo.NstDatabase
     }
 
     /// <remarks/>
-    [System.SerializableAttribute()]
-    [System.ComponentModel.DesignerCategoryAttribute("code")]
-    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
-    public partial class databaseGameDevice
+    [Serializable]
+    [DesignerCategory("code")]
+    [XmlType(AnonymousType = true)]
+    public partial class DatabaseGameDevice
     {
 
         private string typeField;
 
         /// <remarks/>
-        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [XmlAttribute]
         public string type
         {
             get
@@ -143,13 +142,13 @@ namespace MICE.Nintendo.NstDatabase
     }
 
     /// <remarks/>
-    [System.SerializableAttribute()]
-    [System.ComponentModel.DesignerCategoryAttribute("code")]
-    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
-    public partial class databaseGameArcade
+    [Serializable]
+    [DesignerCategory("code")]
+    [XmlType(AnonymousType = true)]
+    public partial class DatabaseGameArcade
     {
 
-        private databaseGameArcadeBoard boardField;
+        private DatabaseGameArcadeBoard boardField;
 
         private string systemField;
 
@@ -160,7 +159,7 @@ namespace MICE.Nintendo.NstDatabase
         private string sha1Field;
 
         /// <remarks/>
-        public databaseGameArcadeBoard board
+        public DatabaseGameArcadeBoard board
         {
             get
             {
@@ -173,7 +172,7 @@ namespace MICE.Nintendo.NstDatabase
         }
 
         /// <remarks/>
-        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [XmlAttribute]
         public string system
         {
             get
@@ -187,7 +186,7 @@ namespace MICE.Nintendo.NstDatabase
         }
 
         /// <remarks/>
-        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [XmlAttribute]
         public string dump
         {
             get
@@ -201,7 +200,7 @@ namespace MICE.Nintendo.NstDatabase
         }
 
         /// <remarks/>
-        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [XmlAttribute]
         public string crc
         {
             get
@@ -215,7 +214,7 @@ namespace MICE.Nintendo.NstDatabase
         }
 
         /// <remarks/>
-        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [XmlAttribute]
         public string sha1
         {
             get
@@ -230,10 +229,10 @@ namespace MICE.Nintendo.NstDatabase
     }
 
     /// <remarks/>
-    [System.SerializableAttribute()]
-    [System.ComponentModel.DesignerCategoryAttribute("code")]
-    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
-    public partial class databaseGameArcadeBoard
+    [Serializable]
+    [DesignerCategory("code")]
+    [XmlType(AnonymousType = true)]
+    public partial class DatabaseGameArcadeBoard
     {
 
         private object[] itemsField;
@@ -243,11 +242,11 @@ namespace MICE.Nintendo.NstDatabase
         private string typeField;
 
         /// <remarks/>
-        [System.Xml.Serialization.XmlElementAttribute("chr", typeof(databaseGameArcadeBoardChr))]
-        [System.Xml.Serialization.XmlElementAttribute("pad", typeof(databaseGameArcadeBoardPad))]
-        [System.Xml.Serialization.XmlElementAttribute("prg", typeof(databaseGameArcadeBoardPrg))]
-        [System.Xml.Serialization.XmlElementAttribute("vram", typeof(databaseGameArcadeBoardVram))]
-        [System.Xml.Serialization.XmlElementAttribute("wram", typeof(databaseGameArcadeBoardWram))]
+        [XmlElement("chr", typeof(DatabaseGameArcadeBoardChr))]
+        [XmlElement("pad", typeof(DatabaseGameArcadeBoardPad))]
+        [XmlElement("prg", typeof(DatabaseGameArcadeBoardPrg))]
+        [XmlElement("vram", typeof(DatabaseGameArcadeBoardVram))]
+        [XmlElement("wram", typeof(DatabaseGameArcadeBoardWram))]
         public object[] Items
         {
             get
@@ -261,7 +260,7 @@ namespace MICE.Nintendo.NstDatabase
         }
 
         /// <remarks/>
-        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [XmlAttribute]
         public byte mapper
         {
             get
@@ -275,7 +274,7 @@ namespace MICE.Nintendo.NstDatabase
         }
 
         /// <remarks/>
-        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [XmlAttribute]
         public string type
         {
             get
@@ -290,16 +289,16 @@ namespace MICE.Nintendo.NstDatabase
     }
 
     /// <remarks/>
-    [System.SerializableAttribute()]
-    [System.ComponentModel.DesignerCategoryAttribute("code")]
-    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
-    public partial class databaseGameArcadeBoardChr
+    [Serializable]
+    [DesignerCategory("code")]
+    [XmlType(AnonymousType = true)]
+    public partial class DatabaseGameArcadeBoardChr
     {
 
         private string sizeField;
 
         /// <remarks/>
-        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [XmlAttribute]
         public string size
         {
             get
@@ -314,10 +313,10 @@ namespace MICE.Nintendo.NstDatabase
     }
 
     /// <remarks/>
-    [System.SerializableAttribute()]
-    [System.ComponentModel.DesignerCategoryAttribute("code")]
-    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
-    public partial class databaseGameArcadeBoardPad
+    [Serializable]
+    [DesignerCategory("code")]
+    [XmlType(AnonymousType = true)]
+    public partial class DatabaseGameArcadeBoardPad
     {
 
         private byte hField;
@@ -325,7 +324,7 @@ namespace MICE.Nintendo.NstDatabase
         private byte vField;
 
         /// <remarks/>
-        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [XmlAttribute]
         public byte h
         {
             get
@@ -339,7 +338,7 @@ namespace MICE.Nintendo.NstDatabase
         }
 
         /// <remarks/>
-        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [XmlAttribute]
         public byte v
         {
             get
@@ -354,16 +353,16 @@ namespace MICE.Nintendo.NstDatabase
     }
 
     /// <remarks/>
-    [System.SerializableAttribute()]
-    [System.ComponentModel.DesignerCategoryAttribute("code")]
-    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
-    public partial class databaseGameArcadeBoardPrg
+    [Serializable]
+    [DesignerCategory("code")]
+    [XmlType(AnonymousType = true)]
+    public partial class DatabaseGameArcadeBoardPrg
     {
 
         private string sizeField;
 
         /// <remarks/>
-        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [XmlAttribute]
         public string size
         {
             get
@@ -378,16 +377,16 @@ namespace MICE.Nintendo.NstDatabase
     }
 
     /// <remarks/>
-    [System.SerializableAttribute()]
-    [System.ComponentModel.DesignerCategoryAttribute("code")]
-    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
-    public partial class databaseGameArcadeBoardVram
+    [Serializable]
+    [DesignerCategory("code")]
+    [XmlType(AnonymousType = true)]
+    public partial class DatabaseGameArcadeBoardVram
     {
 
         private string sizeField;
 
         /// <remarks/>
-        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [XmlAttribute]
         public string size
         {
             get
@@ -402,10 +401,10 @@ namespace MICE.Nintendo.NstDatabase
     }
 
     /// <remarks/>
-    [System.SerializableAttribute()]
-    [System.ComponentModel.DesignerCategoryAttribute("code")]
-    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
-    public partial class databaseGameArcadeBoardWram
+    [Serializable]
+    [DesignerCategory("code")]
+    [XmlType(AnonymousType = true)]
+    public partial class DatabaseGameArcadeBoardWram
     {
 
         private string sizeField;
@@ -415,7 +414,7 @@ namespace MICE.Nintendo.NstDatabase
         private bool batteryFieldSpecified;
 
         /// <remarks/>
-        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [XmlAttribute]
         public string size
         {
             get
@@ -429,7 +428,7 @@ namespace MICE.Nintendo.NstDatabase
         }
 
         /// <remarks/>
-        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [XmlAttribute]
         public byte battery
         {
             get
@@ -443,7 +442,7 @@ namespace MICE.Nintendo.NstDatabase
         }
 
         /// <remarks/>
-        [System.Xml.Serialization.XmlIgnoreAttribute()]
+        [XmlIgnoreAttribute()]
         public bool batterySpecified
         {
             get
@@ -458,13 +457,13 @@ namespace MICE.Nintendo.NstDatabase
     }
 
     /// <remarks/>
-    [System.SerializableAttribute()]
-    [System.ComponentModel.DesignerCategoryAttribute("code")]
-    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
-    public partial class databaseGameCartridge
+    [Serializable]
+    [DesignerCategory("code")]
+    [XmlType(AnonymousType = true)]
+    public partial class DatabaseGameCartridge
     {
 
-        private databaseGameCartridgeBoard boardField;
+        private DatabaseGameCartridgeBoard boardField;
 
         private string systemField;
 
@@ -475,7 +474,7 @@ namespace MICE.Nintendo.NstDatabase
         private string sha1Field;
 
         /// <remarks/>
-        public databaseGameCartridgeBoard board
+        public DatabaseGameCartridgeBoard board
         {
             get
             {
@@ -488,7 +487,7 @@ namespace MICE.Nintendo.NstDatabase
         }
 
         /// <remarks/>
-        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [XmlAttribute]
         public string system
         {
             get
@@ -502,7 +501,7 @@ namespace MICE.Nintendo.NstDatabase
         }
 
         /// <remarks/>
-        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [XmlAttribute]
         public string dump
         {
             get
@@ -516,7 +515,7 @@ namespace MICE.Nintendo.NstDatabase
         }
 
         /// <remarks/>
-        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [XmlAttribute]
         public string crc
         {
             get
@@ -530,7 +529,7 @@ namespace MICE.Nintendo.NstDatabase
         }
 
         /// <remarks/>
-        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [XmlAttribute]
         public string sha1
         {
             get
@@ -545,10 +544,10 @@ namespace MICE.Nintendo.NstDatabase
     }
 
     /// <remarks/>
-    [System.SerializableAttribute()]
-    [System.ComponentModel.DesignerCategoryAttribute("code")]
-    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
-    public partial class databaseGameCartridgeBoard
+    [Serializable]
+    [DesignerCategory("code")]
+    [XmlType(AnonymousType = true)]
+    public partial class DatabaseGameCartridgeBoard
     {
 
         private object[] itemsField;
@@ -560,12 +559,12 @@ namespace MICE.Nintendo.NstDatabase
         private bool mapperFieldSpecified;
 
         /// <remarks/>
-        [System.Xml.Serialization.XmlElementAttribute("chip", typeof(databaseGameCartridgeBoardChip))]
-        [System.Xml.Serialization.XmlElementAttribute("chr", typeof(databaseGameCartridgeBoardChr))]
-        [System.Xml.Serialization.XmlElementAttribute("pad", typeof(databaseGameCartridgeBoardPad))]
-        [System.Xml.Serialization.XmlElementAttribute("prg", typeof(databaseGameCartridgeBoardPrg))]
-        [System.Xml.Serialization.XmlElementAttribute("vram", typeof(databaseGameCartridgeBoardVram))]
-        [System.Xml.Serialization.XmlElementAttribute("wram", typeof(databaseGameCartridgeBoardWram))]
+        [XmlElement("chip", typeof(DatabaseGameCartridgeBoardChip))]
+        [XmlElement("chr", typeof(DatabaseGameCartridgeBoardChr))]
+        [XmlElement("pad", typeof(DatabaseGameCartridgeBoardPad))]
+        [XmlElement("prg", typeof(DatabaseGameCartridgeBoardPrg))]
+        [XmlElement("vram", typeof(DatabaseGameCartridgeBoardVram))]
+        [XmlElement("wram", typeof(DatabaseGameCartridgeBoardWram))]
         public object[] Items
         {
             get
@@ -579,7 +578,7 @@ namespace MICE.Nintendo.NstDatabase
         }
 
         /// <remarks/>
-        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [XmlAttribute]
         public string type
         {
             get
@@ -593,7 +592,7 @@ namespace MICE.Nintendo.NstDatabase
         }
 
         /// <remarks/>
-        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [XmlAttribute]
         public byte mapper
         {
             get
@@ -607,7 +606,7 @@ namespace MICE.Nintendo.NstDatabase
         }
 
         /// <remarks/>
-        [System.Xml.Serialization.XmlIgnoreAttribute()]
+        [XmlIgnoreAttribute()]
         public bool mapperSpecified
         {
             get
@@ -622,13 +621,13 @@ namespace MICE.Nintendo.NstDatabase
     }
 
     /// <remarks/>
-    [System.SerializableAttribute()]
-    [System.ComponentModel.DesignerCategoryAttribute("code")]
-    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
-    public partial class databaseGameCartridgeBoardChip
+    [Serializable]
+    [DesignerCategory("code")]
+    [XmlType(AnonymousType = true)]
+    public partial class DatabaseGameCartridgeBoardChip
     {
 
-        private databaseGameCartridgeBoardChipPin[] pinField;
+        private DatabaseGameCartridgeBoardChipPin[] pinField;
 
         private string typeField;
 
@@ -637,8 +636,8 @@ namespace MICE.Nintendo.NstDatabase
         private bool batteryFieldSpecified;
 
         /// <remarks/>
-        [System.Xml.Serialization.XmlElementAttribute("pin")]
-        public databaseGameCartridgeBoardChipPin[] pin
+        [XmlElement("pin")]
+        public DatabaseGameCartridgeBoardChipPin[] pin
         {
             get
             {
@@ -651,7 +650,7 @@ namespace MICE.Nintendo.NstDatabase
         }
 
         /// <remarks/>
-        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [XmlAttribute]
         public string type
         {
             get
@@ -665,7 +664,7 @@ namespace MICE.Nintendo.NstDatabase
         }
 
         /// <remarks/>
-        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [XmlAttribute]
         public byte battery
         {
             get
@@ -679,7 +678,7 @@ namespace MICE.Nintendo.NstDatabase
         }
 
         /// <remarks/>
-        [System.Xml.Serialization.XmlIgnoreAttribute()]
+        [XmlIgnoreAttribute()]
         public bool batterySpecified
         {
             get
@@ -694,10 +693,10 @@ namespace MICE.Nintendo.NstDatabase
     }
 
     /// <remarks/>
-    [System.SerializableAttribute()]
-    [System.ComponentModel.DesignerCategoryAttribute("code")]
-    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
-    public partial class databaseGameCartridgeBoardChipPin
+    [Serializable]
+    [DesignerCategory("code")]
+    [XmlType(AnonymousType = true)]
+    public partial class DatabaseGameCartridgeBoardChipPin
     {
 
         private byte numberField;
@@ -705,7 +704,7 @@ namespace MICE.Nintendo.NstDatabase
         private string functionField;
 
         /// <remarks/>
-        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [XmlAttribute]
         public byte number
         {
             get
@@ -719,7 +718,7 @@ namespace MICE.Nintendo.NstDatabase
         }
 
         /// <remarks/>
-        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [XmlAttribute]
         public string function
         {
             get
@@ -734,19 +733,19 @@ namespace MICE.Nintendo.NstDatabase
     }
 
     /// <remarks/>
-    [System.SerializableAttribute()]
-    [System.ComponentModel.DesignerCategoryAttribute("code")]
-    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
-    public partial class databaseGameCartridgeBoardChr
+    [Serializable]
+    [DesignerCategory("code")]
+    [XmlType(AnonymousType = true)]
+    public partial class DatabaseGameCartridgeBoardChr
     {
 
-        private databaseGameCartridgeBoardChrPin[] pinField;
+        private DatabaseGameCartridgeBoardChrPin[] pinField;
 
         private string sizeField;
 
         /// <remarks/>
-        [System.Xml.Serialization.XmlElementAttribute("pin")]
-        public databaseGameCartridgeBoardChrPin[] pin
+        [XmlElement("pin")]
+        public DatabaseGameCartridgeBoardChrPin[] pin
         {
             get
             {
@@ -759,7 +758,7 @@ namespace MICE.Nintendo.NstDatabase
         }
 
         /// <remarks/>
-        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [XmlAttribute]
         public string size
         {
             get
@@ -774,10 +773,10 @@ namespace MICE.Nintendo.NstDatabase
     }
 
     /// <remarks/>
-    [System.SerializableAttribute()]
-    [System.ComponentModel.DesignerCategoryAttribute("code")]
-    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
-    public partial class databaseGameCartridgeBoardChrPin
+    [Serializable]
+    [DesignerCategory("code")]
+    [XmlType(AnonymousType = true)]
+    public partial class DatabaseGameCartridgeBoardChrPin
     {
 
         private byte numberField;
@@ -785,7 +784,7 @@ namespace MICE.Nintendo.NstDatabase
         private string functionField;
 
         /// <remarks/>
-        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [XmlAttribute]
         public byte number
         {
             get
@@ -799,7 +798,7 @@ namespace MICE.Nintendo.NstDatabase
         }
 
         /// <remarks/>
-        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [XmlAttribute]
         public string function
         {
             get
@@ -814,10 +813,10 @@ namespace MICE.Nintendo.NstDatabase
     }
 
     /// <remarks/>
-    [System.SerializableAttribute()]
-    [System.ComponentModel.DesignerCategoryAttribute("code")]
-    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
-    public partial class databaseGameCartridgeBoardPad
+    [Serializable]
+    [DesignerCategory("code")]
+    [XmlType(AnonymousType = true)]
+    public partial class DatabaseGameCartridgeBoardPad
     {
 
         private byte hField;
@@ -825,7 +824,7 @@ namespace MICE.Nintendo.NstDatabase
         private byte vField;
 
         /// <remarks/>
-        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [XmlAttribute]
         public byte h
         {
             get
@@ -839,7 +838,7 @@ namespace MICE.Nintendo.NstDatabase
         }
 
         /// <remarks/>
-        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [XmlAttribute]
         public byte v
         {
             get
@@ -854,16 +853,16 @@ namespace MICE.Nintendo.NstDatabase
     }
 
     /// <remarks/>
-    [System.SerializableAttribute()]
-    [System.ComponentModel.DesignerCategoryAttribute("code")]
-    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
-    public partial class databaseGameCartridgeBoardPrg
+    [Serializable]
+    [DesignerCategory("code")]
+    [XmlType(AnonymousType = true)]
+    public partial class DatabaseGameCartridgeBoardPrg
     {
 
         private string sizeField;
 
         /// <remarks/>
-        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [XmlAttribute]
         public string size
         {
             get
@@ -878,16 +877,16 @@ namespace MICE.Nintendo.NstDatabase
     }
 
     /// <remarks/>
-    [System.SerializableAttribute()]
-    [System.ComponentModel.DesignerCategoryAttribute("code")]
-    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
-    public partial class databaseGameCartridgeBoardVram
+    [Serializable]
+    [DesignerCategory("code")]
+    [XmlType(AnonymousType = true)]
+    public partial class DatabaseGameCartridgeBoardVram
     {
 
         private string sizeField;
 
         /// <remarks/>
-        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [XmlAttribute]
         public string size
         {
             get
@@ -902,10 +901,10 @@ namespace MICE.Nintendo.NstDatabase
     }
 
     /// <remarks/>
-    [System.SerializableAttribute()]
-    [System.ComponentModel.DesignerCategoryAttribute("code")]
-    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
-    public partial class databaseGameCartridgeBoardWram
+    [Serializable]
+    [DesignerCategory("code")]
+    [XmlType(AnonymousType = true)]
+    public partial class DatabaseGameCartridgeBoardWram
     {
 
         private string sizeField;
@@ -915,7 +914,7 @@ namespace MICE.Nintendo.NstDatabase
         private bool batteryFieldSpecified;
 
         /// <remarks/>
-        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [XmlAttribute]
         public string size
         {
             get
@@ -929,7 +928,7 @@ namespace MICE.Nintendo.NstDatabase
         }
 
         /// <remarks/>
-        [System.Xml.Serialization.XmlAttributeAttribute()]
+        [XmlAttribute]
         public byte battery
         {
             get
@@ -943,7 +942,7 @@ namespace MICE.Nintendo.NstDatabase
         }
 
         /// <remarks/>
-        [System.Xml.Serialization.XmlIgnoreAttribute()]
+        [XmlIgnoreAttribute()]
         public bool batterySpecified
         {
             get

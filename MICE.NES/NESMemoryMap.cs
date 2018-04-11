@@ -13,7 +13,6 @@ namespace MICE.Nintendo
     {
         public NESMemoryMap(PPU.RicohRP2C02.PPURegisters ppuRegisters, InputHandler inputHandler) : base()
         {
-
             inputHandler.ControllerChanged += this.OnControllerChanged;
 
             // The NES CPU's memory is mapped out like below - with some trickery possible in the ROM itself to further map out memory.

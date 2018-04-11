@@ -9,7 +9,9 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="ByteSize" Version="1.3.0" />
     <PackageReference Include="Ninject" Version="3.3.4" />
+    <PackageReference Include="SharpZipLib" Version="0.86.0" />
     <PackageReference Include="System.Memory" Version="4.5.0-preview1-26216-02" />
   </ItemGroup>
 
@@ -18,6 +20,15 @@
     <ProjectReference Include="..\MICE.Components\MICE.Components.csproj" />
     <ProjectReference Include="..\MICE.CPU.MOS6502\MICE.CPU.MOS6502.csproj" />
     <ProjectReference Include="..\MICE.PPU.RicohRP2C02\MICE.PPU.RicohRP2C02.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="NesCarts.xml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="NstDatabase.xml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>

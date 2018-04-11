@@ -31,7 +31,7 @@ namespace MICE.Nintendo
             public static Range Stack = new Range(0x0100, 0x01FF);
             public static Range RAM = new Range(0x0200, 0x07FF);
 
-            /// Above mirrored... until 0x1FFF...
+            public static Range MirroredRAM = new Range(0x0800, 0x1FFF);
 
             public static Range RegisterRanges = new Range(0x2000, 0x401F);
             public static Range APURegisterRange = new Range(0x4000, 0x4017);
@@ -149,6 +149,10 @@ namespace MICE.Nintendo
             {
                 return this.RAM.Span[ramOffset];
             }
+            else if (MemoryRanges.MirroredRAM.IsInRange(index))
+            {
+                return this.ReadByte(index % 0x07FF);
+            }
             else if (MemoryRanges.SRAM.TryGetOffset(index, out int sramOffset))
             {
                 return this.sram.ReadByte(sramOffset);
@@ -217,11 +221,11 @@ namespace MICE.Nintendo
                 case var _ when MemoryRanges.SRAM.IsInRange(index):
                     this.sram.Write(index, value);
                     break;
-                case var _ when MemoryRanges.ProgramRomUpperBank.IsInRange(index):
-                    this.prgROMUpperBank.Write(index, value);
-                    break;
                 case var _ when MemoryRanges.ProgramRomLowerBank.IsInRange(index):
                     this.prgROMLowerBank.Write(index, value);
+                    break;
+                case var _ when MemoryRanges.ProgramRomUpperBank.IsInRange(index):
+                    this.prgROMUpperBank.Write(index, value);
                     break;
                 case var _ when MemoryRanges.Stack.IsInRange(index):
                     this.stack.Write(index, value);

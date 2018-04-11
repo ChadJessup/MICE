@@ -203,7 +203,7 @@ namespace MICE.CPU.MOS6502
 
             this.LastPC = this.Registers.PC.Read();
 
-            if (this.CurrentCycle >= 176316)
+            if (this.CurrentCycle == 195559)
             {
 
             }

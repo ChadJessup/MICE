@@ -1,5 +1,4 @@
 ﻿using MICE.Common.Interfaces;
-using MICE.Common.Misc;
 using MICE.Nintendo.Loaders;
 using MICE.PPU.RicohRP2C02.Components;
 using System;
@@ -46,9 +45,7 @@ namespace MICE.Nintendo.Mappers
             }
             else if (memorySegment.Range.IsInRange(MemoryRanges.ProgramROMLastBank))
             {
-                this.programROMLastBank = this.cartridge.ProgramROMBanks.Count == 1
-                    ? this.cartridge.ProgramROMBanks[0]
-                    : this.cartridge.ProgramROMBanks[1];
+                this.programROMLastBank = this.cartridge.ProgramROMBanks.Last();
             }
             else if (memorySegment.Range.IsInRange(MemoryRanges.CharacterROM0Range))
             {

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace MICE.Nintendo.Databases
+namespace MICE.Nintendo.Databases.NesCartDB
 {
 
     // NOTE: Generated code may require at least .NET Framework 4.5 or .NET Core/Standard 2.0.
@@ -14,7 +14,7 @@ namespace MICE.Nintendo.Databases
     public partial class database
     {
 
-        private databaseGame[] gameField;
+        private DatabaseGame[] gameField;
 
         private decimal versionField;
 
@@ -28,7 +28,7 @@ namespace MICE.Nintendo.Databases
 
         /// <remarks/>
         [System.Xml.Serialization.XmlElementAttribute("game")]
-        public databaseGame[] game
+        public DatabaseGame[] game
         {
             get
             {
@@ -115,12 +115,12 @@ namespace MICE.Nintendo.Databases
     [System.SerializableAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
-    public partial class databaseGame
+    public partial class DatabaseGame
     {
 
-        private databaseGameDevice[] peripheralsField;
+        private DatabaseGameDevice[] peripheralsField;
 
-        private databaseGameCartridge[] cartridgeField;
+        private DatabaseGameCartridge[] cartridgeField;
 
         private string nameField;
 
@@ -146,7 +146,7 @@ namespace MICE.Nintendo.Databases
 
         /// <remarks/>
         [System.Xml.Serialization.XmlArrayItemAttribute("device", IsNullable = false)]
-        public databaseGameDevice[] peripherals
+        public DatabaseGameDevice[] peripherals
         {
             get
             {
@@ -160,7 +160,7 @@ namespace MICE.Nintendo.Databases
 
         /// <remarks/>
         [System.Xml.Serialization.XmlElementAttribute("cartridge")]
-        public databaseGameCartridge[] cartridge
+        public DatabaseGameCartridge[] cartridge
         {
             get
             {
@@ -331,7 +331,7 @@ namespace MICE.Nintendo.Databases
     [System.SerializableAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
-    public partial class databaseGameDevice
+    public partial class DatabaseGameDevice
     {
 
         private string typeField;
@@ -371,10 +371,10 @@ namespace MICE.Nintendo.Databases
     [System.SerializableAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
-    public partial class databaseGameCartridge
+    public partial class DatabaseGameCartridge
     {
 
-        private databaseGameCartridgeBoard boardField;
+        private DatabaseGameCartridgeBoard boardField;
 
         private string systemField;
 
@@ -395,7 +395,7 @@ namespace MICE.Nintendo.Databases
         private bool prototypeFieldSpecified;
 
         /// <remarks/>
-        public databaseGameCartridgeBoard board
+        public DatabaseGameCartridgeBoard board
         {
             get
             {
@@ -538,7 +538,7 @@ namespace MICE.Nintendo.Databases
     [System.SerializableAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
-    public partial class databaseGameCartridgeBoard
+    public partial class DatabaseGameCartridgeBoard
     {
 
         private object[] itemsField;
@@ -550,13 +550,13 @@ namespace MICE.Nintendo.Databases
         private byte mapperField;
 
         /// <remarks/>
-        [System.Xml.Serialization.XmlElementAttribute("chip", typeof(databaseGameCartridgeBoardChip))]
-        [System.Xml.Serialization.XmlElementAttribute("chr", typeof(databaseGameCartridgeBoardChr))]
-        [System.Xml.Serialization.XmlElementAttribute("cic", typeof(databaseGameCartridgeBoardCic))]
-        [System.Xml.Serialization.XmlElementAttribute("pad", typeof(databaseGameCartridgeBoardPad))]
-        [System.Xml.Serialization.XmlElementAttribute("prg", typeof(databaseGameCartridgeBoardPrg))]
-        [System.Xml.Serialization.XmlElementAttribute("vram", typeof(databaseGameCartridgeBoardVram))]
-        [System.Xml.Serialization.XmlElementAttribute("wram", typeof(databaseGameCartridgeBoardWram))]
+        [System.Xml.Serialization.XmlElementAttribute("chip", typeof(DatabaseGameCartridgeBoardChip))]
+        [System.Xml.Serialization.XmlElementAttribute("chr", typeof(DatabaseGameCartridgeBoardChr))]
+        [System.Xml.Serialization.XmlElementAttribute("cic", typeof(DatabaseGameCartridgeBoardCic))]
+        [System.Xml.Serialization.XmlElementAttribute("pad", typeof(DatabaseGameCartridgeBoardPad))]
+        [System.Xml.Serialization.XmlElementAttribute("prg", typeof(DatabaseGameCartridgeBoardPrg))]
+        [System.Xml.Serialization.XmlElementAttribute("vram", typeof(DatabaseGameCartridgeBoardVram))]
+        [System.Xml.Serialization.XmlElementAttribute("wram", typeof(DatabaseGameCartridgeBoardWram))]
         public object[] Items
         {
             get
@@ -616,10 +616,10 @@ namespace MICE.Nintendo.Databases
     [System.SerializableAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
-    public partial class databaseGameCartridgeBoardChip
+    public partial class DatabaseGameCartridgeBoardChip
     {
 
-        private databaseGameCartridgeBoardChipPin[] pinField;
+        private DatabaseGameCartridgeBoardChipPin[] pinField;
 
         private string typeField;
 
@@ -629,7 +629,7 @@ namespace MICE.Nintendo.Databases
 
         /// <remarks/>
         [System.Xml.Serialization.XmlElementAttribute("pin")]
-        public databaseGameCartridgeBoardChipPin[] pin
+        public DatabaseGameCartridgeBoardChipPin[] pin
         {
             get
             {
@@ -688,7 +688,7 @@ namespace MICE.Nintendo.Databases
     [System.SerializableAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
-    public partial class databaseGameCartridgeBoardChipPin
+    public partial class DatabaseGameCartridgeBoardChipPin
     {
 
         private byte numberField;
@@ -728,10 +728,10 @@ namespace MICE.Nintendo.Databases
     [System.SerializableAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
-    public partial class databaseGameCartridgeBoardChr
+    public partial class DatabaseGameCartridgeBoardChr
     {
 
-        private databaseGameCartridgeBoardChrPin[] pinField;
+        private DatabaseGameCartridgeBoardChrPin[] pinField;
 
         private string sizeField;
 
@@ -747,7 +747,7 @@ namespace MICE.Nintendo.Databases
 
         /// <remarks/>
         [System.Xml.Serialization.XmlElementAttribute("pin")]
-        public databaseGameCartridgeBoardChrPin[] pin
+        public DatabaseGameCartridgeBoardChrPin[] pin
         {
             get
             {
@@ -848,7 +848,7 @@ namespace MICE.Nintendo.Databases
     [System.SerializableAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
-    public partial class databaseGameCartridgeBoardChrPin
+    public partial class DatabaseGameCartridgeBoardChrPin
     {
 
         private byte numberField;
@@ -888,7 +888,7 @@ namespace MICE.Nintendo.Databases
     [System.SerializableAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
-    public partial class databaseGameCartridgeBoardCic
+    public partial class DatabaseGameCartridgeBoardCic
     {
 
         private string typeField;
@@ -912,7 +912,7 @@ namespace MICE.Nintendo.Databases
     [System.SerializableAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
-    public partial class databaseGameCartridgeBoardPad
+    public partial class DatabaseGameCartridgeBoardPad
     {
 
         private byte hField;
@@ -952,7 +952,7 @@ namespace MICE.Nintendo.Databases
     [System.SerializableAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
-    public partial class databaseGameCartridgeBoardPrg
+    public partial class DatabaseGameCartridgeBoardPrg
     {
 
         private string nameField;
@@ -1056,7 +1056,7 @@ namespace MICE.Nintendo.Databases
     [System.SerializableAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
-    public partial class databaseGameCartridgeBoardVram
+    public partial class DatabaseGameCartridgeBoardVram
     {
 
         private string sizeField;
@@ -1112,9 +1112,8 @@ namespace MICE.Nintendo.Databases
     [System.SerializableAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
-    public partial class databaseGameCartridgeBoardWram
+    public partial class DatabaseGameCartridgeBoardWram
     {
-
         private string sizeField;
 
         private byte batteryField;

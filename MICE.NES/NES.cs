@@ -155,11 +155,11 @@ namespace MICE.Nintendo
             {
                 if (NES.IsDebug)
                 {
-                    Console.WriteLine($"Frame took (ms): {this.frameSW.ElapsedMilliseconds}");
-                    this.frameSW.Restart();
-
                     File.AppendAllText(Constants.DebugFile, NES.traceFileOutput.ToString());
                     NES.traceFileOutput.Clear();
+
+                    Console.WriteLine($"Frame took (ms): {this.frameSW.ElapsedMilliseconds}");
+                    this.frameSW.Restart();
                 }
 
                 this.CurrentFrame = this.PPU.FrameNumber;

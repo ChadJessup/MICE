@@ -1,4 +1,6 @@
-﻿using MICE.Common.Helpers;
+﻿using ICSharpCode.SharpZipLib.Checksums;
+using MICE.Common.Helpers;
+using MICE.Nintendo.Databases;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -135,8 +137,6 @@ namespace MICE.Nintendo.Loaders
                 this.ROMBanks.Add(new ArraySegment<byte>(bytes, romBankOffset + (i * Constants.ROMBankSize), Constants.ROMBankSize).ToArray());
             }
 
-            var romBytes = this.ROMBanks[0].ToList();
-
             int chrBankOffset = romBankOffset + this.ROMBanks.Sum(bank => bank.Length);
 
             for (int i = 0; i < this.CharacterROMBankCount; i++)
@@ -155,8 +155,31 @@ namespace MICE.Nintendo.Loaders
                 MirroringMode = this.MirroringMode,
                 ProgramRAMBanks = this.RAMBanks,
                 ProgramROMBanks = this.ROMBanks,
+                Trainer = this.Trainer,
                 SRAM = this.SRAM,
             };
+
+            var crc = new Crc32();
+
+            for (int i = 0; i < cartridge.ProgramROMBanks.Count; i++)
+            {
+                crc.Update(cartridge.ProgramROMBanks[i]);
+            }
+
+            for (int i = 0; i < cartridge.CharacterRomBanks.Count; i++)
+            {
+                crc.Update(cartridge.CharacterRomBanks[i]);
+            }
+
+            cartridge.Crc32 = crc.Value.ToString("X");
+
+            var entry = NESDatabase.GetRomDetails(cartridge.Crc32);
+
+            if (entry.MapperId != this.MemoryMapperId)
+            {
+                Console.WriteLine($"Mapper in the ROM ({this.MemoryMapperId}) is not what the databases say...({entry.MapperId}) trusting databases.");
+                this.MemoryMapperId = entry.MapperId;
+            }
 
             cartridge.InitializeMapper(this.MemoryMapperId);
 

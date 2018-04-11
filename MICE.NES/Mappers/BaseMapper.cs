@@ -27,6 +27,7 @@ namespace MICE.Nintendo.Mappers
             public static Range ProgramROMFirstBank = new Range(0x8000, 0xBFFF);
             public static Range ProgramROMLastBank = new Range(0xC000, 0xFFFF);
         }
+
         protected readonly NESCartridge cartridge;
 
         public BaseMapper(string name, NESCartridge cartridge)
