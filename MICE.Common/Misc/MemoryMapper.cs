@@ -53,7 +53,10 @@ namespace MICE.Common.Misc
             this.memorySegments.Add(item);
         }
 
-        public T GetMemorySegment<T>(string segmentName) where T : IMemorySegment => (T)this.memorySegments.First(ms => ms is T && ms.Name == segmentName);
+        public T GetMemorySegment<T>(string segmentName) where T : IMemorySegment
+        {
+            return (T)this.memorySegments.First(ms => ms is T && ms.Name == segmentName);
+        }
 
         // Standard collection methods...
         public bool IsReadOnly => false;

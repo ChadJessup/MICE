@@ -1,5 +1,6 @@
 ﻿using MICE.Common;
 using MICE.Common.Interfaces;
+using MICE.PPU.RicohRP2C02;
 using Ninject;
 using System;
 using System.Collections.Generic;
@@ -15,7 +16,10 @@ namespace MICE.CPU.MOS6502
 
         private Opcodes Opcodes;
 
-        public MOS6502([Named("CPU")] IMemoryMap memoryMap) => this.MemoryMap = memoryMap;
+        public MOS6502([Named("CPU")] IMemoryMap memoryMap)
+        {
+            this.MemoryMap = memoryMap;
+        }
 
         public IReadOnlyDictionary<InterruptType, int> InterruptOffsets = new Dictionary<InterruptType, int>()
         {
