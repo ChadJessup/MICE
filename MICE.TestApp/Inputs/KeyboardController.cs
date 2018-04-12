@@ -16,8 +16,8 @@ namespace MICE.TestApp
         private readonly Keyboard keyboard;
         private readonly InputHandler inputHandler;
 
-        public KeyboardController(InputHandler inputHandler, Range memoryRange, string name)
-            : base(memoryRange, name)
+        public KeyboardController(InputHandler inputHandler, Range memoryRange, string name, Memory<byte> memory = default)
+            : base(memoryRange, memory, name)
         {
             var directInput = new DirectInput();
             this.keyboard = new Keyboard(directInput);

@@ -7,7 +7,7 @@ namespace MICE.Components.Memory
     public class ROM : MemorySegment, IROM
     {
         public ROM(int lowerIndex, int upperIndex, string name)
-            : base(new Range(lowerIndex, upperIndex), name)
+            : base(new Range(lowerIndex, upperIndex), null, name)
         {
         }
 

@@ -246,7 +246,7 @@ namespace MICE.PPU.RicohRP2C02
                 this.ScrollHandler.CopyVerticalBits();
             }
 
-            return 0;
+            return 1;
         }
 
         public void PowerOn()

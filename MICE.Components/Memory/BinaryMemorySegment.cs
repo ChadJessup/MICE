@@ -5,34 +5,31 @@ namespace MICE.Components.Memory
 {
     public abstract class BinaryMemorySegment : MemorySegment
     {
-        public BinaryMemorySegment(Range range, string name, Action<int, byte> afterWriteAction = null, Action<int, byte> afterReadAction = null)
-            : base(range, name)
+        public BinaryMemorySegment(Range range, string name, Memory<byte> memory, Action<int, byte> afterWriteAction = null, Action<int, byte> afterReadAction = null)
+            : base(range, memory, name)
         {
             var length = this.Range.Max - this.Range.Min;
 
             this.AfterReadAction = afterReadAction;
             this.AfterWriteAction = afterWriteAction;
-
-            // TODO: fix this in getoffsetinsegment by overriding it...
-            this.Data = new byte[length + 1];
         }
 
-        public byte[] Data { get; set; }
+        // TODO: Converting things over to Memory/Span, so some of the code around 'Data' is bad atm.
 
-        public override byte[] GetBytes() => this.Data;
+        public override byte[] GetBytes() => this.Memory.ToArray();
 
         public override byte ReadByte(int index)
         {
-            var value = this.Data[this.GetOffsetInSegment(index)];
+            var value = this.Memory.Span[this.GetOffsetInSegment(index)];
             this.AfterReadAction?.Invoke(index, value);
 
             return value;
         }
 
-        public override ushort ReadShort(int index) => BitConverter.ToUInt16(this.Data, this.GetOffsetInSegment(index));
+        public override ushort ReadShort(int index) => BitConverter.ToUInt16(this.Memory.ToArray(), this.GetOffsetInSegment(index));
         public override void Write(int index, byte value)
         {
-            this.Data[this.GetOffsetInSegment(index)] = value;
+            this.Memory.Span[this.GetOffsetInSegment(index)] = value;
             this.AfterWriteAction?.Invoke(index, value);
         }
 
@@ -45,7 +42,7 @@ namespace MICE.Components.Memory
 
             for (int i = 0; i < length; i++)
             {
-                destinationArray[dstIndex++] = this.Data[sourceIndex++];
+                destinationArray[dstIndex++] = this.Memory.Span[sourceIndex++];
             }
         }
     }

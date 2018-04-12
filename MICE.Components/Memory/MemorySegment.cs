@@ -8,11 +8,13 @@ namespace MICE.Components.Memory
     {
         public Range Range { get; }
         public string Name { get; private set; }
+        public Memory<byte> Memory { get; private set; }
 
-        public MemorySegment(Range memoryRange, string name)
+        public MemorySegment(Range memoryRange, Memory<byte> memory, string name)
         {
             this.Range = memoryRange;
             this.Name = name;
+            this.Memory = memory;
         }
 
         public virtual bool ContainsIndex(int index) => IsIndexInRange(index) || (index <= this.Range.Min && index >= this.Range.Max);

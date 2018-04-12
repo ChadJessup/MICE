@@ -1,4 +1,5 @@
-﻿using MICE.Common.Interfaces;
+﻿using MICE.Common;
+using MICE.Common.Interfaces;
 using MICE.Components.Bus;
 using MICE.Components.Memory;
 using MICE.CPU.MOS6502;
@@ -110,7 +111,7 @@ namespace MICE.Nintendo
         public static StringBuilder traceFileOutput = new StringBuilder();
 
         private Stopwatch frameSW;
-        public void Step()
+        public long Step()
         {
             string registerState = "";
             if (NES.IsDebug)
@@ -121,28 +122,49 @@ namespace MICE.Nintendo
             // 1 Step = 1 Frame to the NES, since we're doing frame-based timing here:
             // 1 System step = 1 CPU step + (3 PPU steps * CPU Cycles in Step) + (2 Audio steps * 1 CPU cycle).
             // Cycles are based on which instructions the CPU ran.
-            //var cycleEvent = new NintendoStepArgs();
+            NintendoStepArgs stepEvent;
             //cycleEvent.CPUStepsOccurred = this.CPU.Step();
-            var cpuCycles = this.CPU.Step();
+            stepEvent.PPUCyclesOccurred = 0;
+
+            stepEvent.CPUCyclesOccurred = this.CPU.FetchInstruction();
+
+            stepEvent.PPUCyclesOccurred = this.PPU.Step();
+            stepEvent.PPUCyclesOccurred += this.PPU.Step();
+            stepEvent.PPUCyclesOccurred += this.PPU.Step();
+
+            stepEvent.CPUCyclesOccurred += this.CPU.DecodeInstruction();
+
+            stepEvent.PPUCyclesOccurred += this.PPU.Step();
+            stepEvent.PPUCyclesOccurred += this.PPU.Step();
+            stepEvent.PPUCyclesOccurred += this.PPU.Step();
+            stepEvent.CPUCyclesOccurred += this.CPU.ExecuteInstruction();
+
+            //var ppuCyclesLeft = (stepEvent.CPUCyclesOccurred * 3) - stepEvent.PPUCyclesOccurred;
+
+            //for (int i = 0; i < stepEvent.CPUCyclesOccurred * 3; i++)
+            //{
+            //    stepEvent.PPUCyclesOccurred += this.PPU.Step();
+            //}
+
+            //cycleEvent.CPUCyclesOccurred += this.CPU.Step() + 2;
 
             if (NES.IsDebug)
             {
                 NES.traceFileOutput.AppendLine(this.GetState(registerState));
             }
 
-           // CPU.CurrentCycle += cycleEvent.CPUStepsOccurred;
+            CPU.CurrentCycle += stepEvent.CPUCyclesOccurred;
+            stepEvent.TotalCPUCycles = CPU.CurrentCycle;
 
-            //cycleEvent.TotalCPUSteps = CPU.CurrentCycle;
+            //for (int i = 0; i < stepEvent.CPUCyclesOccurred * 3; i++)
+            //{
+            //    this.PPU.Step();
+            //    //cycleEvent.PPUStepsOccurred = this.PPU.Step();
 
-            for (int i = 0; i < cpuCycles * 3; i++)
-            {
-                this.PPU.Step();
-                //cycleEvent.PPUStepsOccurred = this.PPU.Step();
+            //    // this.ppuTotalCycles += cycleEvent.PPUStepsOccurred;
 
-               // this.ppuTotalCycles += cycleEvent.PPUStepsOccurred;
-
-                //cycleEvent.TotalPPUSteps = this.ppuTotalCycles;
-            }
+            //    //cycleEvent.TotalPPUSteps = this.ppuTotalCycles;
+            //}
 
             if (this.PPU.ShouldNMInterrupt)
             {
@@ -168,7 +190,9 @@ namespace MICE.Nintendo
 
             // TODO: APU Cycles
 
-           // this.StepCompleted?.Invoke(this, cycleEvent);
+            // this.StepCompleted?.Invoke(this, cycleEvent);
+
+            return stepEvent.CPUCyclesOccurred;
         }
 
         public void PowerOff()
@@ -203,10 +227,17 @@ namespace MICE.Nintendo
             }
         }
 
+        private DateTime gameTickDateTime;
+        private long allocatedCycles;
+
         public Task Run()
         {
+            var startTime = DateTime.Now;
+
             return Task.Factory.StartNew(() =>
             {
+                gameTickDateTime = DateTime.Now;
+
                 this.frameSW = new Stopwatch();
 
                 if (NES.IsDebug)
@@ -216,8 +247,24 @@ namespace MICE.Nintendo
 
                 while (!this.IsPaused && this.IsPoweredOn)
                 {
-                    this.Step();
+                    DateTime currentTickDateTime = DateTime.Now;
+                    double tickDelta = (currentTickDateTime - gameTickDateTime).TotalSeconds;
 
+                    gameTickDateTime = currentTickDateTime;
+
+                    double deltaTime = tickDelta;
+
+                    allocatedCycles += (long)(deltaTime * MOS6502.FrequencyHz);
+                    var then = DateTime.Now;
+
+                    while (allocatedCycles > 0)
+                    {
+                        allocatedCycles -= this.Step();
+                    }
+
+                    var totalTime = DateTime.Now - then;
+
+                    Console.WriteLine($"Behind real CPU: {totalTime.TotalSeconds} seconds, over {(DateTime.Now - startTime).TotalSeconds} seconds");
                     // TODO: Get RAW Screen data from PPU.
                     // TODO: Audio.
                 }

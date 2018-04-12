@@ -16,13 +16,13 @@ namespace MICE.CPU.MOS6502
             public const int StackPointerStart = 0xFF;
         }
 
-        public Stack(Range range, string name)
-            : base(range, name)
+        public Stack(Range range, string name, Memory<byte> memory = default)
+            : base(range, name, memory)
         {
         }
 
-        public Stack(int lowerIndex, int upperIndex, string name)
-            : this(new Range(lowerIndex, upperIndex), name)
+        public Stack(int lowerIndex, int upperIndex, string name, Memory<byte> memory = default)
+            : this(new Range(lowerIndex, upperIndex), name, memory)
         {
         }
 
@@ -36,7 +36,7 @@ namespace MICE.CPU.MOS6502
 
         public void Push(byte value)
         {
-            this.Data[this.GetAdjustedStackPointer()] = value;
+            this.Memory.Span[this.GetAdjustedStackPointer()] = value;
 
             this.DecrementStackPointer();
         }
@@ -45,8 +45,8 @@ namespace MICE.CPU.MOS6502
         {
             var bytes = BitConverter.GetBytes(value);
 
-            this.Data[this.GetAdjustedStackPointer() - 1] = (byte)(bytes[0]);
-            this.Data[this.GetAdjustedStackPointer()] = (byte)(bytes[1]);
+            this.Memory.Span[this.GetAdjustedStackPointer() - 1] = (byte)(bytes[0]);
+            this.Memory.Span[this.GetAdjustedStackPointer()] = (byte)(bytes[1]);
 
             this.DecrementStackPointer();
             this.DecrementStackPointer();
@@ -56,15 +56,15 @@ namespace MICE.CPU.MOS6502
         {
             this.IncrementStackPointer();
 
-            return this.Data[this.GetAdjustedStackPointer()];
+            return this.Memory.Span[this.GetAdjustedStackPointer()];
         }
 
         public ushort PopShort()
         {
             this.IncrementStackPointer();
             this.IncrementStackPointer();
-            var low = this.Data[this.GetAdjustedStackPointer() - 1];
-            var high = this.Data[this.GetAdjustedStackPointer()];
+            var low = this.Memory.Span[this.GetAdjustedStackPointer() - 1];
+            var high = this.Memory.Span[this.GetAdjustedStackPointer()];
 
             return (ushort)(high << 8 | low & 0xff);
         }

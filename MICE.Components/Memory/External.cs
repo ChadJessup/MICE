@@ -9,7 +9,7 @@ namespace MICE.Components.Memory
         private IExternalHandler mapper;
 
         public External(int lowerIndex, int upperIndex, string name)
-            : base(new Range(lowerIndex, upperIndex), name)
+            : base(new Range(lowerIndex, upperIndex), null, name)
         {
         }
 

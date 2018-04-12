@@ -10,7 +10,7 @@ namespace MICE.Nintendo.Components
         private int readCount = 0;
 
         public KeyboardController2(Range memoryRange, string name)
-            : base(memoryRange, name)
+            : base(memoryRange, null, name)
         {
         }
 

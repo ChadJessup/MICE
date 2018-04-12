@@ -175,7 +175,7 @@ namespace MICE.Nintendo.Loaders
 
             var entry = NESDatabase.GetRomDetails(cartridge.Crc32);
 
-            if (entry.MapperId != this.MemoryMapperId)
+            if ((entry?.MapperId ?? this.MemoryMapperId) != this.MemoryMapperId)
             {
                 Console.WriteLine($"Mapper in the ROM ({this.MemoryMapperId}) is not what the databases say...({entry.MapperId}) trusting databases.");
                 this.MemoryMapperId = entry.MapperId;

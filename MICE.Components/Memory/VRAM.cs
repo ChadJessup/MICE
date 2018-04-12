@@ -1,9 +1,11 @@
-﻿namespace MICE.Components.Memory
+﻿using System;
+
+namespace MICE.Components.Memory
 {
     public class VRAM : RAM
     {
-        public VRAM(int lowerIndex, int upperIndex, string name)
-            : base(lowerIndex, upperIndex, name)
+        public VRAM(int lowerIndex, int upperIndex, string name, Memory<byte> memory)
+            : base(lowerIndex, upperIndex, name, memory)
         {
         }
     }

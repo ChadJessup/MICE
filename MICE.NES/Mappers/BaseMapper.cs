@@ -31,7 +31,7 @@ namespace MICE.Nintendo.Mappers
         protected readonly NESCartridge cartridge;
 
         public BaseMapper(string name, NESCartridge cartridge)
-            : base(new Range(0x8000, 0xFFFF), $"{name} Mapper")
+            : base(new Range(0x8000, 0xFFFF), null, $"{name} Mapper")
         {
             this.cartridge = cartridge;
         }

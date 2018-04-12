@@ -16,8 +16,6 @@ namespace MICE.PPU.RicohRP2C02.Handlers
         {
             this.memoryMap = (PPUMemoryMap)memoryMap;
 
-            var memorySegments = this.memoryMap.GetSegmentsInRange(0x3F00, 0x3FFF);
-
             this.BackgroundPalette0 = this.memoryMap.GetMemorySegment<Palette>("Background palette 0");
             this.palettes.AddRange(this.memoryMap.GetSegmentsInRange(0x3F00, 0x3F1F));
         }
@@ -34,8 +32,8 @@ namespace MICE.PPU.RicohRP2C02.Handlers
             }
             else
             {
-                var palette = this.palettes.First(p => p.IsIndexInRange(address));
-                this.memoryMap.ReadBuffer = palette.ReadByte(address);
+                //var palette = this.palettes.First(p => p.IsIndexInRange(address));
+                this.memoryMap.ReadBuffer = this.memoryMap.ReadByte(address);
             }
 
             return this.memoryMap.ReadBuffer;
@@ -51,8 +49,8 @@ namespace MICE.PPU.RicohRP2C02.Handlers
             {
                 sprite.PaletteAddress = (ushort)(0x3f10 + 4 * sprite.PaletteNumber + sprite.ColorIndex);
 
-                var palette = this.palettes.First(p => p.IsIndexInRange(sprite.PaletteAddress));
-                this.memoryMap.ReadBuffer = palette.ReadByte(sprite.PaletteAddress);
+               // var palette = this.palettes.First(p => p.IsIndexInRange(sprite.PaletteAddress));
+                this.memoryMap.ReadBuffer = this.memoryMap.ReadByte(sprite.PaletteAddress); //palette.ReadByte(sprite.PaletteAddress);
             }
 
             return this.memoryMap.ReadBuffer;

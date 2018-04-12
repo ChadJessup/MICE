@@ -15,7 +15,7 @@ namespace MICE.Components.Memory
         private Range mirroredRange;
 
         public MirroredMemory(int lowerIndex, int upperIndex, int mirroredLowerIndex, int mirroredUpperIndex, IMemoryMap memoryMapper, string name)
-            : base(new Range(lowerIndex, upperIndex), name)
+            : base(new Range(lowerIndex, upperIndex), null, name)
         {
             this.mirroredRange = new Range(mirroredLowerIndex, mirroredUpperIndex);
 

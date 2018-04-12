@@ -81,7 +81,7 @@ namespace MICE.WPF.ViewModels
         }
 
         public Task Run() => throw new NotImplementedException();
-        public void Step() => throw new NotImplementedException();
+        public long Step() => throw new NotImplementedException();
         public void Reset() => this.NES.Reset();
         public void PowerOff()
         {

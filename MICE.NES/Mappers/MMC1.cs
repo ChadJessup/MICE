@@ -37,8 +37,8 @@ namespace MICE.Nintendo.Mappers
         protected ProgramROMBankMode ProgramRomBankMode { get; private set; }
         protected CharacterROMBankMode CharacterRomBankMode { get; private set; }
 
-        public MMC1(NESCartridge cartridge)
-            : base(MemoryMapperIds.MMC1.ToString(), cartridge)
+        public MMC1(NESCartridge cartridge, MemoryMapperIds id = MemoryMapperIds.MMC1)
+            : base(id.ToString(), cartridge)
         {
         }
 

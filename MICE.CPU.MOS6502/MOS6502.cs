@@ -17,6 +17,8 @@ namespace MICE.CPU.MOS6502
 
         public MOS6502([Named("CPU")] IMemoryMap memoryMap) => this.MemoryMap = memoryMap;
 
+        public static long FrequencyHz = 1789773;
+
         public IReadOnlyDictionary<InterruptType, int> InterruptOffsets = new Dictionary<InterruptType, int>()
         {
             { InterruptType.BRK, 0xFFFE },
@@ -29,6 +31,7 @@ namespace MICE.CPU.MOS6502
 
         public IMemoryMap MemoryMap { get; }
         public ushort LastPC { get; set; }
+        public byte NextOpcode { get; private set; }
 
         private string lastAccessedAddress;
         public string LastAccessedAddress
@@ -185,6 +188,13 @@ namespace MICE.CPU.MOS6502
         /// <returns>The amount of cycles that have passed in this step.</returns>
         public int Step()
         {
+            FetchInstruction();
+            DecodeInstruction();
+            return ExecuteInstruction();
+        }
+
+        public int FetchInstruction()
+        {
             this.LastAccessedAddress = "";
 
             if (this.WasNMIRequested)
@@ -203,12 +213,20 @@ namespace MICE.CPU.MOS6502
 
             this.LastPC = this.Registers.PC.Read();
 
-            if (this.CurrentCycle == 195559)
-            {
+            this.NextOpcode = this.ReadNextByte();
 
-            }
+            return 1;
+        }
 
-            this.CurrentOpcode = this.Opcodes[this.ReadNextByte()];
+        public int DecodeInstruction()
+        {
+            this.CurrentOpcode = this.Opcodes[this.NextOpcode];
+
+            return 1;
+        }
+
+        public int ExecuteInstruction()
+        {
             this.CurrentOpcode.Instruction(this.CurrentOpcode);
 
             if (this.CurrentOpcode.ShouldVerifyResults && (LastPC + this.CurrentOpcode.PCDelta != this.Registers.PC))
@@ -224,8 +242,9 @@ namespace MICE.CPU.MOS6502
                 this.CurrentOpcode.AddedCycles += Constants.ExtraNMIHandledCycles;
             }
 
-            var newCycles = this.CurrentOpcode.Cycles + this.CurrentOpcode.AddedCycles;
-            this.CurrentCycle += newCycles;
+            // Subtract two from total due to fetch/decode steps prior
+            var newCycles = (this.CurrentOpcode.Cycles - 2) + this.CurrentOpcode.AddedCycles;
+            //this.CurrentCycle += newCycles;
 
             return newCycles;
         }

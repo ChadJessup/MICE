@@ -6,8 +6,8 @@ namespace MICE.Components.Memory
 {
     public class RAM : BinaryMemorySegment, IRAM
     {
-        public RAM(int lowerIndex, int upperIndex, string name, Action<int, byte> afterWriteAction = null, Action<int, byte> afterReadAction = null)
-            : base(new Range(lowerIndex, upperIndex), name, afterWriteAction, afterReadAction)
+        public RAM(int lowerIndex, int upperIndex, string name, Memory<byte> memory = default, Action<int, byte> afterWriteAction = null, Action<int, byte> afterReadAction = null)
+            : base(new Range(lowerIndex, upperIndex), name, memory, afterWriteAction, afterReadAction)
         {
         }
 

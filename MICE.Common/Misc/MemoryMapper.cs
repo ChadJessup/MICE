@@ -23,7 +23,7 @@ namespace MICE.Common.Misc
             return this.memorySegments.Where(seg => seg.Range.IsOverlapped(range));
         }
 
-        public void Add(IMemorySegment item)
+        public virtual void Add(IMemorySegment item)
         {
             var existingSegment = this.memorySegments.FirstOrDefault(seg => seg.IsIndexInRange(item.Range.Min))
                 ?? this.memorySegments.FirstOrDefault(seg => seg.IsIndexInRange(item.Range.Max));
@@ -53,7 +53,7 @@ namespace MICE.Common.Misc
             this.memorySegments.Add(item);
         }
 
-        public T GetMemorySegment<T>(string segmentName) where T : IMemorySegment => (T)this.memorySegments.First(ms => ms is T && ms.Name == segmentName);
+        public virtual T GetMemorySegment<T>(string segmentName) where T : IMemorySegment => (T)this.memorySegments.First(ms => ms is T && ms.Name == segmentName);
 
         // Standard collection methods...
         public bool IsReadOnly => false;

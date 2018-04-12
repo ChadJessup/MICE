@@ -97,7 +97,7 @@ namespace MICE.Nintendo
             this.inputHandler = inputHandler;
 
             this.sram = new SRAM(MemoryRanges.SRAM, "SRAM");
-            this.stack = new CPU.MOS6502.Stack(MemoryRanges.Stack, "Stack");
+            this.stack = new CPU.MOS6502.Stack(MemoryRanges.Stack, "Stack", new Memory<byte>(this.memory, MemoryRanges.Stack.Min, (MemoryRanges.Stack.Max - MemoryRanges.Stack.Min) + 1));
 
             this.prgROMLowerBank = new ExternalFacade(this, MemoryRanges.ProgramRomLowerBank, Constants.ProgramRomLowerBank);
             this.prgROMUpperBank = new ExternalFacade(this, MemoryRanges.ProgramRomUpperBank, Constants.ProgramRomUpperBank);

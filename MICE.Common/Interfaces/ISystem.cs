@@ -18,6 +18,6 @@ namespace MICE.Common.Interfaces
         void PowerOff();
         void Reset();
         Task Run();
-        void Step();
+        long Step();
     }
 }
