@@ -183,7 +183,7 @@ namespace MICE.CPU.MOS6502
                     throw new InvalidOperationException($"Unhandled AddressMode ({container.AddressingMode}) for Opcode: ({container.Name})");
             }
 
-            CPU.LastAccessedAddress = AddressingMode.GetAddressAsString(CPU, container, result);
+           // CPU.LastAccessedAddress = AddressingMode.GetAddressAsString(CPU, container, result);
 
             return result;
         }

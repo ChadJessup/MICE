@@ -30,12 +30,7 @@ namespace MICE.CPU.MOS6502
         public IMemoryMap MemoryMap { get; }
         public ushort LastPC { get; set; }
 
-        private string lastAccessedAddress;
-        public string LastAccessedAddress
-        {
-            get => this.lastAccessedAddress;
-            set => this.lastAccessedAddress = value;
-        }
+        public string LastAccessedAddress { get; set; }
 
         /// <summary>
         /// Gets or sets a value requesting a non-maskable interrrupt.
@@ -202,11 +197,6 @@ namespace MICE.CPU.MOS6502
             }
 
             this.LastPC = this.Registers.PC.Read();
-
-            if (this.CurrentCycle == 195559)
-            {
-
-            }
 
             this.CurrentOpcode = this.Opcodes[this.ReadNextByte()];
             this.CurrentOpcode.Instruction(this.CurrentOpcode);

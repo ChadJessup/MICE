@@ -439,7 +439,7 @@ namespace MICE.PPU.RicohRP2C02
                 return;
             }
 
-            if (drawnTile.tile?.TileByte % 4 == 0 || drawnSprite.spritePixel % 4 == 0)
+            if (drawnTile.tile?.IsTransparentPixel ?? false || drawnSprite.spritePixel % 4 == 0)
             {
                 return;
             }
