@@ -1,6 +1,5 @@
 ﻿using MICE.Common;
 using MICE.Common.Interfaces;
-using MICE.PPU.RicohRP2C02;
 using Ninject;
 using System;
 using System.Collections.Generic;
@@ -16,10 +15,9 @@ namespace MICE.CPU.MOS6502
 
         private Opcodes Opcodes;
 
-        public MOS6502([Named("CPU")] IMemoryMap memoryMap)
-        {
-            this.MemoryMap = memoryMap;
-        }
+        public MOS6502([Named("CPU")] IMemoryMap memoryMap) => this.MemoryMap = memoryMap;
+
+        public static long FrequencyHz = 1789773;
 
         public IReadOnlyDictionary<InterruptType, int> InterruptOffsets = new Dictionary<InterruptType, int>()
         {
@@ -33,8 +31,14 @@ namespace MICE.CPU.MOS6502
 
         public IMemoryMap MemoryMap { get; }
         public ushort LastPC { get; set; }
+        public byte NextOpcode { get; private set; }
 
-        public string LastAccessedAddress { get; set; }
+        private string lastAccessedAddress;
+        public string LastAccessedAddress
+        {
+            get => this.lastAccessedAddress;
+            set => this.lastAccessedAddress = value;
+        }
 
         /// <summary>
         /// Gets or sets a value requesting a non-maskable interrrupt.
@@ -184,6 +188,13 @@ namespace MICE.CPU.MOS6502
         /// <returns>The amount of cycles that have passed in this step.</returns>
         public int Step()
         {
+            var cycles = FetchInstruction();
+            cycles += DecodeInstruction();
+            return ExecuteInstruction() + cycles;
+        }
+
+        public int FetchInstruction()
+        {
             this.LastAccessedAddress = "";
 
             if (this.WasNMIRequested)
@@ -202,7 +213,20 @@ namespace MICE.CPU.MOS6502
 
             this.LastPC = this.Registers.PC.Read();
 
-            this.CurrentOpcode = this.Opcodes[this.ReadNextByte()];
+            this.NextOpcode = this.ReadNextByte();
+
+            return 1;
+        }
+
+        public int DecodeInstruction()
+        {
+            this.CurrentOpcode = this.Opcodes[this.NextOpcode];
+
+            return 1;
+        }
+
+        public int ExecuteInstruction()
+        {
             this.CurrentOpcode.Instruction(this.CurrentOpcode);
 
             if (this.CurrentOpcode.ShouldVerifyResults && (LastPC + this.CurrentOpcode.PCDelta != this.Registers.PC))
@@ -218,8 +242,9 @@ namespace MICE.CPU.MOS6502
                 this.CurrentOpcode.AddedCycles += Constants.ExtraNMIHandledCycles;
             }
 
-            var newCycles = this.CurrentOpcode.Cycles + this.CurrentOpcode.AddedCycles;
-            this.CurrentCycle += newCycles;
+            // Subtract two from total due to fetch/decode steps prior
+            var newCycles = (this.CurrentOpcode.Cycles - 2) + this.CurrentOpcode.AddedCycles;
+            //this.CurrentCycle += newCycles;
 
             return newCycles;
         }

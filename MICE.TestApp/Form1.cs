@@ -234,11 +234,9 @@ namespace MICE.TestApp
                         lastFrame = nes.CurrentFrame;
                         improveBy = 60 / fps;
                         lastTime = DateTime.Now;
+                        uiDispatcher.Invoke(() => this.Text = $"Frame: {this.nes.CurrentFrame} FPS: {fps} Improve: {improveBy:F2}x");
                     }
 
-                    // Basic 60 fps lock...not good, but I don't care atm.
-                   // Task.Delay(16);
-                    uiDispatcher.Invoke(() => this.Text = $"Frame: {this.nes.CurrentFrame} FPS: {fps} Improve: {improveBy:F2}x");
                     this.Draw(this.nes.Screen);
                 }
             },
@@ -252,8 +250,15 @@ namespace MICE.TestApp
         {
             BitmapData frame = this.bitmap.LockBits(this.bitmapRectangle, ImageLockMode.WriteOnly, PixelFormat.Format8bppIndexed);
 
-            var ptr = frame.Scan0;
-            Marshal.Copy(screen, 0, ptr, screen.Length);
+            //var ptr = frame.Scan0;
+            unsafe
+            {
+                var toSpan = new Span<byte>(frame.Scan0.ToPointer(), screen.Length);
+                var fromSpan = new Span<byte>(screen);
+                fromSpan.CopyTo(toSpan);
+            }
+
+            //Marshal.Copy(screen, 0, ptr, screen.Length);
 
             this.bitmap.UnlockBits(frame);
 
