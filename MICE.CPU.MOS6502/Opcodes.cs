@@ -464,11 +464,13 @@ namespace MICE.CPU.MOS6502
         [MOS6502Opcode(0x20, "JSR", AddressingModes.Absolute, timing: 6, length: 3, verify: false)]
         public void JSR(OpcodeContainer container, ushort address)
         {
-            CPU.Stack.Push((ushort)(CPU.Registers.PC + 1));
-            var nextPC = CPU.ReadNextShort();
-            CPU.SetPCTo(nextPC);
+            //var low = CPU.ReadNextByte();
+            //CPU.IncrementPC();
 
-            CPU.LastAccessedAddress = $"${nextPC:X4}";
+            CPU.Stack.Push((ushort)(CPU.Registers.PC - 1));
+            CPU.SetPCTo(address);
+
+            CPU.LastAccessedAddress = $"${address:X4}";
         }
 
         [MOS6502Opcode(0x60, "RTS", AddressingModes.Absolute, timing: 6, length: 3, verify: false)]
@@ -628,16 +630,16 @@ namespace MICE.CPU.MOS6502
             this.WriteByteToRegister(CPU.Registers.X, ++x, S: true, Z: true);
         }
 
-        [MOS6502Opcode(0x8A, "TXA", AddressingModes.Immediate, timing: 2, length: 1)]
+        [MOS6502Opcode(0x8A, "TXA", AddressingModes.Implied, timing: 2, length: 1)]
         public void TXA(OpcodeContainer container, ushort address) => this.WriteByteToRegister(CPU.Registers.A, CPU.Registers.X, S: true, Z: true);
 
-        [MOS6502Opcode(0xAA, "TAX", AddressingModes.Immediate, timing: 2, length: 1)]
+        [MOS6502Opcode(0xAA, "TAX", AddressingModes.Implied, timing: 2, length: 1)]
         public void TAX(OpcodeContainer container, ushort address) => this.WriteByteToRegister(CPU.Registers.X, CPU.Registers.A, S: true, Z: true);
 
-        [MOS6502Opcode(0xA8, "TAY", AddressingModes.Immediate, timing: 2, length: 1)]
+        [MOS6502Opcode(0xA8, "TAY", AddressingModes.Implied, timing: 2, length: 1)]
         public void TAY(OpcodeContainer container, ushort address) => this.WriteByteToRegister(CPU.Registers.Y, CPU.Registers.A, S: true, Z: true);
 
-        [MOS6502Opcode(0x98, "TYA", AddressingModes.Immediate, timing: 2, length: 1)]
+        [MOS6502Opcode(0x98, "TYA", AddressingModes.Implied, timing: 2, length: 1)]
         public void TYA(OpcodeContainer container, ushort address) => this.WriteByteToRegister(CPU.Registers.A, CPU.Registers.Y, S: true, Z: true);
 
         #endregion

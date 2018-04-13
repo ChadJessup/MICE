@@ -189,7 +189,7 @@ namespace MICE.CPU.MOS6502
         /// <returns>The amount of cycles that have passed in this step.</returns>
         public int Step()
         {
-            if (this.CurrentCycle >= 27264)
+            if (this.CurrentCycle >= 50060)
             {
 
             }
@@ -230,7 +230,6 @@ namespace MICE.CPU.MOS6502
 
         public int DecodeInstruction()
         {
-            NMI?
             this.CurrentOpcode = this.Opcodes[this.NextOpcode];
 
             this.address = AddressingMode.GetAddressedOperand(this, this.CurrentOpcode);
@@ -271,7 +270,7 @@ namespace MICE.CPU.MOS6502
         public byte ReadByteAt(ushort address) => this.MemoryMap.ReadByte(address);
         public ushort ReadShortAt(ushort address) => this.MemoryMap.ReadShort(address);
         public void WriteByteAt(ushort address, byte value) => this.MemoryMap.Write(address, value);
-        public void IncrementPC(ushort count = 1) => this.Registers.PC.Write((ushort)(this.Registers.PC + count));
+        public void IncrementPC(int count = 1) => this.Registers.PC.Write((ushort)(this.Registers.PC + count));
 
         public void HandleInterruptRequest(InterruptType interruptType, ushort returnAddress)
         {

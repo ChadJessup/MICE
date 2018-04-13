@@ -178,7 +178,10 @@ namespace MICE.CPU.MOS6502
 
         public static ushort GetAbsoluteX(MOS6502 CPU)
         {
-            return (ushort)(CPU.ReadNextShort() + CPU.Registers.X);
+            var nextShort = (ushort)(CPU.ReadNextShort() + CPU.Registers.X);
+            CPU.IncrementPC(2);
+
+            return nextShort;
         }
 
         public static ushort GetAbsoluteY(MOS6502 CPU)
@@ -203,15 +206,15 @@ namespace MICE.CPU.MOS6502
 
         public static ushort GetIndirectY(MOS6502 CPU)
         {
-            var incompleteYAddress = CPU.ReadNextByte();
+            intermediateAddress = CPU.ReadNextByte();
             CPU.IncrementPC();
 
-            var intermediateAddress = incompleteYAddress == 0xFF
+            var baseAddress = intermediateAddress == 0xFF
                 ? (ushort)(CPU.ReadByteAt(0xFF) | CPU.ReadByteAt(0x00) << 8)
-                : CPU.ReadShortAt(incompleteYAddress);
+                : CPU.ReadShortAt((ushort)intermediateAddress);
 
 
-            return (ushort)(intermediateAddress + CPU.Registers.Y);
+            return (ushort)(baseAddress + CPU.Registers.Y);
         }
 
         private static ushort GetRelative(MOS6502 CPU) => 0x0000;
