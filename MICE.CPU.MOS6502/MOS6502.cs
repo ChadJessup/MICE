@@ -1,6 +1,5 @@
 ﻿using MICE.Common;
 using MICE.Common.Interfaces;
-using MICE.PPU.RicohRP2C02;
 using Ninject;
 using System;
 using System.Collections.Generic;
@@ -16,10 +15,9 @@ namespace MICE.CPU.MOS6502
 
         private Opcodes Opcodes;
 
-        public MOS6502([Named("CPU")] IMemoryMap memoryMap)
-        {
-            this.MemoryMap = memoryMap;
-        }
+        public MOS6502([Named("CPU")] IMemoryMap memoryMap) => this.MemoryMap = memoryMap;
+
+        public static long FrequencyHz = 1789773;
 
         public IReadOnlyDictionary<InterruptType, int> InterruptOffsets = new Dictionary<InterruptType, int>()
         {
@@ -33,8 +31,14 @@ namespace MICE.CPU.MOS6502
 
         public IMemoryMap MemoryMap { get; }
         public ushort LastPC { get; set; }
+        public byte NextOpcode { get; private set; }
 
-        public string LastAccessedAddress { get; set; }
+        private string lastAccessedAddress;
+        public string LastAccessedAddress
+        {
+            get => this.lastAccessedAddress;
+            set => this.lastAccessedAddress = value;
+        }
 
         /// <summary>
         /// Gets or sets a value requesting a non-maskable interrrupt.
@@ -177,12 +181,26 @@ namespace MICE.CPU.MOS6502
         }
 
         private bool shouldHandleNMI = false;
+
         /// <summary>
         /// Steps the CPU and returns the amount of Cycles that would have occurred if the CPU were real.
         /// The cycles can be used by other components as a timing mechanism.
         /// </summary>
         /// <returns>The amount of cycles that have passed in this step.</returns>
         public int Step()
+        {
+            if (this.CurrentCycle >= 50060)
+            {
+
+            }
+
+            var cycles = this.FetchInstruction();
+            cycles += this.DecodeInstruction();
+
+            return this.ExecuteInstruction() + cycles;
+        }
+
+        public int FetchInstruction()
         {
             this.LastAccessedAddress = "";
 
@@ -202,8 +220,29 @@ namespace MICE.CPU.MOS6502
 
             this.LastPC = this.Registers.PC.Read();
 
-            this.CurrentOpcode = this.Opcodes[this.ReadNextByte()];
-            this.CurrentOpcode.Instruction(this.CurrentOpcode);
+            this.NextOpcode = this.ReadNextByte();
+
+            this.IncrementPC();
+
+            this.CurrentCycle++;
+            return 1;
+        }
+
+        public int DecodeInstruction()
+        {
+            this.CurrentOpcode = this.Opcodes[this.NextOpcode];
+
+            this.address = AddressingMode.GetAddressedOperand(this, this.CurrentOpcode);
+
+            this.CurrentCycle++;
+            return 1;
+        }
+
+        private ushort address;
+
+        public int ExecuteInstruction()
+        {
+            this.CurrentOpcode.Instruction(this.CurrentOpcode, address);
 
             if (this.CurrentOpcode.ShouldVerifyResults && (LastPC + this.CurrentOpcode.PCDelta != this.Registers.PC))
             {
@@ -218,57 +257,20 @@ namespace MICE.CPU.MOS6502
                 this.CurrentOpcode.AddedCycles += Constants.ExtraNMIHandledCycles;
             }
 
-            var newCycles = this.CurrentOpcode.Cycles + this.CurrentOpcode.AddedCycles;
-            this.CurrentCycle += newCycles;
+            // Subtract two from total due to fetch/decode steps prior
+            var executeCycles = (this.CurrentOpcode.Cycles - 2) + this.CurrentOpcode.AddedCycles;
+            this.CurrentCycle += executeCycles;
 
-            return newCycles;
+            return executeCycles;
         }
 
-        public void WriteByteAt(ushort address, byte value, bool incrementPC = true)
-        {
-            ushort pc = this.Registers.PC;
-            this.CycleComplete?.Invoke(this, null);
-
-            this.MemoryMap.Write(address, value);
-
-            if (incrementPC)
-            {
-                this.Registers.PC.Write(++pc);
-            }
-        }
-
-        public void IncrementPC(ushort count = 1) => this.Registers.PC.Write((ushort)(this.Registers.PC + count));
+        public byte ReadNextByte() => this.ReadByteAt(this.Registers.PC);
+        public ushort ReadNextShort() => this.ReadShortAt(this.Registers.PC);
         public void SetPCTo(ushort address) => this.Registers.PC.Write(address);
-        public byte ReadNextByte(bool incrementPC = true) => this.ReadByteAt(this.Registers.PC, incrementPC);
-        public byte ReadByteAt(ushort address, bool incrementPC = true)
-        {
-            ushort pc = this.Registers.PC;
-            this.CycleComplete?.Invoke(this, null);
-
-            var value = this.MemoryMap.ReadByte(address);
-
-            if (incrementPC)
-            {
-                this.Registers.PC.Write(++pc);
-            }
-
-            return value;
-        }
-
-        public ushort ReadNextShort(bool incrementPC = true) => this.ReadShortAt(this.Registers.PC, incrementPC);
-        public ushort ReadShortAt(ushort address, bool incrementPC = true)
-        {
-            ushort pc = this.Registers.PC;
-            var value = this.MemoryMap.ReadShort(address);
-
-            if (incrementPC)
-            {
-                this.Registers.PC.Write(++pc);
-                this.Registers.PC.Write(++pc);
-            }
-
-            return value;
-        }
+        public byte ReadByteAt(ushort address) => this.MemoryMap.ReadByte(address);
+        public ushort ReadShortAt(ushort address) => this.MemoryMap.ReadShort(address);
+        public void WriteByteAt(ushort address, byte value) => this.MemoryMap.Write(address, value);
+        public void IncrementPC(int count = 1) => this.Registers.PC.Write((ushort)(this.Registers.PC + count));
 
         public void HandleInterruptRequest(InterruptType interruptType, ushort returnAddress)
         {

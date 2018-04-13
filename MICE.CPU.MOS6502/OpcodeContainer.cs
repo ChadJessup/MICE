@@ -17,8 +17,8 @@ namespace MICE.CPU.MOS6502
         public bool ShouldVerifyResults { get; private set; }
         public bool IsUnofficial { get; private set; }
 
-        private Action<OpcodeContainer> instruction;
-        public Action<OpcodeContainer> Instruction
+        private Action<OpcodeContainer, ushort> instruction;
+        public Action<OpcodeContainer, ushort> Instruction
         {
             get
             {
@@ -41,9 +41,9 @@ namespace MICE.CPU.MOS6502
             this.ShouldVerifyResults = details.ShouldVerify;
             this.IsUnofficial = details.Unofficial;
 
-            this.Instruction = (Action<OpcodeContainer>)Delegate.CreateDelegate(typeof(Action<OpcodeContainer>), opcodes, methodInfo, throwOnBindFailure: true);
+            this.Instruction = (Action<OpcodeContainer, ushort>)Delegate.CreateDelegate(typeof(Action<OpcodeContainer, ushort>), opcodes, methodInfo, throwOnBindFailure: true);
         }
 
-        public override string ToString() => $"{this.Name} (0x{this.Code:X})";
+        public override string ToString() => $"{this.Name} (0x{this.Code:X}) - {this.AddressingMode}";
     }
 }

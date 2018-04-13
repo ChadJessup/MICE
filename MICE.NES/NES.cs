@@ -39,7 +39,7 @@ namespace MICE.Nintendo
         public string Name { get; } = "Nintendo Entertainment System";
         public long CurrentFrame { get; private set; } = 1;
 
-        public static bool IsDebug { get; set; } = false;
+        public static bool IsDebug { get; set; } = true;
 
         // Create components...
         public DataBus DataBus { get; } = new DataBus();
@@ -123,14 +123,24 @@ namespace MICE.Nintendo
             // Cycles are based on which instructions the CPU ran.
             //var cycleEvent = new NintendoStepArgs();
             //cycleEvent.CPUStepsOccurred = this.CPU.Step();
-            var cpuCycles = this.CPU.Step();
+
+            int cpuCycles = 0;
+            try
+            {
+                cpuCycles = this.CPU.Step();
+            }
+            catch (Exception e)
+            {
+                NES.traceFileOutput.AppendLine(e.Message);
+                File.AppendAllText(Constants.DebugFile, NES.traceFileOutput.ToString());
+            }
 
             if (NES.IsDebug)
             {
                 NES.traceFileOutput.AppendLine(this.GetState(registerState));
             }
 
-           // CPU.CurrentCycle += cycleEvent.CPUStepsOccurred;
+            // CPU.CurrentCycle += cycleEvent.CPUStepsOccurred;
 
             //cycleEvent.TotalCPUSteps = CPU.CurrentCycle;
 
@@ -157,7 +167,6 @@ namespace MICE.Nintendo
                 {
                     File.AppendAllText(Constants.DebugFile, NES.traceFileOutput.ToString());
                     NES.traceFileOutput.Clear();
-
                     Console.WriteLine($"Frame took (ms): {this.frameSW.ElapsedMilliseconds}");
                     this.frameSW.Restart();
                 }
