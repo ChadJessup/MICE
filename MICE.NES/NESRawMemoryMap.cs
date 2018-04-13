@@ -59,6 +59,8 @@ namespace MICE.Nintendo
             public const int PPUDATA = 0x2007;
 
             public const int OAMDMA = 0x4014;
+
+            public static Range MirroredRegisters = new Range(0x2008, 0x3FFF);
         }
 
         private static class APURegisterAddresses
@@ -169,6 +171,12 @@ namespace MICE.Nintendo
             {
                 return this.ppuRegisterLookup[index].Read();
             }
+            else if (PPURegisterAddresses.MirroredRegisters.IsInRange(index))
+            {
+                var newIndex = (index - PPURegisterAddresses.MirroredRegisters.Min) + 0x2000;
+
+                return this.ReadByte(newIndex);
+            }
 
             switch (index)
             {
@@ -189,6 +197,8 @@ namespace MICE.Nintendo
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ushort ReadShort(int index)
         {
+            return (ushort)(this.ReadByte(index + 1) << 8 | this.ReadByte(index));
+
             switch (index)
             {
                 case var _ when MemoryRanges.ZeroPage.TryGetOffset(index, out int offset):

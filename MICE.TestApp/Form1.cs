@@ -1,6 +1,5 @@
 ﻿using MICE.Common.Misc;
 using MICE.Nintendo;
-using MICE.Nintendo.Components;
 using MICE.Nintendo.Loaders;
 using Ninject;
 using System;
@@ -109,8 +108,8 @@ namespace MICE.TestApp
             this.nes.InputHandler.SetController1(new KeyboardController(this.nes.InputHandler, new Range(0x4016, 0x4016), "Control Input 1"));
             //this.nes.InputHandler.SetController2(new KeyboardController(new Range(0x4017, 0x4017), "Control Input 2"));
 
-            //var cartridge = NESLoader.CreateCartridge(@"C:\Emulators\NES\Games\World\Donkey Kong (JU).nes");
-            var cartridge = NESLoader.CreateCartridge(@"C:\Emulators\NES\Games\Super Mario Bros.nes");
+            var cartridge = NESLoader.CreateCartridge(@"C:\Emulators\NES\Games\World\Donkey Kong (JU).nes");
+            //var cartridge = NESLoader.CreateCartridge(@"C:\Emulators\NES\Games\Super Mario Bros.nes");
             //var cartridge = NESLoader.CreateCartridge(@"C:\Emulators\NES\Games\USA\Legend of Zelda, The (U) (PRG 1).nes");
             //var cartridge = NESLoader.CreateCartridge(@"C:\Emulators\NES\Games\USA\Bionic Commando (U).nes");
             //var cartridge = NESLoader.CreateCartridge(@"C:\Emulators\NES\Games\USA\Mega Man (U).nes");
@@ -250,15 +249,12 @@ namespace MICE.TestApp
         {
             BitmapData frame = this.bitmap.LockBits(this.bitmapRectangle, ImageLockMode.WriteOnly, PixelFormat.Format8bppIndexed);
 
-            //var ptr = frame.Scan0;
             unsafe
             {
                 var toSpan = new Span<byte>(frame.Scan0.ToPointer(), screen.Length);
                 var fromSpan = new Span<byte>(screen);
                 fromSpan.CopyTo(toSpan);
             }
-
-            //Marshal.Copy(screen, 0, ptr, screen.Length);
 
             this.bitmap.UnlockBits(frame);
 

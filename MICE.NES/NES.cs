@@ -39,7 +39,7 @@ namespace MICE.Nintendo
         public string Name { get; } = "Nintendo Entertainment System";
         public long CurrentFrame { get; private set; } = 1;
 
-        public static bool IsDebug { get; set; } = false;
+        public static bool IsDebug { get; set; } = true;
 
         // Create components...
         public DataBus DataBus { get; } = new DataBus();
