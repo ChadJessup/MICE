@@ -14,6 +14,10 @@
     <OutputPath>C:\src\MICE3D\MICE3D\Assets\</OutputPath>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <OutputPath>C:\src\MICE3D\MICE3D\Assets\Plugins\netstandard2.0\</OutputPath>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="ByteSize" Version="1.3.0" />
     <PackageReference Include="Ninject" Version="3.3.4" />

@@ -173,9 +173,9 @@ namespace MICE.Nintendo
             switch (index)
             {
                 case var _ when MemoryRanges.Controller1.IsInRange(index):
-                    return this.Controller1.ReadByte(index);
+                    return this.Controller1?.ReadByte(index) ?? 0x40;
                 case var _ when MemoryRanges.Controller2.IsInRange(index):
-                    return this.Controller2?.ReadByte(index) ?? 0x0;
+                    return this.Controller2?.ReadByte(index) ?? 0x40;
                 case APURegisterAddresses.DirectLoad:
                 case APURegisterAddresses.ChannelStatus:
                     return 0x0;
