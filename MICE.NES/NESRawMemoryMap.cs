@@ -155,9 +155,9 @@ namespace MICE.Nintendo
             {
                 return this.ReadByte(index % 0x07FF);
             }
-            else if (MemoryRanges.SRAM.TryGetOffset(index, out int sramOffset))
+            else if (MemoryRanges.SRAM.IsInRange(index))
             {
-                return this.sram.ReadByte(sramOffset);
+                return this.sram.ReadByte(index);
             }
             else if (MemoryRanges.ProgramRomUpperBank.IsInRange(index))
             {

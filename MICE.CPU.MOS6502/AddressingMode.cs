@@ -138,18 +138,34 @@ namespace MICE.CPU.MOS6502
 
         public static ushort GetZeroPageX(MOS6502 CPU)
         {
-            var address = (ushort)(CPU.ReadNextByte() + CPU.Registers.X);
+            intermediateAddress = CPU.ReadNextByte();
+            var address = (ushort)(intermediateAddress + CPU.Registers.X);
+            address &= 0xFF;
+
             CPU.IncrementPC();
 
             return address;
         }
 
-        public static ushort GetZeroPageY(MOS6502 CPU) => (ushort)(CPU.ReadNextByte() + CPU.Registers.Y);
+        public static ushort GetZeroPageY(MOS6502 CPU)
+        {
+            intermediateAddress = CPU.ReadNextByte();
+            var address = (ushort)(intermediateAddress + CPU.Registers.Y);
+            address &= 0xFF;
+
+            CPU.IncrementPC();
+
+            return address;
+        }
 
         public static ushort GetIndirect(MOS6502 CPU)
         {
-            return CPU.ReadShortAt(CPU.ReadNextShort());
+            intermediateAddress = CPU.ReadNextShort();
+            //return CPU.ReadShortAt(intermediateAddress.Value);
+
+            return intermediateAddress.Value;
         }
+
         public static ushort GetZeroPage(MOS6502 CPU)
         {
             var pc = CPU.ReadNextByte();
@@ -178,7 +194,8 @@ namespace MICE.CPU.MOS6502
 
         public static ushort GetAbsoluteX(MOS6502 CPU)
         {
-            var nextShort = (ushort)(CPU.ReadNextShort() + CPU.Registers.X);
+            intermediateAddress = CPU.ReadNextShort();
+            var nextShort = (ushort)(intermediateAddress + CPU.Registers.X);
             CPU.IncrementPC(2);
 
             return nextShort;
@@ -186,10 +203,11 @@ namespace MICE.CPU.MOS6502
 
         public static ushort GetAbsoluteY(MOS6502 CPU)
         {
-            var pc = CPU.ReadNextShort();
+            intermediateAddress = CPU.ReadNextShort();
+            var nextShort = (ushort)(intermediateAddress + CPU.Registers.Y);
             CPU.IncrementPC(2);
 
-            return pc;
+            return nextShort;
         }
 
         public static ushort GetIndirectX(MOS6502 CPU)
@@ -225,6 +243,10 @@ namespace MICE.CPU.MOS6502
 
         public static ushort GetAddressedOperand(MOS6502 CPU, OpcodeContainer container)
         {
+            operandValue = 0;
+            intermediateAddress = 0;
+            address = 0;
+
             switch (container.AddressingMode)
             {
                 case AddressingModes.Implied:
@@ -270,7 +292,10 @@ namespace MICE.CPU.MOS6502
                     throw new InvalidOperationException();
             }
 
-            CPU.LastAccessedAddress = AddressingMode.GetAddressAsString(CPU, container);
+            if (MOS6502.IsDebug)
+            {
+                CPU.LastAccessedAddress = AddressingMode.GetAddressAsString(CPU, container);
+            }
 
             return address;
         }
@@ -328,6 +353,11 @@ namespace MICE.CPU.MOS6502
 
         public static string GetAddressAsString(MOS6502 CPU, OpcodeContainer container)
         {
+            if (container.Name == "RTS")
+            {
+                return "";
+            }
+
             switch (container.AddressingMode)
             {
                 case AddressingModes.Implied:

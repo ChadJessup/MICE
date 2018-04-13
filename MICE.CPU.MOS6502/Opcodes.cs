@@ -134,26 +134,15 @@ namespace MICE.CPU.MOS6502
         [MOS6502Opcode(0x7E, "ROR", AddressingModes.AbsoluteX, timing: 7, length: 3)]
         public void ROR(OpcodeContainer container, ushort address)
         {
-            var value = CPU.ReadByteAt(address);
-
-            var originalCarry = CPU.IsCarry ? 1 : 0;
-            var newCarry = (byte)(value & 1);
-
-            var newValue = (byte)(originalCarry << 7 | value >> 1);
-            CPU.IsCarry = newCarry == 1;
-
             switch (container.AddressingMode)
             {
                 case AddressingModes.Accumulator:
-                    this.WriteByteToRegister(CPU.Registers.A, newValue, S: false, Z: false);
+                    this.WriteByteToRegister(CPU.Registers.A, this.ROR(CPU.Registers.A), S: false, Z: false);
                     break;
                 default:
-                    CPU.WriteByteAt(address, newValue);
+                    CPU.WriteByteAt(address, this.ROR(CPU.ReadByteAt(address)));
                     break;
             }
-
-            this.HandleNegative(newValue);
-            this.HandleZero(newValue);
         }
 
         [MOS6502Opcode(0x2A, "ROL", AddressingModes.Accumulator, timing: 2, length: 1)]
@@ -163,25 +152,15 @@ namespace MICE.CPU.MOS6502
         [MOS6502Opcode(0x3E, "ROL", AddressingModes.AbsoluteX, timing: 7, length: 3)]
         public void ROL(OpcodeContainer container, ushort address)
         {
-            var value = CPU.ReadByteAt(address);
-
-            byte originalCarry = (byte)(CPU.IsCarry ? 1 : 0);
-            CPU.IsCarry = (value & 0b10000000) == 0x80;
-
-            value = (byte)(value << 1 | originalCarry);
-
             switch (container.AddressingMode)
             {
                 case AddressingModes.Accumulator:
-                    this.WriteByteToRegister(CPU.Registers.A, value, S: false, Z: false);
+                    this.WriteByteToRegister(CPU.Registers.A, this.ROL(CPU.Registers.A), S: false, Z: false);
                     break;
                 default:
-                    CPU.WriteByteAt(address, value);
+                    CPU.WriteByteAt(address, this.ROL(CPU.ReadByteAt(address)));
                     break;
             }
-
-            this.HandleNegative(value);
-            this.HandleZero(value);
         }
 
         [MOS6502Opcode(0x0A, "ASL", AddressingModes.Accumulator, timing: 2, length: 1)]
@@ -191,13 +170,16 @@ namespace MICE.CPU.MOS6502
         [MOS6502Opcode(0x1E, "ASL", AddressingModes.AbsoluteX, timing: 7, length: 3)]
         public void ASL(OpcodeContainer container, ushort address)
         {
-            var value = CPU.ReadByteAt(address);
+            byte value = container.AddressingMode == AddressingModes.Accumulator
+                ? CPU.Registers.A
+                : CPU.ReadByteAt(address);
 
             CPU.IsCarry = (value & 0b10000000) == 0b10000000;
             value = (byte)(value << 1);
 
             if (container.AddressingMode == AddressingModes.Accumulator)
             {
+
                 this.WriteByteToRegister(CPU.Registers.A, value, S: true, Z: true);
             }
             else
@@ -443,7 +425,7 @@ namespace MICE.CPU.MOS6502
         [MOS6502Opcode(0xC2, "NOP", AddressingModes.Immediate, timing: 2, length: 2, unofficial: true)]
         [MOS6502Opcode(0xE2, "NOP", AddressingModes.Immediate, timing: 2, length: 2, unofficial: true)]
         [MOS6502Opcode(0x89, "NOP", AddressingModes.Immediate, timing: 2, length: 2, unofficial: true)]
-        public void NOP(OpcodeContainer container, ushort address) => AddressingMode.GetAddressedOperand(CPU, container);
+        public void NOP(OpcodeContainer container, ushort address) {}
 
         [MOS6502Opcode(0x6C, "JMP", AddressingModes.Indirect, timing: 5, length: 3, verify: false)]
         [MOS6502Opcode(0x4C, "JMP", AddressingModes.Absolute, timing: 3, length: 3, verify: false)]
@@ -464,9 +446,6 @@ namespace MICE.CPU.MOS6502
         [MOS6502Opcode(0x20, "JSR", AddressingModes.Absolute, timing: 6, length: 3, verify: false)]
         public void JSR(OpcodeContainer container, ushort address)
         {
-            //var low = CPU.ReadNextByte();
-            //CPU.IncrementPC();
-
             CPU.Stack.Push((ushort)(CPU.Registers.PC - 1));
             CPU.SetPCTo(address);
 
@@ -916,6 +895,22 @@ namespace MICE.CPU.MOS6502
         private void HandleOverflow(byte original, byte operand, byte value)
         {
             CPU.IsOverflowed = (~(original ^ operand) & 0x80) != 0 && ((original ^ value) & 0x80) != 0;
+        }
+
+        private byte ROL(byte value)
+        {
+            bool carryFlag = CPU.IsCarry;
+            CPU.IsCarry = false;
+            CPU.IsNegative = false;
+            CPU.IsZero = false;
+
+            CPU.IsCarry = (value & 0x80) != 0;
+
+            byte result = (byte)(value << 1 | (carryFlag ? 0x01 : 0x00));
+            this.HandleNegative(result);
+            this.HandleZero(result);
+
+            return result;
         }
 
         private byte ROR(byte value)

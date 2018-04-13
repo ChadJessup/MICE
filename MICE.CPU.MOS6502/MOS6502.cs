@@ -18,6 +18,7 @@ namespace MICE.CPU.MOS6502
         public MOS6502([Named("CPU")] IMemoryMap memoryMap) => this.MemoryMap = memoryMap;
 
         public static long FrequencyHz = 1789773;
+        public static bool IsDebug { get; set; } = false;
 
         public IReadOnlyDictionary<InterruptType, int> InterruptOffsets = new Dictionary<InterruptType, int>()
         {
@@ -33,12 +34,7 @@ namespace MICE.CPU.MOS6502
         public ushort LastPC { get; set; }
         public byte NextOpcode { get; private set; }
 
-        private string lastAccessedAddress;
-        public string LastAccessedAddress
-        {
-            get => this.lastAccessedAddress;
-            set => this.lastAccessedAddress = value;
-        }
+        public string LastAccessedAddress { get; set; }
 
         /// <summary>
         /// Gets or sets a value requesting a non-maskable interrrupt.
@@ -189,11 +185,6 @@ namespace MICE.CPU.MOS6502
         /// <returns>The amount of cycles that have passed in this step.</returns>
         public int Step()
         {
-            if (this.CurrentCycle >= 50060)
-            {
-
-            }
-
             var cycles = this.FetchInstruction();
             cycles += this.DecodeInstruction();
 

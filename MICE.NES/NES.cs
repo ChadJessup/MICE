@@ -19,13 +19,15 @@ namespace MICE.Nintendo
     {
         private static class Constants
         {
-            public const string DebugFile = @"C:\Emulators\NES\MICE - Trace.txt";
+            public const string DebugFile = @"G:\Emulators\NES\MICE - Trace.txt";
         }
 
         private readonly NESContext context;
 
         public NES(NESContext context)
         {
+            NES.IsDebug = true;
+
             this.context = context;
 
             this.PPU = this.context.PPU;
@@ -39,7 +41,16 @@ namespace MICE.Nintendo
         public string Name { get; } = "Nintendo Entertainment System";
         public long CurrentFrame { get; private set; } = 1;
 
-        public static bool IsDebug { get; set; } = true;
+        private static bool isDebug = false;
+        public static bool IsDebug
+        {
+            get => NES.isDebug;
+            set
+            {
+                NES.isDebug = value;
+                MOS6502.IsDebug = value;
+            }
+        }
 
         // Create components...
         public DataBus DataBus { get; } = new DataBus();
@@ -73,15 +84,9 @@ namespace MICE.Nintendo
                 throw new InvalidOperationException("Cartridge must be loaded first, unable to power on.");
             }
 
-            //this.PPURegisters = new PPURegisters();
-            //this.CPUMemoryMap = new NESMemoryMap(this.PPURegisters, this.InputHandler);
-            //this.PPU = new RicohRP2C02(new PPUMemoryMap(), this.PPURegisters, this.CPUMemoryMap);
-
             this.PPU.Registers.OAMDMA.AfterWriteAction = this.DMATransfer;
 
             this.MapToCartridge();
-
-            //this.CPU = new Ricoh2A03(this.CPUMemoryMap);
 
             this.CPU.PowerOn();
             this.PPU.PowerOn();
@@ -121,37 +126,25 @@ namespace MICE.Nintendo
             // 1 Step = 1 Frame to the NES, since we're doing frame-based timing here:
             // 1 System step = 1 CPU step + (3 PPU steps * CPU Cycles in Step) + (2 Audio steps * 1 CPU cycle).
             // Cycles are based on which instructions the CPU ran.
-            //var cycleEvent = new NintendoStepArgs();
-            //cycleEvent.CPUStepsOccurred = this.CPU.Step();
+            NintendoStepArgs cycleEvent;
 
-            int cpuCycles = 0;
-            try
+            if (CPU.CurrentCycle == 116867)
             {
-                cpuCycles = this.CPU.Step();
+
             }
-            catch (Exception e)
-            {
-                NES.traceFileOutput.AppendLine(e.Message);
-                File.AppendAllText(Constants.DebugFile, NES.traceFileOutput.ToString());
-            }
+
+            cycleEvent.CPUStepsOccurred = this.CPU.FetchInstruction();
+            cycleEvent.CPUStepsOccurred += this.CPU.DecodeInstruction();
+            cycleEvent.CPUStepsOccurred += this.CPU.ExecuteInstruction();
 
             if (NES.IsDebug)
             {
                 NES.traceFileOutput.AppendLine(this.GetState(registerState));
             }
 
-            // CPU.CurrentCycle += cycleEvent.CPUStepsOccurred;
-
-            //cycleEvent.TotalCPUSteps = CPU.CurrentCycle;
-
-            for (int i = 0; i < cpuCycles * 3; i++)
+            for (int i = 0; i < cycleEvent.CPUStepsOccurred * 3; i++)
             {
                 this.PPU.Step();
-                //cycleEvent.PPUStepsOccurred = this.PPU.Step();
-
-               // this.ppuTotalCycles += cycleEvent.PPUStepsOccurred;
-
-                //cycleEvent.TotalPPUSteps = this.ppuTotalCycles;
             }
 
             if (this.PPU.ShouldNMInterrupt)
