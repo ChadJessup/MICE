@@ -128,7 +128,7 @@ namespace MICE.Nintendo
             // Cycles are based on which instructions the CPU ran.
             NintendoStepArgs cycleEvent;
 
-            if (CPU.CurrentCycle == 116867)
+            if (CPU.CurrentCycle == 116749)
             {
 
             }
@@ -190,18 +190,18 @@ namespace MICE.Nintendo
         {
             ushort readAddress = (ushort)(value << 8);
 
-            var lastCycle = this.CPU.CurrentCycle;
+            var lastCycle = this.CPU.CurrentCycle + 1;
 
             this.CPU.CurrentOpcode.AddedCycles +=
-                ((this.CPU.CurrentCycle + this.CPU.CurrentOpcode.Cycles) % 2) == 1
-                ? 515
-                : 514;
+                ((lastCycle + this.CPU.CurrentOpcode.Cycles) % 2) == 1
+                ? 514
+                : 513;
 
             this.CPUMemoryMap.BulkTransfer(readAddress, this.PPU.PrimaryOAM.Data, this.PPU.Registers.OAMADDR, 256);
 
             if (NES.IsDebug)
             {
-                NES.traceFileOutput.Append($" - [Sprite DMA Start - Cycle: {lastCycle}] - [Sprite DMA End - Cycle: {this.CPU.CurrentCycle + this.CPU.CurrentOpcode.AddedCycles}]");
+                NES.traceFileOutput.Append($" - [Sprite DMA Start - Cycle: {lastCycle}] - [Sprite DMA End - Cycle: {lastCycle + this.CPU.CurrentOpcode.AddedCycles}]");
             }
         }
 

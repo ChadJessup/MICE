@@ -228,6 +228,9 @@ namespace MICE.Nintendo
                 case var _ when MemoryRanges.RAM.TryGetOffset(index, out int offset):
                     this.RAM.Span[offset] = value;
                     break;
+                case var _ when MemoryRanges.MirroredRAM.IsInRange(index):
+                    this.Write(index % 0x07FF, value);
+                    break;
                 case var _ when MemoryRanges.SRAM.IsInRange(index):
                     this.sram.Write(index, value);
                     break;

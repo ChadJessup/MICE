@@ -161,9 +161,7 @@ namespace MICE.CPU.MOS6502
         public static ushort GetIndirect(MOS6502 CPU)
         {
             intermediateAddress = CPU.ReadNextShort();
-            //return CPU.ReadShortAt(intermediateAddress.Value);
-
-            return intermediateAddress.Value;
+            return CPU.ReadShortAt(intermediateAddress.Value);
         }
 
         public static ushort GetZeroPage(MOS6502 CPU)

@@ -244,7 +244,11 @@ namespace MICE.CPU.MOS6502
             {
                 this.shouldHandleNMI = false;
 
-                //trace.Append($" - [NMI - Cycle: {this.CurrentCycle + Constants.ExtraNMIHandledCycles}]");
+                if (MOS6502.IsDebug)
+                {
+                    Console.WriteLine($" - [NMI - Cycle: {this.CurrentCycle + Constants.ExtraNMIHandledCycles}]");
+                }
+
                 this.CurrentOpcode.AddedCycles += Constants.ExtraNMIHandledCycles;
             }
 
