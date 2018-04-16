@@ -7,7 +7,6 @@ namespace MICE.CPU.MOS6502
     {
         public int Cycles { get; private set; }
         public int PCDelta { get; set; }
-        public int AddedCycles { get; set; }
         public bool Processed { get; set; }
 
         public AddressingModes AddressingMode { get; private set; } = AddressingModes.None;
@@ -22,7 +21,6 @@ namespace MICE.CPU.MOS6502
         {
             get
             {
-                this.AddedCycles = 0;
                 this.Processed = false;
                 return this.instruction;
             }

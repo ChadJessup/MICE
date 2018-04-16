@@ -3,6 +3,7 @@ using MICE.Common.Interfaces;
 using MICE.PPU.RicohRP2C02.Components;
 using MICE.PPU.RicohRP2C02.Handlers;
 using Ninject;
+using System;
 
 namespace MICE.PPU.RicohRP2C02
 {
@@ -66,7 +67,6 @@ namespace MICE.PPU.RicohRP2C02
         public PixelMuxer PixelMuxer { get; private set; }
 
         public PPUMemoryMap MemoryMap { get; private set; }
-        public bool ShouldNMInterrupt { get; set; }
 
         /// <summary>
         /// Gets the externally accessible PPU Registers. These are manipulated via the CPU.
@@ -107,6 +107,14 @@ namespace MICE.PPU.RicohRP2C02
             set => this.Registers.PPUCTRL.SetBit(7, value);
         }
 
+        public bool NMI_output
+        {
+            get => this.WasNMIRequested;
+            set => this.WasNMIRequested = value;
+        }
+
+        public bool ShouldNMInterrupt { get; set; }
+
         /// <summary>
         /// Gets or sets a value when in a VBlank period.
         /// </summary>
@@ -114,6 +122,12 @@ namespace MICE.PPU.RicohRP2C02
         {
             get => this.Registers.PPUSTATUS.GetBit(7);
             set => this.Registers.PPUSTATUS.SetBit(7, value);
+        }
+
+        public bool NMI_occurred
+        {
+            get => this.IsVBlank;
+            set => this.IsVBlank = value;
         }
 
         /// <summary>
@@ -188,6 +202,7 @@ namespace MICE.PPU.RicohRP2C02
 
             if (this.IsPreRenderLine && this.Cycle == 1)
             {
+                this.NMI_occurred = false;
                 this.IsVBlank = false;
                 this.SpriteHandler.WasSprite0Hit = false;
                 this.SpriteHandler.WasSpriteOverflow = false;
@@ -249,7 +264,7 @@ namespace MICE.PPU.RicohRP2C02
             return 0;
         }
 
-        public void PowerOn()
+        public void PowerOn(Action cycleComplete)
         {
             this.Registers.PPUADDR.ReadByteInsteadAction = (_, value) => this.RegisterLatch;
             this.Registers.PPUADDR.AfterWriteAction = (_, value) =>
@@ -276,7 +291,7 @@ namespace MICE.PPU.RicohRP2C02
             {
                 this.RegisterLatch = value;
 
-                this.ShouldNMInterrupt = false;
+                this.NMI_output = (value & 0b1000000) != 0;
                 this.InternalRegisters.t = (ushort)((this.InternalRegisters.t & 0xF3FF) | ((value & 0x03) << 10));
             };
 
@@ -374,10 +389,24 @@ namespace MICE.PPU.RicohRP2C02
             this.ClearOutput();
         }
 
-        private bool OnFinalCycleOnLine() =>
-            this.BackgroundHandler.ShowBackground && !this.IsFrameEven && this.ScanLine == 261
+        private bool OnFinalCycleOnLine()
+        {
+            if (!this.IsRenderingEnabled)
+            {
+                return this.Cycle == 341;
+            }
+
+            bool isFinalCycle = this.ScanLine == 261 && this.BackgroundHandler.ShowBackground && !this.IsFrameEven
                 ? this.Cycle == 340
                 : this.Cycle == 341;
+
+            if (isFinalCycle)
+            {
+
+            }
+
+            return isFinalCycle;
+        }
 
         private void DrawPixel(int x, int y)
         {
@@ -420,7 +449,7 @@ namespace MICE.PPU.RicohRP2C02
             this.IsVBlank = true;
             this.SpriteHandler.ClearSprites();
 
-            if (this.WasNMIRequested)
+            if (this.NMI_output && this.NMI_occurred)
             {
                 this.ShouldNMInterrupt = true;
             }

@@ -105,8 +105,6 @@ namespace MICE.CPU.MOS6502
         [MOS6502Opcode(0x5E, "LSR", AddressingModes.AbsoluteX, timing: 7, length: 3)]
         public void LSR(OpcodeContainer container, ushort address)
         {
-            var value = CPU.ReadByteAt(address);
-
             switch (container.AddressingMode)
             {
                 case AddressingModes.Accumulator:
@@ -117,8 +115,12 @@ namespace MICE.CPU.MOS6502
                     this.HandleZero(CPU.Registers.A);
                     break;
                 default:
+                    var value = CPU.ReadByteAt(address);
                     CPU.IsCarry = (value & 1) == 1;
                     byte shiftedValue = (byte)(value >> 1);
+
+                    // Spin cycle for the work above.
+                    CPU.CycleFinished();
                     CPU.WriteByteAt(address, shiftedValue);
 
                     CPU.IsNegative = false;
@@ -137,7 +139,11 @@ namespace MICE.CPU.MOS6502
             switch (container.AddressingMode)
             {
                 case AddressingModes.Accumulator:
-                    this.WriteByteToRegister(CPU.Registers.A, this.ROR(CPU.Registers.A), S: false, Z: false);
+                    this.WriteByteToRegister(CPU.Registers.A, this.ROR(CPU.Registers.A, consumeCycle: false), S: false, Z: false);
+                    break;
+                case AddressingModes.AbsoluteX:
+                    CPU.WriteByteAt(address, this.ROR(CPU.ReadByteAt(address)));
+                    CPU.CycleFinished();
                     break;
                 default:
                     CPU.WriteByteAt(address, this.ROR(CPU.ReadByteAt(address)));
@@ -155,7 +161,7 @@ namespace MICE.CPU.MOS6502
             switch (container.AddressingMode)
             {
                 case AddressingModes.Accumulator:
-                    this.WriteByteToRegister(CPU.Registers.A, this.ROL(CPU.Registers.A), S: false, Z: false);
+                    this.WriteByteToRegister(CPU.Registers.A, this.ROL(CPU.Registers.A, consumeCycle: false), S: false, Z: false);
                     break;
                 default:
                     CPU.WriteByteAt(address, this.ROL(CPU.ReadByteAt(address)));
@@ -179,12 +185,15 @@ namespace MICE.CPU.MOS6502
 
             if (container.AddressingMode == AddressingModes.Accumulator)
             {
-
                 this.WriteByteToRegister(CPU.Registers.A, value, S: true, Z: true);
             }
             else
             {
+                // Consume cycle for work above.
+                CPU.CycleFinished();
+
                 CPU.WriteByteAt(address, value);
+
                 this.HandleNegative(value);
                 this.HandleZero(value);
             }
@@ -199,6 +208,7 @@ namespace MICE.CPU.MOS6502
             var value = CPU.ReadByteAt(address);
 
             CPU.WriteByteAt(address, ++value);
+            CPU.CycleFinished();
 
             this.HandleNegative(value);
             this.HandleZero(value);
@@ -207,12 +217,14 @@ namespace MICE.CPU.MOS6502
         [MOS6502Opcode(0xC6, "DEC", AddressingModes.ZeroPage, timing: 5, length: 2)]
         [MOS6502Opcode(0xD6, "DEC", AddressingModes.ZeroPageX, timing: 6, length: 2)]
         [MOS6502Opcode(0xCE, "DEC", AddressingModes.Absolute, timing: 6, length: 3)]
-        [MOS6502Opcode(0xDE, "DEC", AddressingModes.AbsoluteX, timing: 7, length: 3)]
+        [MOS6502Opcode(0xDE, "DEC", AddressingModes.AbsoluteXWrite, timing: 7, length: 3)]
         public void DEC(OpcodeContainer container, ushort address)
         {
             var value = CPU.ReadByteAt(address);
 
             value--;
+            CPU.CycleFinished();
+
             CPU.WriteByteAt(address, value);
 
             this.HandleNegative(value);
@@ -335,10 +347,25 @@ namespace MICE.CPU.MOS6502
         public void TSX(OpcodeContainer container, ushort address) => this.WriteByteToRegister(CPU.Registers.X, CPU.Registers.SP, S: true, Z: true);
 
         [MOS6502Opcode(0x48, "PHA", AddressingModes.Implied, timing: 3, length: 1)]
-        public void PHA(OpcodeContainer container, ushort address) => CPU.Stack.Push(CPU.Registers.A);
+        public void PHA(OpcodeContainer container, ushort address)
+        {
+            CPU.Stack.Push(CPU.Registers.A);
+            CPU.CycleFinished();
+        }
 
         [MOS6502Opcode(0x68, "PLA", AddressingModes.Implied, timing: 4, length: 1)]
-        public void PLA(OpcodeContainer container, ushort address) => this.WriteByteToRegister(CPU.Registers.A, CPU.Stack.PopByte(), S: true, Z: true);
+        public void PLA(OpcodeContainer container, ushort address)
+        {
+            // Increment Stack Pointer
+            CPU.CycleFinished();
+
+            var stackByte = CPU.Stack.PopByte();
+
+            // Pop Value
+            CPU.CycleFinished();
+
+            this.WriteByteToRegister(CPU.Registers.A, stackByte, S: true, Z: true);
+        }
 
         [MOS6502Opcode(0x08, "PHP", AddressingModes.Implied, timing: 3, length: 1)]
         public void PHP(OpcodeContainer container, ushort address) => CPU.Stack.Push((byte)(CPU.Registers.P | 0x10));
@@ -364,6 +391,15 @@ namespace MICE.CPU.MOS6502
         [MOS6502Opcode(0x91, "STA", AddressingModes.IndirectY, timing: 6, length: 2)]
         public void STA(OpcodeContainer container, ushort address)
         {
+            // There is a dummy cycle consumed depending on whether we're in a Read/Write situation
+            // for certain addressing modes.
+            if (container.AddressingMode == AddressingModes.IndirectY
+                || container.AddressingMode == AddressingModes.AbsoluteX
+                || container.AddressingMode == AddressingModes.AbsoluteY)
+            {
+                CPU.CycleFinished();
+            }
+
             CPU.WriteByteAt(address, CPU.Registers.A);
         }
 
@@ -431,31 +467,40 @@ namespace MICE.CPU.MOS6502
         [MOS6502Opcode(0x4C, "JMP", AddressingModes.Absolute, timing: 3, length: 3, verify: false)]
         public void JMP(OpcodeContainer container, ushort address)
         {
-            // 6502 bug in indirect JMP...
-            if (container.AddressingMode == AddressingModes.Indirect && (address & 0x00FF) == 0xFF)
-            {
-                byte lowByte = CPU.ReadByteAt(address);
-                byte highByte = CPU.ReadByteAt((ushort)(address - 0x00FF));
-
-                address = (ushort)(highByte << 8 | lowByte);
-            }
-
             CPU.SetPCTo(address);
         }
 
         [MOS6502Opcode(0x20, "JSR", AddressingModes.Absolute, timing: 6, length: 3, verify: false)]
         public void JSR(OpcodeContainer container, ushort address)
         {
+            // Predecrement Stack Pointer
+            CPU.CycleFinished();
+
             CPU.Stack.Push((ushort)(CPU.Registers.PC - 1));
+
+            // Push Two values to Stack
+            CPU.CycleFinished();
+            CPU.CycleFinished();
+
             CPU.SetPCTo(address);
 
             CPU.LastAccessedAddress = $"${address:X4}";
         }
 
-        [MOS6502Opcode(0x60, "RTS", AddressingModes.Absolute, timing: 6, length: 3, verify: false)]
+        [MOS6502Opcode(0x60, "RTS", AddressingModes.Implied, timing: 6, length: 3, verify: false)]
         public void RTS(OpcodeContainer container, ushort address)
         {
-            CPU.SetPCTo((ushort)(CPU.Stack.PopShort() + 1));
+            var newPC = CPU.Stack.PopShort();
+
+            // Two bytes popped from Stack, and Stack pointer change.
+            CPU.CycleFinished();
+            CPU.CycleFinished();
+            CPU.CycleFinished();
+
+            // Increment PC value.
+            CPU.CycleFinished();
+
+            CPU.SetPCTo((ushort)(newPC + 1));
         }
 
         [MOS6502Opcode(0x40, "RTI", AddressingModes.Implied, timing: 6, length: 1, verify: false)]
@@ -469,75 +514,67 @@ namespace MICE.CPU.MOS6502
 
         #region Branches
 
-        [MOS6502Opcode(0x10, "BPL", AddressingModes.Relative, timing: 2, length: 2)]
+        [MOS6502Opcode(0x10, "BPL", AddressingModes.Relative, timing: 2, length: 2, verify: false)]
         public void BPL(OpcodeContainer container, ushort address)
         {
             var (cycles, pcDelta) = this.Branch(!CPU.IsNegative);
 
-            container.AddedCycles = cycles;
             container.PCDelta = pcDelta;
         }
 
-        [MOS6502Opcode(0x30, "BMI", AddressingModes.Relative, timing: 2, length: 2)]
+        [MOS6502Opcode(0x30, "BMI", AddressingModes.Relative, timing: 2, length: 2, verify: false)]
         public void BMI(OpcodeContainer container, ushort address)
         {
             var (cycles, pcDelta) = this.Branch(CPU.IsNegative);
 
-            container.AddedCycles = cycles;
             container.PCDelta = pcDelta;
         }
 
-        [MOS6502Opcode(0x50, "BVC", AddressingModes.Relative, timing: 2, length: 2)]
+        [MOS6502Opcode(0x50, "BVC", AddressingModes.Relative, timing: 2, length: 2, verify: false)]
         public void BVC(OpcodeContainer container, ushort address)
         {
             var (cycles, pcDelta) = this.Branch(!CPU.IsOverflowed);
 
-            container.AddedCycles = cycles;
             container.PCDelta = pcDelta;
         }
 
-        [MOS6502Opcode(0x70, "BVS", AddressingModes.Relative, timing: 2, length: 2)]
+        [MOS6502Opcode(0x70, "BVS", AddressingModes.Relative, timing: 2, length: 2, verify: false)]
         public void BVS(OpcodeContainer container, ushort address)
         {
             var (cycles, pcDelta) = this.Branch(CPU.IsOverflowed);
 
-            container.AddedCycles = cycles;
             container.PCDelta = pcDelta;
         }
 
-        [MOS6502Opcode(0x90, "BCC", AddressingModes.Relative, timing: 2, length: 2)]
+        [MOS6502Opcode(0x90, "BCC", AddressingModes.Relative, timing: 2, length: 2, verify: false)]
         public void BCC(OpcodeContainer container, ushort address)
         {
             var (cycles, pcDelta) = this.Branch(!CPU.IsCarry);
 
-            container.AddedCycles = cycles;
             container.PCDelta = pcDelta;
         }
 
-        [MOS6502Opcode(0xB0, "BCS", AddressingModes.Relative, timing: 2, length: 2)]
+        [MOS6502Opcode(0xB0, "BCS", AddressingModes.Relative, timing: 2, length: 2, verify: false)]
         public void BCS(OpcodeContainer container, ushort address)
         {
             var (cycles, pcDelta) = this.Branch(CPU.IsCarry);
 
-            container.AddedCycles = cycles;
             container.PCDelta = pcDelta;
         }
 
-        [MOS6502Opcode(0xD0, "BNE", AddressingModes.Relative, timing: 2, length: 2)]
+        [MOS6502Opcode(0xD0, "BNE", AddressingModes.Relative, timing: 2, length: 2, verify: false)]
         public void BNE(OpcodeContainer container, ushort address)
         {
             var (cycles, pcDelta) = this.Branch(CPU.IsZero == false);
 
-            container.AddedCycles = cycles;
             container.PCDelta = pcDelta;
         }
 
-        [MOS6502Opcode(0xF0, "BEQ", AddressingModes.Relative, timing: 2, length: 2)]
+        [MOS6502Opcode(0xF0, "BEQ", AddressingModes.Relative, timing: 2, length: 2, verify: false)]
         public void BEQ(OpcodeContainer container, ushort address)
         {
             var (cycles, pcDelta) = this.Branch(CPU.IsZero);
 
-            container.AddedCycles = cycles;
             container.PCDelta = pcDelta;
         }
 
@@ -820,6 +857,7 @@ namespace MICE.CPU.MOS6502
 
             var shiftedValue = this.ROR(value);
             this.ADD(container, shiftedValue);
+
             CPU.WriteByteAt(address, shiftedValue);
         }
 
@@ -897,7 +935,7 @@ namespace MICE.CPU.MOS6502
             CPU.IsOverflowed = (~(original ^ operand) & 0x80) != 0 && ((original ^ value) & 0x80) != 0;
         }
 
-        private byte ROL(byte value)
+        private byte ROL(byte value, bool consumeCycle = true)
         {
             bool carryFlag = CPU.IsCarry;
             CPU.IsCarry = false;
@@ -910,10 +948,15 @@ namespace MICE.CPU.MOS6502
             this.HandleNegative(result);
             this.HandleZero(result);
 
+            if (consumeCycle)
+            {
+                CPU.CycleFinished();
+            }
+
             return result;
         }
 
-        private byte ROR(byte value)
+        private byte ROR(byte value, bool consumeCycle = true)
         {
             bool carryFlag = CPU.IsCarry;
             CPU.IsCarry = false;
@@ -925,6 +968,11 @@ namespace MICE.CPU.MOS6502
             byte result = (byte)(value >> 1 | (carryFlag ? 0x80 : 0x00));
             this.HandleNegative(result);
             this.HandleZero(result);
+
+            if (consumeCycle)
+            {
+                CPU.CycleFinished();
+            }
 
             return result;
         }
@@ -951,6 +999,7 @@ namespace MICE.CPU.MOS6502
         {
             var originalPC = CPU.Registers.PC.Read();
             var offset = (sbyte)CPU.ReadNextByte();
+
             CPU.IncrementPC();
 
             ushort newPC = (ushort)(CPU.Registers.PC + offset);
@@ -962,15 +1011,13 @@ namespace MICE.CPU.MOS6502
                 if (!this.AreSamePage(originalPC, newPC))
                 {
                     cycles++;
+                    CPU.CycleFinished();
                 }
 
                 CPU.SetPCTo(newPC);
 
                 cycles++;
-            }
-            else
-            {
-
+                CPU.CycleFinished();
             }
 
             CPU.LastAccessedAddress = $"${newPC:X4}";
@@ -1071,7 +1118,7 @@ namespace MICE.CPU.MOS6502
                 case AddressingModes.IndirectY:
                     if (!samePage.Value)
                     {
-                        container.AddedCycles++;
+                        CPU.CycleFinished();
                     }
                     break;
                 default:

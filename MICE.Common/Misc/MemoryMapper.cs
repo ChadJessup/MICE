@@ -74,31 +74,31 @@ namespace MICE.Common.Misc
         {
             byte value = 0x00;
 
-            if (this.memorySegmentCache.TryGetValue(index, out IMemorySegment cachedSegment))
-            {
-                value = cachedSegment.ReadByte(index);
-            }
-            else
-            {
+            //if (this.memorySegmentCache.TryGetValue(index, out IMemorySegment cachedSegment))
+            //{
+            //    value = cachedSegment.ReadByte(index);
+            //}
+            //else
+            //{
                 var segment = this.memorySegments.First(seg => seg.IsIndexInRange(index));
-                this.memorySegmentCache.Add(index, segment);
+             //   this.memorySegmentCache.Add(index, segment);
 
                 value = segment.ReadByte(index);
-            }
+            //}
 
             return value;
         }
 
         public virtual void Write(int index, byte value)
         {
-            if (this.memorySegmentCache.TryGetValue(index, out IMemorySegment cachedSegment))
-            {
-                cachedSegment.Write(index, value);
-                return;
-            }
+            //if (this.memorySegmentCache.TryGetValue(index, out IMemorySegment cachedSegment))
+            //{
+            //    cachedSegment.Write(index, value);
+            //    return;
+            //}
 
             var segment = this.memorySegments.First(seg => seg.IsIndexInRange(index));
-            this.memorySegmentCache.Add(index, segment);
+            //this.memorySegmentCache.Add(index, segment);
 
             segment.Write(index, value);
         }

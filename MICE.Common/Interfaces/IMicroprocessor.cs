@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 
 namespace MICE.Common.Interfaces
 {
@@ -6,7 +7,7 @@ namespace MICE.Common.Interfaces
     {
         bool IsPowered { get; }
         void PowerOff();
-        void PowerOn();
+        void PowerOn(Action cycleComplete);
         int Step();
     }
 }

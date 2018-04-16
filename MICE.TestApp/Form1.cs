@@ -109,7 +109,7 @@ namespace MICE.TestApp
             //this.nes.InputHandler.SetController2(new KeyboardController(new Range(0x4017, 0x4017), "Control Input 2"));
 
             //var cartridge = NESLoader.CreateCartridge(@"C:\Emulators\NES\Games\World\Donkey Kong (JU).nes");
-            var cartridge = NESLoader.CreateCartridge(@"C:\Emulators\NES\Games\Super Mario Bros.nes");
+            //var cartridge = NESLoader.CreateCartridge(@"C:\Emulators\NES\Games\Super Mario Bros.nes");
             //var cartridge = NESLoader.CreateCartridge(@"C:\Emulators\NES\Games\USA\Legend of Zelda, The (U) (PRG 1).nes");
             //var cartridge = NESLoader.CreateCartridge(@"C:\Emulators\NES\Games\USA\Bionic Commando (U).nes");
             //var cartridge = NESLoader.CreateCartridge(@"C:\Emulators\NES\Games\USA\Mega Man (U).nes");
@@ -133,7 +133,7 @@ namespace MICE.TestApp
             //var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\nes_instr_test\rom_singles\11-special.nes");
 
             // NMI Tests
-            //var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\vbl_nmi_timing\1.frame_basics.nes");
+            var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\vbl_nmi_timing\1.frame_basics.nes");
 
             // FAILING
             //var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\blargg_nes_cpu_test5\official.nes");

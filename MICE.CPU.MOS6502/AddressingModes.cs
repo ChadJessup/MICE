@@ -16,6 +16,7 @@
 
         Absolute,
         AbsoluteX,
+        AbsoluteXWrite,
         AbsoluteY,
 
         Indirect,

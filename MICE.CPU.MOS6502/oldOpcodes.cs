@@ -518,7 +518,6 @@ namespace MICE.CPU.MOS6502
         {
             var (cycles, pcDelta) = this.Branch(!CPU.IsNegative);
 
-            container.AddedCycles = cycles;
             container.PCDelta = pcDelta;
         }
 
@@ -527,7 +526,6 @@ namespace MICE.CPU.MOS6502
         {
             var (cycles, pcDelta) = this.Branch(CPU.IsNegative);
 
-            container.AddedCycles = cycles;
             container.PCDelta = pcDelta;
         }
 
@@ -536,7 +534,6 @@ namespace MICE.CPU.MOS6502
         {
             var (cycles, pcDelta) = this.Branch(!CPU.IsOverflowed);
 
-            container.AddedCycles = cycles;
             container.PCDelta = pcDelta;
         }
 
@@ -545,7 +542,6 @@ namespace MICE.CPU.MOS6502
         {
             var (cycles, pcDelta) = this.Branch(CPU.IsOverflowed);
 
-            container.AddedCycles = cycles;
             container.PCDelta = pcDelta;
         }
 
@@ -554,7 +550,6 @@ namespace MICE.CPU.MOS6502
         {
             var (cycles, pcDelta) = this.Branch(!CPU.IsCarry);
 
-            container.AddedCycles = cycles;
             container.PCDelta = pcDelta;
         }
 
@@ -563,7 +558,6 @@ namespace MICE.CPU.MOS6502
         {
             var (cycles, pcDelta) = this.Branch(CPU.IsCarry);
 
-            container.AddedCycles = cycles;
             container.PCDelta = pcDelta;
         }
 
@@ -572,7 +566,6 @@ namespace MICE.CPU.MOS6502
         {
             var (cycles, pcDelta) = this.Branch(CPU.IsZero == false);
 
-            container.AddedCycles = cycles;
             container.PCDelta = pcDelta;
         }
 
@@ -581,7 +574,6 @@ namespace MICE.CPU.MOS6502
         {
             var (cycles, pcDelta) = this.Branch(CPU.IsZero);
 
-            container.AddedCycles = cycles;
             container.PCDelta = pcDelta;
         }
 
@@ -1112,7 +1104,7 @@ namespace MICE.CPU.MOS6502
                 case AddressingModes.IndirectY:
                     if (!samePage.Value)
                     {
-                        container.AddedCycles++;
+                        CPU.CycleFinished();
                     }
                     break;
                 default:

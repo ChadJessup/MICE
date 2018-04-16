@@ -19,7 +19,7 @@ namespace MICE.Nintendo
     {
         private static class Constants
         {
-            public const string DebugFile = @"G:\Emulators\NES\MICE - Trace.txt";
+            public const string DebugFile = @"C:\Emulators\NES\MICE - Trace.txt";
         }
 
         private readonly NESContext context;
@@ -71,9 +71,13 @@ namespace MICE.Nintendo
 
         public bool IsPaused { get; private set; } = false;
 
+        private Action cycleCompleteAction;
+
         // Hook them up...
         public void PowerOn()
         {
+            NES.IsDebug = true;
+
             if (NES.IsDebug && File.Exists(Constants.DebugFile))
             {
                 File.Delete(Constants.DebugFile);
@@ -88,10 +92,36 @@ namespace MICE.Nintendo
 
             this.MapToCartridge();
 
-            this.CPU.PowerOn();
-            this.PPU.PowerOn();
+            this.cycleCompleteAction = this.DoPerCPUCycle;
+
+            this.CPU.PowerOn(this.cycleCompleteAction);
+            this.PPU.PowerOn(this.cycleCompleteAction);
 
             this.IsPaused = false;
+        }
+
+        private void DoPerCPUCycle()
+        {
+            this.StepPPU();
+
+            this.HandleInterrupts();
+        }
+
+        private void HandleInterrupts()
+        {
+            if (this.PPU.ShouldNMInterrupt)
+            {
+                this.CPU.WasNMIRequested = true;
+                this.PPU.WasNMIRequested = false;
+                this.PPU.ShouldNMInterrupt = false;
+            }
+        }
+
+        private void StepPPU()
+        {
+            this.PPU.Step();
+            this.PPU.Step();
+            this.PPU.Step();
         }
 
         private void MapToCartridge()
@@ -128,13 +158,9 @@ namespace MICE.Nintendo
             // Cycles are based on which instructions the CPU ran.
             NintendoStepArgs cycleEvent;
 
-            if (CPU.CurrentCycle == 116749)
-            {
-
-            }
-
             cycleEvent.CPUStepsOccurred = this.CPU.FetchInstruction();
             cycleEvent.CPUStepsOccurred += this.CPU.DecodeInstruction();
+
             cycleEvent.CPUStepsOccurred += this.CPU.ExecuteInstruction();
 
             if (NES.IsDebug)
@@ -142,17 +168,10 @@ namespace MICE.Nintendo
                 NES.traceFileOutput.AppendLine(this.GetState(registerState));
             }
 
-            for (int i = 0; i < cycleEvent.CPUStepsOccurred * 3; i++)
-            {
-                this.PPU.Step();
-            }
-
-            if (this.PPU.ShouldNMInterrupt)
-            {
-                this.CPU.WasNMIRequested = true;
-                this.PPU.WasNMIRequested = false;
-                this.PPU.ShouldNMInterrupt = false;
-            }
+            //for (int i = 0; i < cycleEvent.CPUStepsOccurred * 3; i++)
+            //{
+            //    this.PPU.Step();
+            //}
 
             if (this.PPU.FrameNumber > this.CurrentFrame)
             {
@@ -169,8 +188,6 @@ namespace MICE.Nintendo
             }
 
             // TODO: APU Cycles
-
-           // this.StepCompleted?.Invoke(this, cycleEvent);
         }
 
         public void PowerOff()
@@ -192,16 +209,21 @@ namespace MICE.Nintendo
 
             var lastCycle = this.CPU.CurrentCycle + 1;
 
-            this.CPU.CurrentOpcode.AddedCycles +=
+            var extraCycles =
                 ((lastCycle + this.CPU.CurrentOpcode.Cycles) % 2) == 1
                 ? 514
                 : 513;
 
             this.CPUMemoryMap.BulkTransfer(readAddress, this.PPU.PrimaryOAM.Data, this.PPU.Registers.OAMADDR, 256);
 
+            for (int i = 0; i < extraCycles; i++)
+            {
+                CPU.CycleFinished();
+            }
+
             if (NES.IsDebug)
             {
-                NES.traceFileOutput.Append($" - [Sprite DMA Start - Cycle: {lastCycle}] - [Sprite DMA End - Cycle: {lastCycle + this.CPU.CurrentOpcode.AddedCycles}]");
+                NES.traceFileOutput.Append($" - [Sprite DMA Start - Cycle: {lastCycle}] - [Sprite DMA End - Cycle: {lastCycle}]");
             }
         }
 

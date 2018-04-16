@@ -2,7 +2,6 @@
 using MICE.Nintendo.Databases.NesCartDB;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Xml.Serialization;
@@ -49,6 +48,8 @@ namespace MICE.Nintendo.Databases
             }
 
             NESDatabase.hasParsed = true;
+
+            GC.Collect(3, GCCollectionMode.Forced, blocking: true);
         }
 
         public static void ParseNesCartsDatabase(string nesCartsPath)

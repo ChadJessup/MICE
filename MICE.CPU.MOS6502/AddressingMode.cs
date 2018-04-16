@@ -142,6 +142,7 @@ namespace MICE.CPU.MOS6502
             var address = (ushort)(intermediateAddress + CPU.Registers.X);
             address &= 0xFF;
 
+            CPU.CycleFinished();
             CPU.IncrementPC();
 
             return address;
@@ -153,6 +154,7 @@ namespace MICE.CPU.MOS6502
             var address = (ushort)(intermediateAddress + CPU.Registers.Y);
             address &= 0xFF;
 
+            CPU.CycleFinished();
             CPU.IncrementPC();
 
             return address;
@@ -161,6 +163,16 @@ namespace MICE.CPU.MOS6502
         public static ushort GetIndirect(MOS6502 CPU)
         {
             intermediateAddress = CPU.ReadNextShort();
+
+            // 6502 bug in indirect JMP...
+            if ((intermediateAddress & 0x00FF) == 0xFF)
+            {
+                byte lowByte = CPU.ReadByteAt(intermediateAddress.Value);
+                byte highByte = CPU.ReadByteAt((ushort)(intermediateAddress.Value - 0x00FF));
+
+                intermediateAddress = (ushort)(highByte << 8 | lowByte);
+            }
+
             return CPU.ReadShortAt(intermediateAddress.Value);
         }
 
@@ -175,7 +187,7 @@ namespace MICE.CPU.MOS6502
         public static ushort GetImmediate(MOS6502 CPU)
         {
             var pc = CPU.Registers.PC.Read();
-            operandValue = CPU.ReadNextByte();
+            operandValue = CPU.ReadNextByte(isCycle: false);
 
             CPU.IncrementPC();
 
@@ -194,7 +206,19 @@ namespace MICE.CPU.MOS6502
         {
             intermediateAddress = CPU.ReadNextShort();
             var nextShort = (ushort)(intermediateAddress + CPU.Registers.X);
+
             CPU.IncrementPC(2);
+
+            return nextShort;
+        }
+
+        public static ushort GetAbsoluteXWrite(MOS6502 CPU)
+        {
+            intermediateAddress = CPU.ReadNextShort();
+            var nextShort = (ushort)(intermediateAddress + CPU.Registers.X);
+
+            CPU.IncrementPC(2);
+            CPU.CycleFinished();
 
             return nextShort;
         }
@@ -203,6 +227,7 @@ namespace MICE.CPU.MOS6502
         {
             intermediateAddress = CPU.ReadNextShort();
             var nextShort = (ushort)(intermediateAddress + CPU.Registers.Y);
+
             CPU.IncrementPC(2);
 
             return nextShort;
@@ -229,8 +254,9 @@ namespace MICE.CPU.MOS6502
                 ? (ushort)(CPU.ReadByteAt(0xFF) | CPU.ReadByteAt(0x00) << 8)
                 : CPU.ReadShortAt((ushort)intermediateAddress);
 
+            var finalAddress = (ushort)(baseAddress + CPU.Registers.Y);
 
-            return (ushort)(baseAddress + CPU.Registers.Y);
+            return finalAddress;
         }
 
         private static ushort GetRelative(MOS6502 CPU) => 0x0000;
@@ -249,9 +275,11 @@ namespace MICE.CPU.MOS6502
             {
                 case AddressingModes.Implied:
                     address = 0x0000;
+                    CPU.CycleFinished();
                     break;
                 case AddressingModes.Accumulator:
                     address = 0x0000;
+                    CPU.CycleFinished();
                     break;
                 case AddressingModes.Immediate:
                     address = AddressingMode.GetImmediate(CPU);
@@ -261,6 +289,9 @@ namespace MICE.CPU.MOS6502
                     break;
                 case AddressingModes.AbsoluteX:
                     address = AddressingMode.GetAbsoluteX(CPU);
+                    break;
+                case AddressingModes.AbsoluteXWrite:
+                    address = AddressingMode.GetAbsoluteXWrite(CPU);
                     break;
                 case AddressingModes.AbsoluteY:
                     address = AddressingMode.GetAbsoluteY(CPU);
