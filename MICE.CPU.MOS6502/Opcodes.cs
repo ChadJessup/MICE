@@ -385,17 +385,15 @@ namespace MICE.CPU.MOS6502
         [MOS6502Opcode(0x85, "STA", AddressingModes.ZeroPage, timing: 3, length: 2)]
         [MOS6502Opcode(0x95, "STA", AddressingModes.ZeroPageX, timing: 4, length: 2)]
         [MOS6502Opcode(0x8D, "STA", AddressingModes.Absolute, timing: 4, length: 3)]
-        [MOS6502Opcode(0x9D, "STA", AddressingModes.AbsoluteX, timing: 5, length: 3)]
+        [MOS6502Opcode(0x9D, "STA", AddressingModes.AbsoluteXWrite, timing: 5, length: 3)]
         [MOS6502Opcode(0x99, "STA", AddressingModes.AbsoluteY, timing: 5, length: 3)]
         [MOS6502Opcode(0x81, "STA", AddressingModes.IndirectX, timing: 6, length: 2)]
-        [MOS6502Opcode(0x91, "STA", AddressingModes.IndirectY, timing: 6, length: 2)]
+        [MOS6502Opcode(0x91, "STA", AddressingModes.IndirectYWrite, timing: 6, length: 2)]
         public void STA(OpcodeContainer container, ushort address)
         {
             // There is a dummy cycle consumed depending on whether we're in a Read/Write situation
             // for certain addressing modes.
-            if (container.AddressingMode == AddressingModes.IndirectY
-                || container.AddressingMode == AddressingModes.AbsoluteX
-                || container.AddressingMode == AddressingModes.AbsoluteY)
+            if (container.AddressingMode == AddressingModes.AbsoluteY)
             {
                 CPU.CycleFinished();
             }
@@ -506,7 +504,19 @@ namespace MICE.CPU.MOS6502
         [MOS6502Opcode(0x40, "RTI", AddressingModes.Implied, timing: 6, length: 1, verify: false)]
         public void RTI(OpcodeContainer container, ushort address)
         {
-            this.WriteByteToRegister(CPU.Registers.P, CPU.Stack.PopByte(), S: false, Z: false);
+            // 6 Cycles for RTI - two already consumed...
+            // 1 cycle = increment S...
+            CPU.CycleFinished();
+
+            // 1 cycle = pop CPU flags...
+            CPU.CycleFinished();
+
+            var cpuFlags = CPU.Stack.PopByte();
+            this.WriteByteToRegister(CPU.Registers.P, cpuFlags, S: false, Z: false);
+
+            // 2 cycles = pop address to return to as well as increment S...
+            CPU.CycleFinished();
+            CPU.CycleFinished();
             CPU.SetPCTo(CPU.Stack.PopShort());
         }
 
@@ -1008,19 +1018,24 @@ namespace MICE.CPU.MOS6502
 
             if (condition)
             {
-                if (!this.AreSamePage(originalPC, newPC))
+                if (!AddressingMode.WasSamePage(CPU.Registers.PC, offset))
                 {
                     cycles++;
+
+                    // TODO: This seems to throw off the cycles, gotta figure it out...
                     CPU.CycleFinished();
                 }
 
                 CPU.SetPCTo(newPC);
+                CPU.CycleFinished();
 
                 cycles++;
-                CPU.CycleFinished();
             }
 
-            CPU.LastAccessedAddress = $"${newPC:X4}";
+            if (MOS6502.IsDebug)
+            {
+                CPU.LastAccessedAddress = $"${newPC:X4}";
+            }
 
             // Adding 1 to PC delta to compensate for the original PC++ to get here.
             return (cycles, 1 + CPU.Registers.PC - originalPC);
@@ -1102,7 +1117,6 @@ namespace MICE.CPU.MOS6502
             }
         }
 
-        private bool AreSamePage(ushort a1, ushort a2) => ((a1 ^ a2) & 0xFF00) == 0;
         private void HandlePageBoundaryCrossed(OpcodeContainer container, bool? samePage)
         {
             if (samePage == null)

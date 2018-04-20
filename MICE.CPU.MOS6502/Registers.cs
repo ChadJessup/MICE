@@ -1,4 +1,5 @@
-﻿using MICE.Components.CPU;
+﻿using System;
+using MICE.Components.CPU;
 
 namespace MICE.CPU.MOS6502
 {
@@ -31,5 +32,10 @@ namespace MICE.CPU.MOS6502
 
         // Flags representing state of processor
         public Register8Bit P = new Register8Bit("Processor Status");
+
+        public static object DestructureForLog(Registers registers)
+        {
+            return null;
+        }
     }
 }

@@ -1,5 +1,4 @@
 ﻿using MICE.Common.Interfaces;
-using MICE.Components.Bus;
 using MICE.Components.Memory;
 using MICE.CPU.MOS6502;
 using MICE.Nintendo.Components;
@@ -7,26 +6,20 @@ using MICE.Nintendo.Handlers;
 using MICE.Nintendo.Loaders;
 using MICE.PPU.RicohRP2C02;
 using MICE.PPU.RicohRP2C02.Components;
+using Serilog;
 using System;
 using System.Diagnostics;
-using System.IO;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace MICE.Nintendo
 {
     public class NES : ISystem
     {
-        private static class Constants
-        {
-            public const string DebugFile = @"C:\Emulators\NES\MICE - Trace.txt";
-        }
-
         private readonly NESContext context;
 
         public NES(NESContext context)
         {
-            NES.IsDebug = true;
+            NES.IsDebug = false;
 
             this.context = context;
 
@@ -52,11 +45,6 @@ namespace MICE.Nintendo
             }
         }
 
-        // Create components...
-        public DataBus DataBus { get; } = new DataBus();
-        public AddressBus AddressBus { get; } = new AddressBus();
-        public ControlBus ControlBus { get; } = new ControlBus();
-
         public RicohRP2C02 PPU { get; private set; }
         public PPURegisters PPURegisters { get; private set; }
         public IMemoryMap CPUMemoryMap { get; private set; }
@@ -73,16 +61,8 @@ namespace MICE.Nintendo
 
         private Action cycleCompleteAction;
 
-        // Hook them up...
         public void PowerOn()
         {
-            NES.IsDebug = true;
-
-            if (NES.IsDebug && File.Exists(Constants.DebugFile))
-            {
-                File.Delete(Constants.DebugFile);
-            }
-
             if (this.Cartridge == null)
             {
                 throw new InvalidOperationException("Cartridge must be loaded first, unable to power on.");
@@ -103,7 +83,6 @@ namespace MICE.Nintendo
         private void DoPerCPUCycle()
         {
             this.StepPPU();
-
             this.HandleInterrupts();
         }
 
@@ -142,8 +121,6 @@ namespace MICE.Nintendo
             this.PPU.MemoryMap.GetMemorySegment<Nametable>("Name Table 3").AttachHandler(this.Cartridge.Mapper);
         }
 
-        public static StringBuilder traceFileOutput = new StringBuilder();
-
         private Stopwatch frameSW;
         public void Step()
         {
@@ -156,39 +133,31 @@ namespace MICE.Nintendo
             // 1 Step = 1 Frame to the NES, since we're doing frame-based timing here:
             // 1 System step = 1 CPU step + (3 PPU steps * CPU Cycles in Step) + (2 Audio steps * 1 CPU cycle).
             // Cycles are based on which instructions the CPU ran.
-            NintendoStepArgs cycleEvent;
+            this.CPU.FetchInstruction();
+            this.CPU.DecodeInstruction();
+            this.CPU.ExecuteInstruction();
 
-            cycleEvent.CPUStepsOccurred = this.CPU.FetchInstruction();
-            cycleEvent.CPUStepsOccurred += this.CPU.DecodeInstruction();
-
-            cycleEvent.CPUStepsOccurred += this.CPU.ExecuteInstruction();
+            this.CPU.HandleIfIRQ();
 
             if (NES.IsDebug)
             {
-                NES.traceFileOutput.AppendLine(this.GetState(registerState));
+                Log.Verbose(this.GetState(registerState));
             }
-
-            //for (int i = 0; i < cycleEvent.CPUStepsOccurred * 3; i++)
-            //{
-            //    this.PPU.Step();
-            //}
 
             if (this.PPU.FrameNumber > this.CurrentFrame)
             {
-                if (NES.IsDebug)
-                {
-                    File.AppendAllText(Constants.DebugFile, NES.traceFileOutput.ToString());
-                    NES.traceFileOutput.Clear();
-                    Console.WriteLine($"Frame took (ms): {this.frameSW.ElapsedMilliseconds}");
-                    this.frameSW.Restart();
-                }
+                Log.Information("Frame {currentFrame} took (ms): {elapsed}", this.PPU.FrameNumber, this.frameSW.ElapsedMilliseconds);
+                this.frameSW.Restart();
 
+                this.frameStartClock = this.CPU.CurrentCycle;
                 this.CurrentFrame = this.PPU.FrameNumber;
                 Array.Copy(this.PPU.ScreenData, this.Screen, this.PPU.ScreenData.Length);
             }
 
             // TODO: APU Cycles
         }
+
+        private long frameStartClock = 0;
 
         public void PowerOff()
         {
@@ -207,7 +176,7 @@ namespace MICE.Nintendo
         {
             ushort readAddress = (ushort)(value << 8);
 
-            var lastCycle = this.CPU.CurrentCycle + 1;
+            var lastCycle = this.CPU.CurrentCycle - 1;
 
             var extraCycles =
                 ((lastCycle + this.CPU.CurrentOpcode.Cycles) % 2) == 1
@@ -221,10 +190,7 @@ namespace MICE.Nintendo
                 CPU.CycleFinished();
             }
 
-            if (NES.IsDebug)
-            {
-                NES.traceFileOutput.Append($" - [Sprite DMA Start - Cycle: {lastCycle}] - [Sprite DMA End - Cycle: {lastCycle}]");
-            }
+            Log.Verbose(" - [Sprite DMA Start - Cycle: {startCycle}] - [Sprite DMA End - Cycle: {currentCycle}]", lastCycle, this.CPU.CurrentCycle);
         }
 
         public Task Run()
@@ -233,17 +199,11 @@ namespace MICE.Nintendo
             {
                 this.frameSW = new Stopwatch();
 
-                if (NES.IsDebug)
-                {
-                    this.frameSW.Start();
-                }
+                this.frameSW.Start();
 
                 while (!this.IsPaused && this.IsPoweredOn)
                 {
                     this.Step();
-
-                    // TODO: Get RAW Screen data from PPU.
-                    // TODO: Audio.
                 }
             });
         }
@@ -289,6 +249,7 @@ namespace MICE.Nintendo
             else if (CPU.CurrentOpcode.IsUnofficial) { opCodeName += "*"; expectedSpace--; }
 
             var spaces = new String(' ', Math.Max(1, expectedSpace - label.Length));
+
             return $"{CPU.LastPC:X4}  {opCodeName ?? "SEI"} {label} {spaces} {registerState}";
         }
 

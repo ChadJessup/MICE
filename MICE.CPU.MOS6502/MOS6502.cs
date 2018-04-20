@@ -1,6 +1,7 @@
 ﻿using MICE.Common;
 using MICE.Common.Interfaces;
 using Ninject;
+using Serilog;
 using System;
 using System.Collections.Generic;
 
@@ -14,6 +15,7 @@ namespace MICE.CPU.MOS6502
         }
 
         private Opcodes Opcodes;
+        private ushort address;
 
         public MOS6502([Named("CPU")] IMemoryMap memoryMap) => this.MemoryMap = memoryMap;
 
@@ -22,7 +24,7 @@ namespace MICE.CPU.MOS6502
 
         public long CurrentOpcodeCycle => this.CurrentCycle - this.StartCycle;
 
-        public IReadOnlyDictionary<InterruptType, int> InterruptOffsets = new Dictionary<InterruptType, int>()
+        public IReadOnlyDictionary<InterruptType, ushort> InterruptOffsets = new Dictionary<InterruptType, ushort>()
         {
             { InterruptType.BRK, 0xFFFE },
             { InterruptType.IRQ, 0XFFFE },
@@ -31,12 +33,10 @@ namespace MICE.CPU.MOS6502
         };
 
         public Endianness Endianness { get; } = Endianness.LittleEndian;
-
+        public string LastAccessedAddress { get; set; }
+        public byte NextOpcode { get; private set; }
         public IMemoryMap MemoryMap { get; }
         public ushort LastPC { get; set; }
-        public byte NextOpcode { get; private set; }
-
-        public string LastAccessedAddress { get; set; }
 
         /// <summary>
         /// Gets or sets a value requesting a non-maskable interrrupt.
@@ -193,11 +193,11 @@ namespace MICE.CPU.MOS6502
 
         private bool shouldHandleNMI = false;
 
-        public void IRQ()
+        public void HandleIfIRQ()
         {
             if (this.WasNMIRequested)
             {
-                if (!shouldHandleNMI)
+                if (!this.shouldHandleNMI)
                 {
                     this.shouldHandleNMI = true;
                 }
@@ -206,6 +206,8 @@ namespace MICE.CPU.MOS6502
                     this.HandleInterruptRequest(InterruptType.NMI, this.Registers.PC);
                     this.AreInterruptsDisabled = true;
                     this.WasNMIRequested = false;
+
+                    Log.Verbose(" - [NMI - Cycle: {currentCycle}]", this.CurrentCycle);
                 }
             }
         }
@@ -220,7 +222,11 @@ namespace MICE.CPU.MOS6502
             var cycles = this.FetchInstruction();
             cycles += this.DecodeInstruction();
 
-            return this.ExecuteInstruction() + cycles;
+            cycles += this.ExecuteInstruction();
+
+            this.HandleIfIRQ();
+
+            return cycles;
         }
 
         public int FetchInstruction()
@@ -230,8 +236,7 @@ namespace MICE.CPU.MOS6502
 
             this.LastPC = this.Registers.PC.Read();
 
-            this.NextOpcode = this.ReadNextByte();
-            this.CurrentOpcode = this.Opcodes[this.NextOpcode];
+            this.CurrentOpcode = this.Opcodes[this.ReadNextByte()];
 
             this.IncrementPC();
 
@@ -251,13 +256,11 @@ namespace MICE.CPU.MOS6502
             return 1;
         }
 
-        private ushort address;
-
         public int ExecuteInstruction()
         {
             this.CurrentOpcode.Instruction(this.CurrentOpcode, address);
 
-            if (MOS6502.IsDebug && this.CurrentOpcode.ShouldVerifyResults && (LastPC + this.CurrentOpcode.PCDelta != this.Registers.PC))
+            if (MOS6502.IsDebug && this.CurrentOpcode.ShouldVerifyResults && (this.LastPC + this.CurrentOpcode.PCDelta != this.Registers.PC))
             {
                 throw new InvalidOperationException($"Program Counter was not what was expected after executing instruction: {this.CurrentOpcode.Name} (0x{this.CurrentOpcode.Code:X}).{Environment.NewLine}Was: 0x{LastPC:X}{Environment.NewLine}Is: 0x{this.Registers.PC.Read():X}{Environment.NewLine}Expected: 0x{LastPC + this.CurrentOpcode.PCDelta:X}");
             }
@@ -266,7 +269,8 @@ namespace MICE.CPU.MOS6502
 
             if (MOS6502.IsDebug && this.CurrentOpcode.ShouldVerifyResults && this.EndCycle - this.StartCycle != this.CurrentOpcode.Cycles)
             {
-                Console.WriteLine($"Cycles don't line up: Cycle: {this.StartCycle} Expected to consume: {this.CurrentOpcode.Cycles} Consumed: {this.EndCycle - this.StartCycle} {this.CurrentOpcode}");
+                Log.Warning("Cycles don't line up: Cycle: {startCycle} Expected to consume: {expectedCycles} Consumed: {consumedCycles} {opCode}",
+                    this.StartCycle, this.CurrentOpcode.Cycles, this.EndCycle - this.StartCycle, this.CurrentOpcode);
             }
 
             return (int)(this.EndCycle - this.StartCycle);
@@ -297,14 +301,27 @@ namespace MICE.CPU.MOS6502
 
         public void HandleInterruptRequest(InterruptType interruptType, ushort returnAddress)
         {
+            // Interrupts take up 7 cycles...
+
+            // Initial fetch of vector...
+            this.CycleFinished();
+            this.CycleFinished();
+
             // Push return address to stack...usually PC.
             this.Stack.Push(returnAddress);
+
+            // Above...Stack push high
+            this.CycleFinished();
+            // Stack push low
+            this.CycleFinished();
 
             // Push P to stack...
             this.Stack.Push(this.Registers.P);
 
+            // Two more cycles in the ReadShort fetch (1 per byte).
+
             // Set PC to Interrupt vector.
-            this.Registers.PC.Write(this.MemoryMap.ReadShort(this.InterruptOffsets[interruptType]));
+            this.Registers.PC.Write(this.ReadShortAt(this.InterruptOffsets[interruptType]));
         }
     }
 }

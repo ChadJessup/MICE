@@ -35,33 +35,33 @@ namespace MICE.PPU.RicohRP2C02
             set => this.registers.PPUMASK.SetBit(7, value);
         }
 
-        public byte MuxPixel((byte pixel, Sprite sprite) drawnSprite, (byte pixel, Tile tile) drawnBackground)
+        public byte MuxPixel((byte pixel, Sprite sprite) drawnSprite, byte backgroundPixel, Tile backgroundTile)
         {
-            byte outputPixel = drawnBackground.pixel;
+            byte outputPixel = backgroundPixel;
 
             if (drawnSprite.sprite == null)
             {
-                return drawnBackground.pixel;
+                return backgroundPixel;
             }
 
             switch (outputPixel)
             {
-                case var _ when drawnSprite.sprite.IsTransparentPixel && drawnBackground.tile.IsTransparentPixel:
+                case var _ when drawnSprite.sprite.IsTransparentPixel && backgroundTile.IsTransparentPixel:
                     break;
-                case var _ when drawnBackground.tile.IsTransparentPixel:
+                case var _ when backgroundTile.IsTransparentPixel:
                     outputPixel = drawnSprite.pixel;
                     break;
                 case var _ when drawnSprite.sprite.IsTransparentPixel:
-                    outputPixel = drawnBackground.pixel;
+                    outputPixel = backgroundPixel;
                     break;
                 case var _ when drawnSprite.sprite.IsBehindBackground:
-                    outputPixel = drawnBackground.pixel;
+                    outputPixel = backgroundPixel;
                     break;
                 case var _ when !drawnSprite.sprite.IsTransparentPixel && !drawnSprite.sprite.IsBehindBackground:
                     outputPixel = drawnSprite.pixel;
                     break;
                 default:
-                    outputPixel = drawnBackground.pixel;
+                    outputPixel = backgroundPixel;
                     break;
             }
 

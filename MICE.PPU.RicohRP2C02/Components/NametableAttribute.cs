@@ -8,13 +8,13 @@
             this.RawByte = attributeByte;
         }
 
-        public ushort Address { get; private set; }
+        public ushort Address { get; set; }
+        public byte RawByte { get; set; }
 
         public int Shifted => ((this.Address >> 4) & 0b00000100) | (this.Address & 0b00000010);
         public byte AttributeTableByte => (byte)(((this.RawByte >> this.Shifted) & 0b00000011) << 2);
         public int PaletteOffset => (((this.RawByte >> this.Shifted) & 0b00000011) << 2) & 0b00000011;
 
-        public byte RawByte { get; private set; }
         public int TopLeft => (this.RawByte & 0b00000011) >> 0;
         public int TopRight => (this.RawByte & 0b00001100) >> 2;
         public int BottomLeft => (this.RawByte & 0b00110000) >> 4;

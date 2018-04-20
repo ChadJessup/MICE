@@ -1,6 +1,7 @@
 ﻿using ICSharpCode.SharpZipLib.Checksums;
 using MICE.Common.Helpers;
 using MICE.Nintendo.Databases;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -177,7 +178,7 @@ namespace MICE.Nintendo.Loaders
 
             if (entry != null && entry.MapperId != this.MemoryMapperId)
             {
-                Console.WriteLine($"Mapper in the ROM ({this.MemoryMapperId}) is not what the databases say...({entry.MapperId}) trusting databases.");
+                Log.Information($"Mapper in the ROM ({this.MemoryMapperId}) is not what the databases say...({entry.MapperId}) trusting databases.");
                 this.MemoryMapperId = entry.MapperId;
             }
 

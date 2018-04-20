@@ -19,8 +19,7 @@ namespace MICE.Common.Misc
         public (int min, int max) GetMaxRange() => (min: this.minimumRange, max: this.maximumRange);
         public IEnumerable<IMemorySegment> GetSegmentsInRange(int min, int max)
         {
-            var range = new Range(min, max);
-            return this.memorySegments.Where(seg => seg.Range.IsOverlapped(range));
+            return this.memorySegments.Where(seg => seg.Range.IsOverlapped(new Range(min, max)));
         }
 
         public void Add(IMemorySegment item)
@@ -72,35 +71,44 @@ namespace MICE.Common.Misc
 
         public virtual byte ReadByte(int index)
         {
-            byte value = 0x00;
+            if (this.memorySegmentCache.TryGetValue(index, out IMemorySegment cachedSegment))
+            {
+                return cachedSegment.ReadByte(index);
+            }
+            else
+            {
+                IMemorySegment segment = null;
+                for (int i = 0; i < this.memorySegments.Count; i++)
+                {
+                    if (this.memorySegments[i].IsIndexInRange(index))
+                    {
+                        segment = this.memorySegments[i];
+                        break;
+                    }
+                }
 
-            //if (this.memorySegmentCache.TryGetValue(index, out IMemorySegment cachedSegment))
-            //{
-            //    value = cachedSegment.ReadByte(index);
-            //}
-            //else
-            //{
-                var segment = this.memorySegments.First(seg => seg.IsIndexInRange(index));
-             //   this.memorySegmentCache.Add(index, segment);
-
-                value = segment.ReadByte(index);
-            //}
-
-            return value;
+                this.memorySegmentCache.Add(index, segment);
+                return segment.ReadByte(index);
+            }
         }
 
         public virtual void Write(int index, byte value)
         {
-            //if (this.memorySegmentCache.TryGetValue(index, out IMemorySegment cachedSegment))
-            //{
-            //    cachedSegment.Write(index, value);
-            //    return;
-            //}
+            if (this.memorySegmentCache.TryGetValue(index, out IMemorySegment cachedSegment))
+            {
+                cachedSegment.Write(index, value);
+                return;
+            }
 
-            var segment = this.memorySegments.First(seg => seg.IsIndexInRange(index));
-            //this.memorySegmentCache.Add(index, segment);
-
-            segment.Write(index, value);
+            for (int i = 0; i < this.memorySegments.Count; i++)
+            {
+                if (this.memorySegments[i].IsIndexInRange(index))
+                {
+                    this.memorySegmentCache.Add(index, this.memorySegments[i]);
+                    this.memorySegments[i].Write(index, value);
+                    return;
+                }
+            }
         }
 
         public virtual void BulkTransfer(ushort startAddress, Span<byte> destinationArray, int destinationIndex, int size)

@@ -195,24 +195,7 @@ namespace MICE.Nintendo
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ushort ReadShort(int index)
-        {
-            return (ushort)(this.ReadByte(index + 1) << 8 | this.ReadByte(index));
-
-            switch (index)
-            {
-                case var _ when MemoryRanges.ZeroPage.TryGetOffset(index, out int offset):
-                    return (ushort)(this.ZeroPage.Span[offset + 1] << 8 | this.ZeroPage.Span[offset]); ;
-                case var _ when MemoryRanges.RAM.TryGetOffset(index, out int offset):
-                    return (ushort)(this.RAM.Span[offset + 1] << 8 | this.RAM.Span[offset]);
-                case var _ when MemoryRanges.ProgramRomUpperBank.IsInRange(index):
-                    return this.prgROMUpperBank.ReadShort(index);
-                case var _ when MemoryRanges.ProgramRomLowerBank.IsInRange(index):
-                    return this.prgROMLowerBank.ReadShort(index);
-                default:
-                    throw new NotImplementedException();
-            }
-        }
+        public ushort ReadShort(int index) => (ushort)(this.ReadByte(index + 1) << 8 | this.ReadByte(index));
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Write(int index, byte value)

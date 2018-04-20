@@ -52,10 +52,5 @@ namespace MICE.PPU.RicohRP2C02
         /// Gets or sets the read buffer that is buffered by certain PPU Reads/Writes.
         /// </summary>
         public byte ReadBuffer { get; set; }
-
-        public override byte ReadByte(int index)
-        {
-            return base.ReadByte(index);
-        }
     }
 }

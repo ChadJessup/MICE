@@ -22,5 +22,6 @@
         Indirect,
         IndirectX,
         IndirectY,
+        IndirectYWrite,
     }
 }

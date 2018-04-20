@@ -7,11 +7,11 @@ namespace MICE.PPU.RicohRP2C02.Handlers
     public class BackgroundHandler
     {
         private readonly PPUInternalRegisters internalRegisters;
-        private readonly ScrollHandler scrollHandler;
         private readonly PaletteHandler paletteHandler;
-        private readonly PPURegisters registers;
+        private readonly ScrollHandler scrollHandler;
         private readonly IMemoryMap ppuMemoryMap;
         private readonly IMemoryMap cpuMemoryMap;
+        private readonly PPURegisters registers;
 
         // Having issues, going to reproduce EmuNES's methods for now then break it down if possible.
         private ulong tileData;
@@ -54,11 +54,11 @@ namespace MICE.PPU.RicohRP2C02.Handlers
             set => this.registers.PPUCTRL.SetBit(4, value);
         }
 
-        public (byte drawnPixel, Tile backgroundTile) GetBackgroundPixel(int x, int y)
+        public byte GetBackgroundPixel(int x, int y)
         {
             if (x <= 7 && !this.DrawLeft8BackgroundPixels)
             {
-                return (0, null);
+                return 0;
             }
 
             var rawTileData = (uint)(tileData >> 32);
@@ -66,28 +66,26 @@ namespace MICE.PPU.RicohRP2C02.Handlers
 
             var tileByte = (byte)(data & 0x0F);
 
-            var tile = new Tile();
-            tile.ColorIndex = tileByte;
+            this.CurrentTile.ColorIndex = tileByte;
 
             // Transparent background.
             if (tileByte % 4 == 0)
             {
-                tile.ColorIndex = 0;
+                this.CurrentTile.ColorIndex = 0;
             }
 
-            tile.TileByte = tileByte;
+            this.CurrentTile.TileByte = tileByte;
 
-            var paletteId = this.attribute.GetPaletteOffset();
+            var paletteId = this.currentAttribute.GetPaletteOffset();
 
-            tile.PaletteAddress = (ushort)(0x3f00 + 4 * paletteId + tile.ColorIndex);
+            this.CurrentTile.PaletteAddress = (ushort)(0x3f00 + 4 * paletteId + this.CurrentTile.ColorIndex);
 
-            var palette = this.paletteHandler.GetBackgroundColor(paletteId, tile.ColorIndex);
-            return (palette, tile);
+            return this.paletteHandler.GetBackgroundColor(paletteId, this.CurrentTile.ColorIndex);
         }
 
         public void NextCycle() => tileData <<= 4;
 
-        private NametableAttribute attribute;
+        private NametableAttribute currentAttribute = new NametableAttribute();
 
         public void FetchNametableByte()
         {
@@ -98,11 +96,11 @@ namespace MICE.PPU.RicohRP2C02.Handlers
 
         public void FetchAttributeByte()
         {
-            var address = (ushort)(0x23C0 | (this.internalRegisters.v & 0x0C00) | ((this.internalRegisters.v >> 4) & 0x38) | ((this.internalRegisters.v >> 2) & 0x07));
-            //int shift = ((this.internalRegisters.v >> 4) & 0b00000100) | (this.internalRegisters.v & 0b00000010);
+            var v = this.internalRegisters.v;
+            var address = (ushort)(0x23C0 | (v & 0x0C00) | ((v >> 4) & 0x38) | ((v >> 2) & 0x07));
 
-            var value = this.ppuMemoryMap.ReadByte(address);
-            this.attribute = new NametableAttribute(value, this.internalRegisters.v);
+            this.currentAttribute.RawByte = this.ppuMemoryMap.ReadByte(address);
+            this.currentAttribute.Address = v;
         }
 
         public void FetchLowBGTile()
@@ -139,7 +137,7 @@ namespace MICE.PPU.RicohRP2C02.Handlers
                 highTileByte <<= 1;
                 data <<= 4;
 
-                data |= (uint)(this.attribute.AttributeTableByte | p1 | p2);
+                data |= (uint)(this.currentAttribute.AttributeTableByte | p1 | p2);
             }
 
             tileData |= (ulong)(data);

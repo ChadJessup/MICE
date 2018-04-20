@@ -36,14 +36,12 @@ namespace MICE.TestApp
 
         public override byte ReadByte(int index)
         {
-            byte returnValue = 0x0;
-
             if (this.IsStrobing)
             {
-                returnValue = this.BuildReturnValue(this.GetInput(NESInputs.A));
-
-                return returnValue;
+                return this.BuildReturnValue(this.GetInput(NESInputs.A));
             }
+
+            byte returnValue = 0x0;
 
             switch (this.readCount++)
             {

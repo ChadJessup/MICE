@@ -107,12 +107,6 @@ namespace MICE.PPU.RicohRP2C02
             set => this.Registers.PPUCTRL.SetBit(7, value);
         }
 
-        public bool NMI_output
-        {
-            get => this.WasNMIRequested;
-            set => this.WasNMIRequested = value;
-        }
-
         public bool ShouldNMInterrupt { get; set; }
 
         /// <summary>
@@ -122,12 +116,6 @@ namespace MICE.PPU.RicohRP2C02
         {
             get => this.Registers.PPUSTATUS.GetBit(7);
             set => this.Registers.PPUSTATUS.SetBit(7, value);
-        }
-
-        public bool NMI_occurred
-        {
-            get => this.IsVBlank;
-            set => this.IsVBlank = value;
         }
 
         /// <summary>
@@ -202,7 +190,6 @@ namespace MICE.PPU.RicohRP2C02
 
             if (this.IsPreRenderLine && this.Cycle == 1)
             {
-                this.NMI_occurred = false;
                 this.IsVBlank = false;
                 this.SpriteHandler.WasSprite0Hit = false;
                 this.SpriteHandler.WasSpriteOverflow = false;
@@ -290,8 +277,6 @@ namespace MICE.PPU.RicohRP2C02
             this.Registers.PPUCTRL.AfterWriteAction = (address, value) =>
             {
                 this.RegisterLatch = value;
-
-                this.NMI_output = (value & 0b1000000) != 0;
                 this.InternalRegisters.t = (ushort)((this.InternalRegisters.t & 0xF3FF) | ((value & 0x03) << 10));
             };
 
@@ -410,14 +395,14 @@ namespace MICE.PPU.RicohRP2C02
 
         private void DrawPixel(int x, int y)
         {
-            (byte backgroundPixel, Tile tile) drawnTile = BackgroundHandler.GetBackgroundPixel(x, y);
+            var backgroundPixel = BackgroundHandler.GetBackgroundPixel(x, y);
             (byte spritePixel, Sprite sprite) drawnSprite = SpriteHandler.GetSpritePixel(x, y, this.PrimaryOAM);
 
-            byte muxedPixel = PixelMuxer.MuxPixel(drawnSprite, drawnTile);
+            byte muxedPixel = PixelMuxer.MuxPixel(drawnSprite, backgroundPixel, BackgroundHandler.CurrentTile);
 
             this.ScreenData[(y * Constants.NTSCWidth) + x] = muxedPixel;
 
-            this.HandleSprite0Hit(x, y, drawnTile, drawnSprite);
+            this.HandleSprite0Hit(x, y, backgroundPixel, drawnSprite);
         }
 
         private void Fetch()
@@ -449,16 +434,15 @@ namespace MICE.PPU.RicohRP2C02
             this.IsVBlank = true;
             this.SpriteHandler.ClearSprites();
 
-            if (this.NMI_output && this.NMI_occurred)
+            if (this.WasNMIRequested)
             {
                 this.ShouldNMInterrupt = true;
             }
         }
 
-        private void HandleSprite0Hit(int x, int y, (byte backgroundPixel, Tile tile) drawnTile, (byte spritePixel, Sprite sprite) drawnSprite)
+        private void HandleSprite0Hit(int x, int y, byte backgroundPixel, (byte spritePixel, Sprite sprite) drawnSprite)
         {
-            // Sprite0 hit flag gets reset in cycle 1 of prerender line.
-            if (this.SpriteHandler.WasSprite0Hit)
+            if (this.SpriteHandler.WasSprite0Hit || x == 255)
             {
                 return;
             }
@@ -468,7 +452,7 @@ namespace MICE.PPU.RicohRP2C02
                 return;
             }
 
-            if (drawnTile.tile?.IsTransparentPixel ?? false || drawnSprite.spritePixel % 4 == 0)
+            if (BackgroundHandler.CurrentTile?.IsTransparentPixel ?? false || drawnSprite.spritePixel % 4 == 0)
             {
                 return;
             }
@@ -478,14 +462,9 @@ namespace MICE.PPU.RicohRP2C02
                 return;
             }
 
-            if (x == 255)
-            {
-                return;
-            }
-
             this.SpriteHandler.WasSprite0Hit =
                 drawnSprite.sprite?.IsSpriteZero ?? false
-                && (drawnTile.backgroundPixel != 0x00
+                && (backgroundPixel != 0x00
                 && drawnSprite.spritePixel != 0x00);
         }
 
