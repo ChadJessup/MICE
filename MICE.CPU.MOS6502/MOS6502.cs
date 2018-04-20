@@ -234,6 +234,10 @@ namespace MICE.CPU.MOS6502
             this.LastAccessedAddress = "";
             this.StartCycle = this.CurrentCycle;
 
+            if (this.StartCycle == 116863)
+            {
+            }
+
             this.LastPC = this.Registers.PC.Read();
 
             this.CurrentOpcode = this.Opcodes[this.ReadNextByte()];
@@ -267,11 +271,11 @@ namespace MICE.CPU.MOS6502
 
             this.EndCycle = this.CurrentCycle;
 
-            if (MOS6502.IsDebug && this.CurrentOpcode.ShouldVerifyResults && this.EndCycle - this.StartCycle != this.CurrentOpcode.Cycles)
-            {
-                Log.Warning("Cycles don't line up: Cycle: {startCycle} Expected to consume: {expectedCycles} Consumed: {consumedCycles} {opCode}",
-                    this.StartCycle, this.CurrentOpcode.Cycles, this.EndCycle - this.StartCycle, this.CurrentOpcode);
-            }
+            //if (MOS6502.IsDebug && this.CurrentOpcode.ShouldVerifyResults && this.EndCycle - this.StartCycle != this.CurrentOpcode.Cycles)
+            //{
+            //    Log.Warning("Cycles don't line up: Cycle: {startCycle} Expected to consume: {expectedCycles} Consumed: {consumedCycles} {opCode}",
+            //        this.StartCycle, this.CurrentOpcode.Cycles, this.EndCycle - this.StartCycle, this.CurrentOpcode);
+            //}
 
             return (int)(this.EndCycle - this.StartCycle);
         }

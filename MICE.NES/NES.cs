@@ -8,6 +8,7 @@ using MICE.PPU.RicohRP2C02;
 using MICE.PPU.RicohRP2C02.Components;
 using Serilog;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
 
@@ -16,10 +17,43 @@ namespace MICE.Nintendo
     public class NES : ISystem
     {
         private readonly NESContext context;
+        private readonly Dictionary<string, string> addressLabels = new Dictionary<string, string>()
+        {
+            { "$2000", "PpuControl_2000" },
+            { "$2001", "PpuMask_2001" },
+            { "$2002", "PpuStatus_2002" },
+            { "$2003", "OamAddr_2003" },
+            { "$2004", "OamData_2004" },
+            { "$2005", "PpuScroll_2005" },
+            { "$2006", "PpuAddr_2006" },
+            { "$2007", "PpuData_2007" },
+            { "$4000", "Sq0Duty_4000" },
+            { "$4001", "Sq0Sweep_4001" },
+            { "$4002", "Sq0Timer_4002" },
+            { "$4003", "Sq0Length_4003" },
+            { "$4004", "Sq1Duty_4004" },
+            { "$4005", "Sq1Sweep_4005" },
+            { "$4006", "Sq1Timer_4006" },
+            { "$4007", "Sq1Length_4007" },
+            { "$4008", "TrgLinear_4008" },
+            { "$400A", "TrgTimer_400A" },
+            { "$400B", "TrgLength_400B" },
+            { "$400C", "NoiseVolume_400C" },
+            { "$400E", "NoisePeriod_400E" },
+            { "$400F", "NoiseLength_400F" },
+            { "$4010", "DmcFreq_4010" },
+            { "$4011", "DmcCounter_4011" },
+            { "$4012", "DmcAddress_4012" },
+            { "$4013", "DmcLength_4013" },
+            { "$4014", "SpriteDma_4014" },
+            { "$4015", "ApuStatus_4015" },
+            { "$4016", "Ctrl1_4016" },
+            { "$4017", "Ctrl2_FrameCtr_4017" },
+        };
 
         public NES(NESContext context)
         {
-            NES.IsDebug = false;
+            NES.IsDebug = true;
 
             this.context = context;
 
@@ -146,7 +180,8 @@ namespace MICE.Nintendo
 
             if (this.PPU.FrameNumber > this.CurrentFrame)
             {
-                Log.Information("Frame {currentFrame} took (ms): {elapsed}", this.PPU.FrameNumber, this.frameSW.ElapsedMilliseconds);
+                // TODO: Have two loggers, as trace log shouldn't have these if we need it to match with Mesen's.
+                //Log.Information("Frame {currentFrame} took (ms): {elapsed}", this.PPU.FrameNumber, this.frameSW.ElapsedMilliseconds);
                 this.frameSW.Restart();
 
                 this.frameStartClock = this.CPU.CurrentCycle;
@@ -258,44 +293,12 @@ namespace MICE.Nintendo
 
         private string GetLabelForAddress()
         {
-            if (CPU.LastAccessedAddress.Contains("$4017"))
+            foreach (var kvp in this.addressLabels)
             {
-                CPU.LastAccessedAddress = CPU.LastAccessedAddress.Replace("$4017", "Ctrl2_FrameCtr_4017");
+                CPU.LastAccessedAddress = CPU.LastAccessedAddress.Replace(kvp.Key, kvp.Value);
             }
 
-            switch (CPU.LastAccessedAddress)
-            {
-                case "$2000":
-                    return "PpuControl_2000";
-                case "$2001":
-                    return "PpuMask_2001";
-                case "$2002":
-                    return "PpuStatus_2002";
-                case "$2003":
-                    return "OamAddr_2003";
-                case "$2004":
-                    return "OamData_2004";
-                case "$2005":
-                    return "PpuScroll_2005";
-                case "$2006":
-                    return "PpuAddr_2006";
-                case "$2007":
-                    return "PpuData_2007";
-                case "$4011":
-                    return "DmcCounter_4011";
-                case "$4014":
-                    return "SpriteDma_4014";
-                case "$4015":
-                    return "ApuStatus_4015";
-                case var addr when addr.Contains("$4016"):
-                    return addr.Replace("$4016", "Ctrl1_4016");
-                case var addr when addr.Contains("$4017"):
-                    return addr.Replace("$4017", "Ctrl2_FrameCtr_4017");
-                default:
-                    return string.IsNullOrWhiteSpace(CPU.LastAccessedAddress)
-                        ? " "
-                        : CPU.LastAccessedAddress;
-            }
+            return CPU.LastAccessedAddress;
         }
 
         public EventHandler<NintendoStepArgs> StepCompleted { get; set; }

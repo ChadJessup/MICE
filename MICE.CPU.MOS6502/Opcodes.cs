@@ -373,6 +373,11 @@ namespace MICE.CPU.MOS6502
         [MOS6502Opcode(0x28, "PLP", AddressingModes.Implied, timing: 4, length: 1)]
         public void PLP(OpcodeContainer container, ushort address)
         {
+            // Increment SP
+            CPU.CycleFinished();
+
+            // Pop from Stack.
+            CPU.CycleFinished();
             this.WriteByteToRegister(CPU.Registers.P, CPU.Stack.PopByte(), S: false, Z: false);
             CPU.WillBreak = false;
             CPU.Reserved = true;

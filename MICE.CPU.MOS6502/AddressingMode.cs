@@ -42,7 +42,7 @@ namespace MICE.CPU.MOS6502
                 byte lowByte = CPU.ReadByteAt(intermediateAddress);
                 byte highByte = CPU.ReadByteAt((ushort)(intermediateAddress - 0x00FF));
 
-                intermediateAddress = (ushort)(highByte << 8 | lowByte);
+                return (ushort)(highByte << 8 | lowByte);
             }
 
             return CPU.ReadShortAt(intermediateAddress);
@@ -211,10 +211,10 @@ namespace MICE.CPU.MOS6502
                     throw new InvalidOperationException();
             }
 
-            //if (MOS6502.IsDebug)
-            //{
-                //CPU.LastAccessedAddress = AddressingMode.GetAddressAsString(CPU, container);
-            //}
+            if (MOS6502.IsDebug)
+            {
+                CPU.LastAccessedAddress = AddressingMode.GetAddressAsString(CPU, container);
+            }
 
             return address;
         }
@@ -248,6 +248,7 @@ namespace MICE.CPU.MOS6502
                 case AddressingModes.AbsoluteY:
                     return $"${intermediateAddress:X4},Y @ ${address:X4}";
                 case AddressingModes.AbsoluteX:
+                case AddressingModes.AbsoluteXWrite:
                     return $"${intermediateAddress:X4},X @ ${address:X4}";
                 case AddressingModes.Absolute:
                     return $"${address:X4}";
