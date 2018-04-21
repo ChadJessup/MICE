@@ -41,7 +41,9 @@ namespace MICE.CPU.MOS6502
         /// <summary>
         /// Gets or sets a value requesting a non-maskable interrrupt.
         /// </summary>
-        public bool WasNMIRequested { get; set; }
+        public bool PreviousRunIrq { get; set; }
+
+        public bool CurrentRunIrq { get; set; }
 
         /// <summary>
         /// Gets or sets the current cycle (or tick) or the CPU.  This increments a specific amount for each instruction that occurs.
@@ -162,6 +164,7 @@ namespace MICE.CPU.MOS6502
 
         public void Reset()
         {
+            this.CurrentCycle = -1;
             this.Opcodes = new Opcodes(this);
             this.Registers = new Registers();
             this.Registers.PC.Write(this.MemoryMap.ReadShort(this.InterruptOffsets[InterruptType.Reset]));
@@ -191,25 +194,17 @@ namespace MICE.CPU.MOS6502
             this.MemoryMap.Write(0x4015, 0x00);
         }
 
-        private bool shouldHandleNMI = false;
-
-        public void HandleIfIRQ()
+        public bool HandleIfIRQ()
         {
-            if (this.WasNMIRequested)
+            if (this.PreviousRunIrq)
             {
-                if (!this.shouldHandleNMI)
-                {
-                    this.shouldHandleNMI = true;
-                }
-                else
-                {
-                    this.HandleInterruptRequest(InterruptType.NMI, this.Registers.PC);
-                    this.AreInterruptsDisabled = true;
-                    this.WasNMIRequested = false;
+                this.HandleInterruptRequest(InterruptType.NMI, this.Registers.PC);
 
-                    Log.Verbose(" - [NMI - Cycle: {currentCycle}]", this.CurrentCycle);
-                }
+                Log.Verbose(" - [NMI - Cycle: {currentCycle}]", this.CurrentCycle);
+                return true;
             }
+
+            return false;
         }
 
         /// <summary>
@@ -224,17 +219,15 @@ namespace MICE.CPU.MOS6502
 
             cycles += this.ExecuteInstruction();
 
-            this.HandleIfIRQ();
-
             return cycles;
         }
 
         public int FetchInstruction()
         {
             this.LastAccessedAddress = "";
-            this.StartCycle = this.CurrentCycle;
+            this.StartCycle = this.CurrentCycle + 1;
 
-            if (this.StartCycle == 116863)
+            if (this.StartCycle == 116722)
             {
             }
 
@@ -250,6 +243,7 @@ namespace MICE.CPU.MOS6502
         public void CycleFinished()
         {
             this.CurrentCycle++;
+
             this.cycleComplete();
         }
 
@@ -264,10 +258,10 @@ namespace MICE.CPU.MOS6502
         {
             this.CurrentOpcode.Instruction(this.CurrentOpcode, address);
 
-            if (MOS6502.IsDebug && this.CurrentOpcode.ShouldVerifyResults && (this.LastPC + this.CurrentOpcode.PCDelta != this.Registers.PC))
-            {
-                throw new InvalidOperationException($"Program Counter was not what was expected after executing instruction: {this.CurrentOpcode.Name} (0x{this.CurrentOpcode.Code:X}).{Environment.NewLine}Was: 0x{LastPC:X}{Environment.NewLine}Is: 0x{this.Registers.PC.Read():X}{Environment.NewLine}Expected: 0x{LastPC + this.CurrentOpcode.PCDelta:X}");
-            }
+            //if (MOS6502.IsDebug && !this.shouldHandleNMI && this.CurrentOpcode.ShouldVerifyResults && (this.LastPC + this.CurrentOpcode.PCDelta != this.Registers.PC))
+            //{
+            //    throw new InvalidOperationException($"Program Counter was not what was expected after executing instruction: {this.CurrentOpcode.Name} (0x{this.CurrentOpcode.Code:X}).{Environment.NewLine}Was: 0x{LastPC:X}{Environment.NewLine}Is: 0x{this.Registers.PC.Read():X}{Environment.NewLine}Expected: 0x{LastPC + this.CurrentOpcode.PCDelta:X}");
+            //}
 
             this.EndCycle = this.CurrentCycle;
 
@@ -321,9 +315,9 @@ namespace MICE.CPU.MOS6502
 
             // Push P to stack...
             this.Stack.Push(this.Registers.P);
+            this.CycleFinished();
 
             // Two more cycles in the ReadShort fetch (1 per byte).
-
             // Set PC to Interrupt vector.
             this.Registers.PC.Write(this.ReadShortAt(this.InterruptOffsets[interruptType]));
         }

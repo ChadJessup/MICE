@@ -27,10 +27,10 @@ namespace MICE.Nintendo
             { "$2005", "PpuScroll_2005" },
             { "$2006", "PpuAddr_2006" },
             { "$2007", "PpuData_2007" },
-            { "$4000", "Sq0Duty_4000" },
-            { "$4001", "Sq0Sweep_4001" },
-            { "$4002", "Sq0Timer_4002" },
-            { "$4003", "Sq0Length_4003" },
+            { "$4000", "Sq1Duty_4000" },
+            { "$4001", "Sq1Sweep_4001" },
+            { "$4002", "Sq1Timer_4002" },
+            { "$4003", "Sq1Length_4003" },
             { "$4004", "Sq1Duty_4004" },
             { "$4005", "Sq1Sweep_4005" },
             { "$4006", "Sq1Timer_4006" },
@@ -117,16 +117,21 @@ namespace MICE.Nintendo
         private void DoPerCPUCycle()
         {
             this.StepPPU();
-            this.HandleInterrupts();
+
+            if (!this.isInDMA)
+            {
+                this.HandleInterrupts();
+            }
         }
 
         private void HandleInterrupts()
         {
+            this.CPU.PreviousRunIrq = this.CPU.CurrentRunIrq;
+            this.CPU.CurrentRunIrq = this.PPU.ShouldNMInterrupt;
+
             if (this.PPU.ShouldNMInterrupt)
             {
-                this.CPU.WasNMIRequested = true;
-                this.PPU.WasNMIRequested = false;
-                this.PPU.ShouldNMInterrupt = false;
+
             }
         }
 
@@ -159,6 +164,7 @@ namespace MICE.Nintendo
         public void Step()
         {
             string registerState = "";
+
             if (NES.IsDebug)
             {
                 registerState = this.GetRegisterState();
@@ -171,11 +177,14 @@ namespace MICE.Nintendo
             this.CPU.DecodeInstruction();
             this.CPU.ExecuteInstruction();
 
-            this.CPU.HandleIfIRQ();
-
             if (NES.IsDebug)
             {
                 Log.Verbose(this.GetState(registerState));
+            }
+
+            if (this.CPU.HandleIfIRQ())
+            {
+                this.PPU.ShouldNMInterrupt = false;
             }
 
             if (this.PPU.FrameNumber > this.CurrentFrame)
@@ -207,14 +216,16 @@ namespace MICE.Nintendo
             this.Run();
         }
 
+        private bool isInDMA = false;
         public void DMATransfer(int? address, byte value)
         {
+            this.isInDMA = true;
             ushort readAddress = (ushort)(value << 8);
 
-            var lastCycle = this.CPU.CurrentCycle - 1;
+            var lastCycle = this.CPU.CurrentCycle;
 
             var extraCycles =
-                ((lastCycle + this.CPU.CurrentOpcode.Cycles) % 2) == 1
+                (lastCycle % 2) == 1
                 ? 514
                 : 513;
 
@@ -226,6 +237,7 @@ namespace MICE.Nintendo
             }
 
             Log.Verbose(" - [Sprite DMA Start - Cycle: {startCycle}] - [Sprite DMA End - Cycle: {currentCycle}]", lastCycle, this.CPU.CurrentCycle);
+            this.isInDMA = false;
         }
 
         public Task Run()
@@ -281,18 +293,23 @@ namespace MICE.Nintendo
             else if (opCodeName == "PLA") { stackIndentation += 1; }
             else if (opCodeName == "RTI") { stackIndentation += 3; }
             else if (opCodeName == "PLP") { stackIndentation += 1; }
-            else if (CPU.CurrentOpcode.IsUnofficial) { opCodeName += "*"; expectedSpace--; }
+            else if (CPU.CurrentOpcode?.IsUnofficial ?? false) { opCodeName += "*"; expectedSpace--; }
 
-            var spaces = new String(' ', Math.Max(1, expectedSpace - label.Length));
+            var spaces = new String(' ', Math.Max(1, expectedSpace - label?.Length ?? 3));
 
             return $"{CPU.LastPC:X4}  {opCodeName ?? "SEI"} {label} {spaces} {registerState}";
         }
 
         private string GetRegisterState()
-            => $"A:{CPU.Registers.A.Read():X2} X:{CPU.Registers.X.Read():X2} Y:{CPU.Registers.Y.Read():X2} P:{CPU.Registers.P.Read():X2} SP:{CPU.Registers.SP.Read():X2} CYC:{this.PPU.Cycle,3} SL:{this.PPU.ScanLine,3} FC:{this.CurrentFrame} CPU Cycle:{this.CPU.CurrentCycle}";
+            => $"A:{CPU.Registers.A.Read():X2} X:{CPU.Registers.X.Read():X2} Y:{CPU.Registers.Y.Read():X2} P:{CPU.Registers.P.Read():X2} SP:{CPU.Registers.SP.Read():X2} CYC:{this.PPU.Cycle,3} SL:{this.PPU.ScanLine,3} FC:{this.CurrentFrame} CPU Cycle:{this.CPU.CurrentCycle + 1}";
 
         private string GetLabelForAddress()
         {
+            if (CPU.LastAccessedAddress == null)
+            {
+                return CPU.LastAccessedAddress;
+            }
+
             foreach (var kvp in this.addressLabels)
             {
                 CPU.LastAccessedAddress = CPU.LastAccessedAddress.Replace(kvp.Key, kvp.Value);

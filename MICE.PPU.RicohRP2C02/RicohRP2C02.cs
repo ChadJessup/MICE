@@ -176,6 +176,7 @@ namespace MICE.PPU.RicohRP2C02
             if (this.OnFinalCycleOnLine())
             {
                 this.ScanLine++;
+
                 this.Cycle = 0;
 
                 if (this.ScanLine == 240)
@@ -185,6 +186,17 @@ namespace MICE.PPU.RicohRP2C02
                 else if (this.ScanLine == 261)
                 {
                     this.ScanLine = -1;
+                }
+                else if (this.ScanLine == 0)
+                {
+                    if (!this.IsRenderingEnabled)
+                    {
+                        this.Cycle = 0;
+                    }
+                    else
+                    {
+                        this.Cycle = this.FrameNumber % 2 == 0 ? 0 : 1;
+                    }
                 }
             }
 

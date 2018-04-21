@@ -108,7 +108,7 @@ namespace MICE.TestApp
             this.nes.InputHandler.SetController1(new KeyboardController(this.nes.InputHandler, new Range(0x4016, 0x4016), "Control Input 1"));
             //this.nes.InputHandler.SetController2(new KeyboardController(new Range(0x4017, 0x4017), "Control Input 2"));
 
-            //var cartridge = NESLoader.CreateCartridge(@"C:\Emulators\NES\Games\World\Donkey Kong (JU).nes");
+            var cartridge = NESLoader.CreateCartridge(@"C:\Emulators\NES\Games\World\Donkey Kong (JU).nes");
             //var cartridge = NESLoader.CreateCartridge(@"C:\Emulators\NES\Games\Super Mario Bros.nes");
             //var cartridge = NESLoader.CreateCartridge(@"C:\Emulators\NES\Games\USA\Legend of Zelda, The (U) (PRG 1).nes");
             //var cartridge = NESLoader.CreateCartridge(@"C:\Emulators\NES\Games\USA\Bionic Commando (U).nes");
@@ -133,7 +133,7 @@ namespace MICE.TestApp
             //var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\instr_test-v3\rom_singles\11-jmp_jsr.nes");
             //var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\instr_test-v3\rom_singles\12-rts.nes");
             //var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\instr_test-v3\rom_singles\14-brk.nes");
-            var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\instr_test-v3\rom_singles\15-special.nes");
+            //var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\instr_test-v3\rom_singles\15-special.nes");
 
             //var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\instr_test-v3\rom_singles\13-rti.nes");
             //hmmm...var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\nes_instr_test\rom_singles\11-special.nes");
