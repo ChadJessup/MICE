@@ -21,7 +21,7 @@ namespace MICE.TestApp
             Bind<Registers>().To<Registers>().InSingletonScope();
             Bind<RicohRP2C02>().To<RicohRP2C02>().InSingletonScope();
             Bind<PPURegisters>().To<PPURegisters>().InSingletonScope();
-            Bind<IMemoryMap>().To<PPUMemoryMap>().InSingletonScope().Named("PPU");
+            Bind<IMemoryMap>().To<PPURawMemoryMap>().InSingletonScope().Named("PPU");
             Bind<PPUInternalRegisters>().To<PPUInternalRegisters>().InSingletonScope();
 
             Bind<BackgroundHandler>().To<BackgroundHandler>().InSingletonScope();

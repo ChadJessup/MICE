@@ -6,7 +6,7 @@ using System;
 namespace MICE.Nintendo.Mappers
 {
     [Mapper(MemoryMapperIds.GNROM)]
-    public class GNROM : NROM2
+    public class GNROM : NROM
     {
         private int programBank = 0;
         private int characterBank = 0;

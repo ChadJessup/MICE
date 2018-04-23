@@ -44,7 +44,7 @@ namespace MICE.Benchmark
             this.nesContext = this.kernel.Get<NESContext>();
             var cartridge = NESLoader.CreateCartridge(@"C:\Emulators\NES\Games\World\Donkey Kong (JU).nes");
 
-            this.nes = new NES(this.nesContext);
+            this.nes = this.kernel.Get<NES>();
             this.nes.LoadCartridge(cartridge);
 
             this.nes.PowerOn();

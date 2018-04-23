@@ -11,20 +11,28 @@ namespace MICE.Nintendo.Mappers
     {
         protected static class MemoryRanges
         {
-            public static Range CharacterROMBankRange = new Range(0x0000, 0x1FFF);
-            public static Range CharacterROM0Range = new Range(0x0000, 0x0FFF);
-            public static Range CharacterROM1Range = new Range(0x1000, 0x1FFF);
+            public static Range CharacterROMBanks = new Range(0x0000, 0x1FFF);
+            public static Range CharacterROM0 = new Range(0x0000, 0x0FFF);
+            public static Range CharacterROM1 = new Range(0x1000, 0x1FFF);
 
-            public static Range NametableRange = new Range(0x2000, 0x2FFF);
-            public static Range Nametable0Range = new Range(0x2000, 0x23FF);
-            public static Range Nametable1Range = new Range(0x2400, 0x27FF);
-            public static Range Nametable2Range = new Range(0x2800, 0x2BFF);
-            public static Range Nametable3Range = new Range(0x2C00, 0x2FFF);
+            public static Range Nametables = new Range(0x2000, 0x2FFF);
+            public static Range Nametable0 = new Range(0x2000, 0x23FF);
+            public static Range Nametable1 = new Range(0x2400, 0x27FF);
+            public static Range Nametable2 = new Range(0x2800, 0x2BFF);
+            public static Range Nametable3 = new Range(0x2C00, 0x2FFF);
 
+            public static Range ExpansionROM = new Range(0x4020, 0x05FFF);
+
+            // These names are sometimes interchanged, so let's have both.
             public static Range ProgramRAM = new Range(0x6000, 0x7FFF);
+            public static Range SRAM = new Range(0x6000, 0x7FFF);
 
-            public static Range ProgramROMRange = new Range(0x8000, 0xFFFF);
+            public static Range ProgramROM = new Range(0x8000, 0xFFFF);
+
+            public static Range ProgramROMLowerBank = new Range(0x8000, 0xBFFF);
             public static Range ProgramROMFirstBank = new Range(0x8000, 0xBFFF);
+
+            public static Range ProgramROMUpperBank = new Range(0xC000, 0xFFFF);
             public static Range ProgramROMLastBank = new Range(0xC000, 0xFFFF);
         }
 

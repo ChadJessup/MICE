@@ -4,7 +4,7 @@ using MICE.Nintendo.Loaders;
 namespace MICE.Nintendo.Mappers
 {
     [Mapper(MemoryMapperIds.UNROM)]
-    public class UNROM : NROM2
+    public class UNROM : NROM
     {
         private Range BankSelectRange = new Range(0x8000, 0xFFFF);
 
