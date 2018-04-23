@@ -135,9 +135,17 @@ namespace MICE.Nintendo
             {
                 return this.Memory.Span[index & 0x07FF];
             }
-            else if(index < 0x4000)
+            else if (index < 0x4000)
             {
 
+            }
+            else if (index == 0x4016)
+            {
+                this.Controller1?.ReadByte(index);
+            }
+            else if (index == 0x4017)
+            {
+                this.Controller2?.ReadByte(index);
             }
             else if (index < 0xFFFF)
             {
