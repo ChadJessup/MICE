@@ -37,35 +37,23 @@ namespace MICE.PPU.RicohRP2C02
 
         public byte MuxPixel((byte pixel, Sprite sprite) drawnSprite, byte backgroundPixel, Tile backgroundTile)
         {
-            byte outputPixel = backgroundPixel;
-
-            if (drawnSprite.sprite == null)
+            switch (backgroundPixel)
             {
-                return backgroundPixel;
-            }
-
-            switch (outputPixel)
-            {
+                case var _ when drawnSprite.sprite == null:
+                    return backgroundPixel;
                 case var _ when drawnSprite.sprite.IsTransparentPixel && backgroundTile.IsTransparentPixel:
-                    break;
+                    return backgroundPixel;
                 case var _ when backgroundTile.IsTransparentPixel:
-                    outputPixel = drawnSprite.pixel;
-                    break;
+                    return drawnSprite.pixel;
                 case var _ when drawnSprite.sprite.IsTransparentPixel:
-                    outputPixel = backgroundPixel;
-                    break;
+                    return backgroundPixel;
                 case var _ when drawnSprite.sprite.IsBehindBackground:
-                    outputPixel = backgroundPixel;
-                    break;
+                    return backgroundPixel;
                 case var _ when !drawnSprite.sprite.IsTransparentPixel && !drawnSprite.sprite.IsBehindBackground:
-                    outputPixel = drawnSprite.pixel;
-                    break;
+                    return drawnSprite.pixel;
                 default:
-                    outputPixel = backgroundPixel;
-                    break;
+                    return backgroundPixel;
             }
-
-            return outputPixel;
         }
     }
 }

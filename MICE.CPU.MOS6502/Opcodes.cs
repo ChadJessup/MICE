@@ -347,38 +347,24 @@ namespace MICE.CPU.MOS6502
         public void TSX(OpcodeContainer container, ushort address) => this.WriteByteToRegister(CPU.Registers.X, CPU.Registers.SP, S: true, Z: true);
 
         [MOS6502Opcode(0x48, "PHA", AddressingModes.Implied, timing: 3, length: 1)]
-        public void PHA(OpcodeContainer container, ushort address)
-        {
-            CPU.Stack.Push(CPU.Registers.A);
-            CPU.CycleFinished();
-        }
+        public void PHA(OpcodeContainer container, ushort address) => CPU.StackPushByte(CPU.Registers.A);
 
         [MOS6502Opcode(0x68, "PLA", AddressingModes.Implied, timing: 4, length: 1)]
         public void PLA(OpcodeContainer container, ushort address)
         {
-            // Increment Stack Pointer
+            // Dummy Read
             CPU.CycleFinished();
 
-            var stackByte = CPU.Stack.PopByte();
-
-            // Pop Value
-            CPU.CycleFinished();
-
-            this.WriteByteToRegister(CPU.Registers.A, stackByte, S: true, Z: true);
+            this.WriteByteToRegister(CPU.Registers.A, CPU.StackPopByte(), S: true, Z: true);
         }
 
         [MOS6502Opcode(0x08, "PHP", AddressingModes.Implied, timing: 3, length: 1)]
-        public void PHP(OpcodeContainer container, ushort address) => CPU.Stack.Push((byte)(CPU.Registers.P | 0x10));
+        public void PHP(OpcodeContainer container, ushort address) => CPU.StackPushByte((byte)(CPU.Registers.P | 0x10));
 
         [MOS6502Opcode(0x28, "PLP", AddressingModes.Implied, timing: 4, length: 1)]
         public void PLP(OpcodeContainer container, ushort address)
         {
-            // Increment SP
-            CPU.CycleFinished();
-
-            // Pop from Stack.
-            CPU.CycleFinished();
-            this.WriteByteToRegister(CPU.Registers.P, CPU.Stack.PopByte(), S: false, Z: false);
+            this.WriteByteToRegister(CPU.Registers.P, CPU.StackPopByte(), S: false, Z: false);
             CPU.WillBreak = false;
             CPU.Reserved = true;
         }
@@ -476,53 +462,30 @@ namespace MICE.CPU.MOS6502
         [MOS6502Opcode(0x20, "JSR", AddressingModes.Absolute, timing: 6, length: 3, verify: false)]
         public void JSR(OpcodeContainer container, ushort address)
         {
-            // Predecrement Stack Pointer
-            CPU.CycleFinished();
-
-            CPU.Stack.Push((ushort)(CPU.Registers.PC - 1));
-
-            // Push Two values to Stack
-            CPU.CycleFinished();
-            CPU.CycleFinished();
+            CPU.StackPushShort((ushort)(CPU.Registers.PC - 1));
 
             CPU.SetPCTo(address);
 
-            CPU.LastAccessedAddress = $"${address:X4}";
+            if (MOS6502.IsDebug)
+            {
+                CPU.LastAccessedAddress = $"${address:X4}";
+            }
         }
 
         [MOS6502Opcode(0x60, "RTS", AddressingModes.Implied, timing: 6, length: 3, verify: false)]
         public void RTS(OpcodeContainer container, ushort address)
         {
-            var newPC = CPU.Stack.PopShort();
-
-            // Two bytes popped from Stack, and Stack pointer change.
-            CPU.CycleFinished();
-            CPU.CycleFinished();
-            CPU.CycleFinished();
-
             // Increment PC value.
             CPU.CycleFinished();
 
-            CPU.SetPCTo((ushort)(newPC + 1));
+            CPU.SetPCTo((ushort)(CPU.StackPopShort() + 1));
         }
 
         [MOS6502Opcode(0x40, "RTI", AddressingModes.Implied, timing: 6, length: 1, verify: false)]
         public void RTI(OpcodeContainer container, ushort address)
         {
-            // 6 Cycles for RTI - two already consumed...
-            // 1 cycle = increment S...
-            CPU.CycleFinished();
-
-            // 1 cycle = pop CPU flags...
-            CPU.CycleFinished();
-
-            var cpuFlags = CPU.Stack.PopByte();
-            this.WriteByteToRegister(CPU.Registers.P, cpuFlags, S: false, Z: false);
-
-            // 2 cycles = pop address to return to as well as increment S...
-            CPU.CycleFinished();
-            CPU.CycleFinished();
-            CPU.SetPCTo(CPU.Stack.PopShort());
+            this.WriteByteToRegister(CPU.Registers.P, CPU.StackPopByte(), S: false, Z: false);
+            CPU.SetPCTo(CPU.StackPopShort());
         }
 
         #endregion

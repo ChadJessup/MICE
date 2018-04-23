@@ -189,14 +189,9 @@ namespace MICE.PPU.RicohRP2C02
                 }
                 else if (this.ScanLine == 0)
                 {
-                    if (!this.IsRenderingEnabled)
-                    {
-                        this.Cycle = 0;
-                    }
-                    else
-                    {
-                        this.Cycle = this.FrameNumber % 2 == 0 ? 0 : 1;
-                    }
+                    this.Cycle = this.IsRenderingEnabled
+                     ? this.FrameNumber % 2 == 0 ? 0 : 1
+                     : 0;
                 }
             }
 
@@ -225,7 +220,7 @@ namespace MICE.PPU.RicohRP2C02
                 }
             }
 
-            if (this.ScanLine == 241 && this.Cycle == 1)
+            if (this.ScanLine == 241 && this.Cycle == 0)
             {
                 this.HandleVerticalBlankLines();
             }
@@ -380,18 +375,15 @@ namespace MICE.PPU.RicohRP2C02
             this.InternalRegisters.w = true;
 
             this.FrameNumber = 1;
-            this.ScanLine = 0;
-            this.Cycle = 30;
+            this.ScanLine = -1;
+            this.Cycle = 340;
 
             this.ClearOutput();
         }
 
         private bool OnFinalCycleOnLine()
         {
-            if (!this.IsRenderingEnabled)
-            {
-                return this.Cycle == 341;
-            }
+            return this.Cycle > 339;
 
             bool isFinalCycle = this.ScanLine == 261 && this.BackgroundHandler.ShowBackground && !this.IsFrameEven
                 ? this.Cycle == 340

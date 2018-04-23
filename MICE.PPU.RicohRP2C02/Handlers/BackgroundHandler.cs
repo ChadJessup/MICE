@@ -21,6 +21,14 @@ namespace MICE.PPU.RicohRP2C02.Handlers
         private byte highTileByte;
         //
 
+        private Nametable nameTable0;
+        private Nametable nameTable1;
+        private Nametable nameTable2;
+        private Nametable nameTable3;
+
+        private PatternTable patternTable0;
+        private PatternTable patternTable1;
+
         public Tile PreviousTile { get; set; }
         public Tile CurrentTile { get; set; } = new Tile();
 
@@ -32,6 +40,38 @@ namespace MICE.PPU.RicohRP2C02.Handlers
             this.scrollHandler = scrollHandler;
             this.paletteHandler = paletteHandler;
             this.internalRegisters = internalRegisters;
+
+            foreach (var patternTable in this.ppuMemoryMap.GetMemorySegments<PatternTable>())
+            {
+                if (patternTable.Range.Min == 0x0000)
+                {
+                    this.patternTable0 = patternTable;
+                }
+                else if (patternTable.Range.Min == 0x1000)
+                {
+                    this.patternTable1 = patternTable;
+                }
+            }
+
+            foreach (var nameTable in this.ppuMemoryMap.GetMemorySegments<Nametable>())
+            {
+                if (nameTable.Range.Min == 0x2000)
+                {
+                    this.nameTable0 = nameTable;
+                }
+                else if (nameTable.Range.Min == 0x2400)
+                {
+                    this.nameTable1 = nameTable;
+                }
+                else if (nameTable.Range.Min == 0x2800)
+                {
+                    this.nameTable2 = nameTable;
+                }
+                else if (nameTable.Range.Min == 0x2C00)
+                {
+                    this.nameTable3 = nameTable;
+                }
+            }
         }
 
         public int BaseNametableAddress => (this.registers.PPUCTRL.GetBit(0) ? 1 : 0) | (this.registers.PPUCTRL.GetBit(1) ? 1 : 0) << 2;
@@ -109,18 +149,24 @@ namespace MICE.PPU.RicohRP2C02.Handlers
                 ? 0x1000
                 : 0x0000;
 
-            ushort address = (ushort)(baseAddress + (this.nameTableByte * 16) + this.scrollHandler.vFineYScroll);
-            this.lowTileByte = this.ppuMemoryMap.ReadByte(address);
+            ushort address = (ushort)((this.nameTableByte * 16) + this.scrollHandler.vFineYScroll);
+
+            this.lowTileByte = this.IsBackgroundPatternTableAddress1000
+                ? this.patternTable1.ReadByte(baseAddress + address)
+                : this.patternTable0.ReadByte(baseAddress + address);
         }
 
         public void FetchHighBGTile()
         {
             var baseAddress = this.IsBackgroundPatternTableAddress1000
-                ? 0x1000
-                : 0x0000;
+              ? 0x1000
+              : 0x0000;
 
-            ushort address = (ushort)(baseAddress + (this.nameTableByte * 16) + this.scrollHandler.vFineYScroll + 8);
-            this.highTileByte = this.ppuMemoryMap.ReadByte(address);
+            ushort address = (ushort)((this.nameTableByte * 16) + this.scrollHandler.vFineYScroll + 8);
+
+            this.highTileByte = this.IsBackgroundPatternTableAddress1000
+                ? this.patternTable1.ReadByte(baseAddress + address)
+                : this.patternTable0.ReadByte(baseAddress + address);
         }
 
         // Temp from EmuNES...
@@ -142,6 +188,27 @@ namespace MICE.PPU.RicohRP2C02.Handlers
 
             tileData |= (ulong)(data);
         }
-        //
+
+        private byte GetByteFromNameTables(ushort address)
+        {
+            if (this.nameTable0.Range.TryGetOffset(address, out int ntoffset0))
+            {
+                return this.nameTable0.Data[ntoffset0];
+            }
+            else if (this.nameTable1.Range.TryGetOffset(address, out int ntoffset1))
+            {
+                return this.nameTable1.Data[ntoffset1];
+            }
+            else if (this.nameTable2.Range.TryGetOffset(address, out int ntoffset2))
+            {
+                return this.nameTable2.Data[ntoffset2];
+            }
+            else if (this.nameTable3.Range.TryGetOffset(address, out int ntoffset3))
+            {
+                return this.nameTable3.Data[ntoffset3];
+            }
+
+            return 0x0;
+        }
     }
 }

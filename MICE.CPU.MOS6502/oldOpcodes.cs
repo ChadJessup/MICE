@@ -369,18 +369,18 @@ namespace MICE.CPU.MOS6502
         public void TSX(OpcodeContainer container) => this.WriteByteToRegister(CPU.Registers.X, CPU.Registers.SP, S: true, Z: true);
 
         [MOS6502Opcode(0x48, "PHA", AddressingModes.Immediate, timing: 3, length: 1)]
-        public void PHA(OpcodeContainer container) => CPU.Stack.Push(CPU.Registers.A);
+        public void PHA(OpcodeContainer container) => CPU.StackPushByte(CPU.Registers.A);
 
         [MOS6502Opcode(0x68, "PLA", AddressingModes.Immediate, timing: 4, length: 1)]
-        public void PLA(OpcodeContainer container) => this.WriteByteToRegister(CPU.Registers.A, CPU.Stack.PopByte(), S: true, Z: true);
+        public void PLA(OpcodeContainer container) => this.WriteByteToRegister(CPU.Registers.A, CPU.StackPopByte(), S: true, Z: true);
 
         [MOS6502Opcode(0x08, "PHP", AddressingModes.Immediate, timing: 3, length: 1)]
-        public void PHP(OpcodeContainer container) => CPU.Stack.Push((byte)(CPU.Registers.P | 0x10));
+        public void PHP(OpcodeContainer container) => CPU.StackPushByte((byte)(CPU.Registers.P | 0x10));
 
         [MOS6502Opcode(0x28, "PLP", AddressingModes.Immediate, timing: 4, length: 1)]
         public void PLP(OpcodeContainer container)
         {
-            this.WriteByteToRegister(CPU.Registers.P, CPU.Stack.PopByte(), S: false, Z: false);
+            this.WriteByteToRegister(CPU.Registers.P, CPU.StackPopByte(), S: false, Z: false);
             CPU.WillBreak = false;
             CPU.Reserved = true;
         }
@@ -488,7 +488,7 @@ namespace MICE.CPU.MOS6502
         [MOS6502Opcode(0x20, "JSR", AddressingModes.Absolute, timing: 6, length: 3, verify: false)]
         public void JSR(OpcodeContainer container)
         {
-            CPU.Stack.Push((ushort)(CPU.Registers.PC + 1));
+            CPU.StackPushShort((ushort)(CPU.Registers.PC + 1));
             var nextPC = CPU.ReadNextShort();
             CPU.SetPCTo(nextPC);
 
@@ -498,15 +498,15 @@ namespace MICE.CPU.MOS6502
         [MOS6502Opcode(0x60, "RTS", AddressingModes.Absolute, timing: 6, length: 3, verify: false)]
         public void RTS(OpcodeContainer container)
         {
-            var address = CPU.Stack.PopShort();
+            var address = CPU.StackPopShort();
             CPU.SetPCTo((ushort)(address + 1));
         }
 
         [MOS6502Opcode(0x40, "RTI", AddressingModes.Implied, timing: 6, length: 1, verify: false)]
         public void RTI(OpcodeContainer container)
         {
-            this.WriteByteToRegister(CPU.Registers.P, CPU.Stack.PopByte(), S: false, Z: false);
-            CPU.SetPCTo(CPU.Stack.PopShort());
+            this.WriteByteToRegister(CPU.Registers.P, CPU.StackPopByte(), S: false, Z: false);
+            CPU.SetPCTo(CPU.StackPopShort());
         }
 
         #endregion

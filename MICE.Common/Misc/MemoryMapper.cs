@@ -124,5 +124,7 @@ namespace MICE.Common.Misc
         }
 
         public IEnumerable<IMemorySegment> GetMemorySegments() => this.memorySegments;
+
+        public IEnumerable<T> GetMemorySegments<T>() where T : IMemorySegment => this.memorySegments.OfType<T>();
     }
 }

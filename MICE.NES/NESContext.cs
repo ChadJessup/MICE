@@ -21,21 +21,20 @@ namespace MICE.Nintendo
         (
             ICPU cpu,
             RicohRP2C02 ppu,
+            PixelMuxer pixelMuxer,
             InputHandler inputHandler,
             ScrollHandler scrollHandler,
-            PixelMuxer pixelMuxer,
-            BackgroundHandler backgroundHandler,
-            PaletteHandler paletteHandler
+            PaletteHandler paletteHandler,
+            BackgroundHandler backgroundHandler
         )
         {
             this.CPU = cpu;
             this.PPU = ppu;
-            this.InputHandler = inputHandler;
-
-            this.ScrollHandler = scrollHandler;
             this.PixelMuxer = pixelMuxer;
-            this.BackgroundHandler = backgroundHandler;
+            this.InputHandler = inputHandler;
+            this.ScrollHandler = scrollHandler;
             this.PaletteHandler = paletteHandler;
+            this.BackgroundHandler = backgroundHandler;
 
             if (File.Exists(Constants.DebugFile))
             {
@@ -57,10 +56,10 @@ namespace MICE.Nintendo
 
         public ICPU CPU { get; }
         public RicohRP2C02 PPU { get; }
+        public PixelMuxer PixelMuxer { get; }
         public InputHandler InputHandler { get; }
         public ScrollHandler ScrollHandler { get; }
-        public PixelMuxer PixelMuxer { get; }
-        public BackgroundHandler BackgroundHandler { get; }
         public PaletteHandler PaletteHandler { get; }
+        public BackgroundHandler BackgroundHandler { get; }
     }
 }

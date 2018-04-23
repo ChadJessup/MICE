@@ -53,7 +53,7 @@ namespace MICE.Nintendo
 
         public NES(NESContext context)
         {
-            NES.IsDebug = true;
+            NES.IsDebug = false;
 
             this.context = context;
 
@@ -80,7 +80,6 @@ namespace MICE.Nintendo
         }
 
         public RicohRP2C02 PPU { get; private set; }
-        public PPURegisters PPURegisters { get; private set; }
         public IMemoryMap CPUMemoryMap { get; private set; }
 
         public NESCartridge Cartridge { get; private set; }
@@ -128,11 +127,6 @@ namespace MICE.Nintendo
         {
             this.CPU.PreviousRunIrq = this.CPU.CurrentRunIrq;
             this.CPU.CurrentRunIrq = this.PPU.ShouldNMInterrupt;
-
-            if (this.PPU.ShouldNMInterrupt)
-            {
-
-            }
         }
 
         private void StepPPU()
@@ -160,7 +154,16 @@ namespace MICE.Nintendo
             this.PPU.MemoryMap.GetMemorySegment<Nametable>("Name Table 3").AttachHandler(this.Cartridge.Mapper);
         }
 
-        private Stopwatch frameSW;
+        public void StepFrame()
+        {
+            var currentFrame = this.PPU.FrameNumber;
+            while (currentFrame == this.PPU.FrameNumber)
+            {
+                this.Step();
+            }
+        }
+
+        private Stopwatch frameSW = new Stopwatch();
         public void Step()
         {
             string registerState = "";
@@ -221,22 +224,33 @@ namespace MICE.Nintendo
         {
             this.isInDMA = true;
             ushort readAddress = (ushort)(value << 8);
+            var lastCycle = CPU.CurrentCycle;
 
-            var lastCycle = this.CPU.CurrentCycle;
-
-            var extraCycles =
-                (lastCycle % 2) == 1
-                ? 514
-                : 513;
-
-            this.CPUMemoryMap.BulkTransfer(readAddress, this.PPU.PrimaryOAM.Data, this.PPU.Registers.OAMADDR, 256);
-
-            for (int i = 0; i < extraCycles; i++)
+            if (CPU.CurrentCycle % 2 != 0)
             {
                 CPU.CycleFinished();
             }
 
-            Log.Verbose(" - [Sprite DMA Start - Cycle: {startCycle}] - [Sprite DMA End - Cycle: {currentCycle}]", lastCycle, this.CPU.CurrentCycle);
+            CPU.CycleFinished();
+
+            for (int i = 0; i < 256; i++)
+            {
+                // Read cycle
+                var readByte = CPU.ReadByteAt((ushort)(readAddress + i));
+
+                // Write cycle...
+                CPU.CycleFinished();
+                this.PPU.PrimaryOAM.Data[this.PPU.Registers.OAMADDR + i] = readByte;
+            }
+
+            //this.CPUMemoryMap.BulkTransfer(readAddress, this.PPU.PrimaryOAM.Data, this.PPU.Registers.OAMADDR, 256);
+
+            //for (int i = 0; i < extraCycles; i++)
+            //{
+            //    CPU.CycleFinished();
+            //}
+
+            Log.Verbose(" - [Sprite DMA Start - Cycle: {startCycle}] - [Sprite DMA End - Cycle: {currentCycle}]", lastCycle, this.CPU.CurrentCycle + 1);
             this.isInDMA = false;
         }
 
@@ -244,9 +258,13 @@ namespace MICE.Nintendo
         {
             return Task.Factory.StartNew(() =>
             {
-                this.frameSW = new Stopwatch();
-
                 this.frameSW.Start();
+
+                // Spin the PPU a magic number amount of times while the CPU spins up.
+                for (int i = 0; i < 31; i++)
+                {
+                    this.PPU.Step();
+                }
 
                 while (!this.IsPaused && this.IsPoweredOn)
                 {

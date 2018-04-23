@@ -51,6 +51,11 @@ namespace MICE.Common.Misc
             throw new NotImplementedException();
         }
 
+        public IEnumerable<T> GetMemorySegments<T>() where T : IMemorySegment
+        {
+            throw new NotImplementedException();
+        }
+
         public byte ReadByte(int index)
         {
             throw new NotImplementedException();

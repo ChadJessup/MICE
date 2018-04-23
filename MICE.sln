@@ -24,6 +24,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		Performance1.psess = Performance1.psess
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MICE.Benchmark", "MICE.Benchmark\MICE.Benchmark.csproj", "{05E9207E-CC06-48F1-AA17-B73A37C6F301}"
+EndProject
 Global
 	GlobalSection(Performance) = preSolution
 		HasPerformanceSessions = true
@@ -68,12 +70,19 @@ Global
 		{CF6AC02D-02FA-4EE9-A507-BD94F489972E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CF6AC02D-02FA-4EE9-A507-BD94F489972E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CF6AC02D-02FA-4EE9-A507-BD94F489972E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{05E9207E-CC06-48F1-AA17-B73A37C6F301}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{05E9207E-CC06-48F1-AA17-B73A37C6F301}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{05E9207E-CC06-48F1-AA17-B73A37C6F301}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{05E9207E-CC06-48F1-AA17-B73A37C6F301}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {4E411B99-DC47-4BC5-B7F1-FFE93268C599}
+	EndGlobalSection
+	GlobalSection(Performance) = preSolution
+		HasPerformanceSessions = true
 	EndGlobalSection
 	GlobalSection(Performance) = preSolution
 		HasPerformanceSessions = true

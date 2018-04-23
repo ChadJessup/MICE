@@ -359,5 +359,10 @@ namespace MICE.Nintendo
         public void CopyTo(IMemorySegment[] array, int arrayIndex) => throw new NotImplementedException();
         IEnumerable<IMemorySegment> IMemoryMap.GetMemorySegments() => throw new NotImplementedException();
         public void CopyBytes(ushort startAddress, Span<byte> destination, int destinationIndex, int length) => throw new NotImplementedException();
+
+        public IEnumerable<T> GetMemorySegments<T>() where T : IMemorySegment
+        {
+            throw new NotImplementedException();
+        }
     }
 }

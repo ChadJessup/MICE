@@ -22,7 +22,7 @@ namespace MICE.CPU.MOS6502
         public static long FrequencyHz = 1789773;
         public static bool IsDebug { get; set; } = false;
 
-        public long CurrentOpcodeCycle => this.CurrentCycle - this.StartCycle;
+        public long CurrentOpcodeCycle => (this.CurrentCycle + 1) - this.StartCycle;
 
         public IReadOnlyDictionary<InterruptType, ushort> InterruptOffsets = new Dictionary<InterruptType, ushort>()
         {
@@ -64,7 +64,7 @@ namespace MICE.CPU.MOS6502
         /// Gets the Stack for the MOS6502.
         /// This is actually a memory segment that is wrapped in stack-like helpers.
         /// </summary>
-        public Stack Stack { get; private set; }
+        private Stack stack;
 
         /// <summary>
         /// Gets the MOS6502 Registers.
@@ -161,6 +161,7 @@ namespace MICE.CPU.MOS6502
         }
 
         public void PowerOff() => this.IsPowered = false;
+        public int Step() => throw new NotImplementedException();
 
         public void Reset()
         {
@@ -169,10 +170,10 @@ namespace MICE.CPU.MOS6502
             this.Registers = new Registers();
             this.Registers.PC.Write(this.MemoryMap.ReadShort(this.InterruptOffsets[InterruptType.Reset]));
 
-            this.Stack = this.MemoryMap.GetMemorySegment<Stack>("Stack");
-            this.Stack.SetInitialStackPointer(this.Registers.SP);
-            this.Stack.Push(0x00);
-            this.Stack.Push(0x00);
+            this.stack = this.MemoryMap.GetMemorySegment<Stack>("Stack");
+            this.stack.SetInitialStackPointer(this.Registers.SP);
+            this.stack.Push(0x00);
+            this.stack.Push(0x00);
 
             this.Reserved = true;
             this.AreInterruptsDisabled = true;
@@ -207,29 +208,10 @@ namespace MICE.CPU.MOS6502
             return false;
         }
 
-        /// <summary>
-        /// Steps the CPU and returns the amount of Cycles that would have occurred if the CPU were real.
-        /// The cycles can be used by other components as a timing mechanism.
-        /// </summary>
-        /// <returns>The amount of cycles that have passed in this step.</returns>
-        public int Step()
-        {
-            var cycles = this.FetchInstruction();
-            cycles += this.DecodeInstruction();
-
-            cycles += this.ExecuteInstruction();
-
-            return cycles;
-        }
-
         public int FetchInstruction()
         {
             this.LastAccessedAddress = "";
             this.StartCycle = this.CurrentCycle + 1;
-
-            if (this.StartCycle == 116722)
-            {
-            }
 
             this.LastPC = this.Registers.PC.Read();
 
@@ -242,7 +224,7 @@ namespace MICE.CPU.MOS6502
 
         public void CycleFinished()
         {
-            this.CurrentCycle++;
+            ++this.CurrentCycle;
 
             this.cycleComplete();
         }
@@ -258,18 +240,7 @@ namespace MICE.CPU.MOS6502
         {
             this.CurrentOpcode.Instruction(this.CurrentOpcode, address);
 
-            //if (MOS6502.IsDebug && !this.shouldHandleNMI && this.CurrentOpcode.ShouldVerifyResults && (this.LastPC + this.CurrentOpcode.PCDelta != this.Registers.PC))
-            //{
-            //    throw new InvalidOperationException($"Program Counter was not what was expected after executing instruction: {this.CurrentOpcode.Name} (0x{this.CurrentOpcode.Code:X}).{Environment.NewLine}Was: 0x{LastPC:X}{Environment.NewLine}Is: 0x{this.Registers.PC.Read():X}{Environment.NewLine}Expected: 0x{LastPC + this.CurrentOpcode.PCDelta:X}");
-            //}
-
             this.EndCycle = this.CurrentCycle;
-
-            //if (MOS6502.IsDebug && this.CurrentOpcode.ShouldVerifyResults && this.EndCycle - this.StartCycle != this.CurrentOpcode.Cycles)
-            //{
-            //    Log.Warning("Cycles don't line up: Cycle: {startCycle} Expected to consume: {expectedCycles} Consumed: {consumedCycles} {opCode}",
-            //        this.StartCycle, this.CurrentOpcode.Cycles, this.EndCycle - this.StartCycle, this.CurrentOpcode);
-            //}
 
             return (int)(this.EndCycle - this.StartCycle);
         }
@@ -303,23 +274,43 @@ namespace MICE.CPU.MOS6502
 
             // Initial fetch of vector...
             this.CycleFinished();
-            this.CycleFinished();
 
             // Push return address to stack...usually PC.
-            this.Stack.Push(returnAddress);
-
-            // Above...Stack push high
-            this.CycleFinished();
-            // Stack push low
-            this.CycleFinished();
+            this.StackPushShort(returnAddress);
 
             // Push P to stack...
-            this.Stack.Push(this.Registers.P);
-            this.CycleFinished();
+            this.StackPushByte(this.Registers.P);
 
-            // Two more cycles in the ReadShort fetch (1 per byte).
             // Set PC to Interrupt vector.
             this.Registers.PC.Write(this.ReadShortAt(this.InterruptOffsets[interruptType]));
+        }
+
+        public void StackPushShort(ushort value)
+        {
+            this.CycleFinished();
+            this.StackPushByte((byte)(value >> 8));
+            this.StackPushByte((byte)(value & 0b11111111));
+        }
+
+        public void StackPushByte(byte value)
+        {
+            this.CycleFinished();
+            this.stack.Push(value);
+        }
+
+        public byte StackPopByte()
+        {
+            this.CycleFinished();
+            return this.stack.PopByte();
+        }
+
+        public ushort StackPopShort()
+        {
+            this.CycleFinished();
+            var low = this.StackPopByte();
+            var high = this.StackPopByte();
+
+            return (ushort)(high << 8 | low);
         }
     }
 }
