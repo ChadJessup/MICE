@@ -75,7 +75,7 @@ namespace MICE.Nintendo
         private Dictionary<int, Register8Bit> ppuRegisterLookup;
         private Dictionary<int, Register8Bit> apuRegisterLookup;
 
-        private readonly byte[] memory = new byte[0x0800];
+        private byte[] memory = new byte[0x0800];
         public byte[] Data => this.memory;
         public Memory<byte> Memory => this.memory;
 
@@ -139,28 +139,32 @@ namespace MICE.Nintendo
             {
 
             }
-            else if (MemoryRanges.Controller1.IsInRange(index))
+            else if (index == 0x4016)
             {
-                return this.Controller1?.ReadByte(index) ?? 0x40;
+                this.Controller1?.ReadByte(index);
             }
-            else if (MemoryRanges.Controller2.IsInRange(index))
+            else if (index == 0x4017)
             {
-                return this.Controller2?.ReadByte(index) ?? 0x40;
-            }
-            else if (APURegisterAddresses.DirectLoad == index)
-            {
-                return 0x0;
-            }
-            else if (APURegisterAddresses.ChannelStatus == index)
-            {
-                return 0x0;
+                this.Controller2?.ReadByte(index);
             }
             else if (index < 0xFFFF)
             {
                 return this.mapper.ReadByte(index);
             }
 
-            throw new NotImplementedException();
+            switch (index)
+            {
+                case var _ when MemoryRanges.Controller1.IsInRange(index):
+                    return this.Controller1?.ReadByte(index) ?? 0x40;
+                case var _ when MemoryRanges.Controller2.IsInRange(index):
+                    return this.Controller2?.ReadByte(index) ?? 0x40;
+                case APURegisterAddresses.DirectLoad:
+                case APURegisterAddresses.ChannelStatus:
+                    return 0x0;
+                default:
+                    throw new NotImplementedException();
+            }
+
         }
 
         public ushort ReadShort(int index) => (ushort)(this.ReadByte(index + 1) << 8 | this.ReadByte(index));
