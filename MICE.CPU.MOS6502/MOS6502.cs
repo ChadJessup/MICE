@@ -227,6 +227,11 @@ namespace MICE.CPU.MOS6502
         {
             ++this.CurrentCycle;
 
+            if (this.CurrentCycle >= 87586)
+            {
+
+            }
+
             this.cycleComplete();
         }
 

@@ -35,7 +35,7 @@ namespace MICE.PPU.RicohRP2C02
             this.InternalRegisters = internalRegisters;
 
             this.Registers = registers;
-            this.MemoryMap = (PPURawMemoryMap)memoryMap;
+            this.MemoryMap = (PPUMemoryMap)memoryMap;
             this.ScrollHandler = scrollHandler;
 
             this.PaletteHandler = paletteHandler;
@@ -66,7 +66,7 @@ namespace MICE.PPU.RicohRP2C02
         public ScrollHandler ScrollHandler { get; private set; }
         public PixelMuxer PixelMuxer { get; private set; }
 
-        public PPURawMemoryMap MemoryMap { get; private set; }
+        public PPUMemoryMap MemoryMap { get; private set; }
 
         /// <summary>
         /// Gets the externally accessible PPU Registers. These are manipulated via the CPU.
@@ -383,7 +383,7 @@ namespace MICE.PPU.RicohRP2C02
 
         private bool OnFinalCycleOnLine()
         {
-            return this.Cycle > 339;
+            //return this.Cycle > 339;
 
             bool isFinalCycle = this.ScanLine == 261 && this.BackgroundHandler.ShowBackground && !this.IsFrameEven
                 ? this.Cycle == 340

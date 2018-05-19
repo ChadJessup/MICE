@@ -20,11 +20,11 @@ namespace MICE.PPU.RicohRP2C02.Handlers
         private Palette spritePalette2;
         private Palette spritePalette3;
 
-        private readonly PPURawMemoryMap memoryMap;
+        private readonly PPUMemoryMap memoryMap;
 
         public PaletteHandler([Named("PPU")] IMemoryMap memoryMap)
         {
-            this.memoryMap = (PPURawMemoryMap)memoryMap;
+            this.memoryMap = (PPUMemoryMap)memoryMap;
 
             var memorySegments = this.memoryMap.GetSegmentsInRange(0x3F00, 0x3FFF);
 
