@@ -383,7 +383,7 @@ namespace MICE.PPU.RicohRP2C02
 
         private bool OnFinalCycleOnLine()
         {
-            //return this.Cycle > 339;
+            return this.Cycle > 339;
 
             bool isFinalCycle = this.ScanLine == 261 && this.BackgroundHandler.ShowBackground && !this.IsFrameEven
                 ? this.Cycle == 340
