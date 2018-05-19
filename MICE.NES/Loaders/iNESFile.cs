@@ -1,4 +1,5 @@
-﻿using ICSharpCode.SharpZipLib.Checksums;
+﻿using ByteSizeLib;
+using ICSharpCode.SharpZipLib.Checksums;
 using MICE.Common.Helpers;
 using MICE.Nintendo.Databases;
 using Serilog;
@@ -12,14 +13,14 @@ namespace MICE.Nintendo.Loaders
     {
         private static class Constants
         {
-            public const int ROMBankSize = 16384;
+            public static int ROMBankSize = (int)ByteSize.FromKiloBytes(16.0).Bytes;
             public const int ChrBankSize = 8192;
 
             public const int SizeOfHeader = 16;
 
             public const uint FileSignature = 0x1A53454E;
 
-            public const int SizeOfSRAM = 0x8000 - 0x6000;
+            public const int SizeOfSRAM = 0x7FFF - 0x6000;
             public const int LocationOfSRAM = 0x6000;
 
             public const int SizeOfTrainer = 0x71ff - 0x7000;

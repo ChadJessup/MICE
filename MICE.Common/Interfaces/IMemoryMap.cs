@@ -8,6 +8,7 @@ namespace MICE.Common.Interfaces
     /// </summary>
     public interface IMemoryMap : ICollection<IMemorySegment>
     {
+        byte[] Data { get; }
         ushort ReadShort(int index);
         byte ReadByte(int index);
         void Write(int index, byte value);

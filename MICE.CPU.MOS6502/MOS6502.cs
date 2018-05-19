@@ -170,7 +170,8 @@ namespace MICE.CPU.MOS6502
             this.Registers = new Registers();
             this.Registers.PC.Write(this.MemoryMap.ReadShort(this.InterruptOffsets[InterruptType.Reset]));
 
-            this.stack = this.MemoryMap.GetMemorySegment<Stack>("Stack");
+            this.stack = new Stack(Stack.Constants.MemoryRange.SliceRange(this.MemoryMap.Data), "Stack");
+
             this.stack.SetInitialStackPointer(this.Registers.SP);
             this.stack.Push(0x00);
             this.stack.Push(0x00);
@@ -212,6 +213,11 @@ namespace MICE.CPU.MOS6502
         {
             this.LastAccessedAddress = "";
             this.StartCycle = this.CurrentCycle + 1;
+
+            if (this.StartCycle == 101)
+            {
+
+            }
 
             this.LastPC = this.Registers.PC.Read();
 

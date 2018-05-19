@@ -10,111 +10,41 @@ namespace MICE.Nintendo.Mappers
     [Mapper(MemoryMapperIds.NROM2)]
     public class NROM2 : BaseMapper
     {
-        protected Nametable nametable2000;
-        protected Nametable nametable2400;
-        protected Nametable nametable2800;
-        protected Nametable nametable2C00;
+        private byte[] memory = new byte[0x10000];
+        public Memory<byte> AllMemory { get; }
 
-        protected Memory<byte> programROMFirstBank;
-        protected Memory<byte> programROMLastBank;
-
-        protected Memory<byte> SRAM;
-
-        protected Memory<byte> CharacterROM0Bank;
-        protected Memory<byte> CharacterROM1Bank;
+        public Memory<byte> ExpansionROM { get; }
+        public Memory<byte> SRAM { get; private set; }
+        public Memory<byte> ProgramROMLowerBank { get; private set; }
+        public Memory<byte> ProgramROMUpperBank { get; private set; }
 
         public NROM2(NESCartridge cartridge, MemoryMapperIds id = MemoryMapperIds.NROM2)
             : base(id.ToString(), cartridge)
         {
+            this.AllMemory = new Memory<byte>(this.memory);
+            this.SRAM = MemoryRanges.SRAM.SliceRange(this.memory);
+            this.ExpansionROM = MemoryRanges.ExpansionROM.SliceRange(this.memory);
+            this.ProgramROMLowerBank = MemoryRanges.ProgramROMLowerBank.SliceRange(this.memory);
+            this.ProgramROMUpperBank = MemoryRanges.ProgramROMUpperBank.SliceRange(this.memory);
+
+            this.CopyCartridgeToLocal();
+        }
+
+        private void CopyCartridgeToLocal()
+        {
+            if (this.cartridge.SRAM != null)
+            {
+                this.cartridge.SRAM.CopyTo(this.SRAM);
+            }
+
+            this.cartridge.ProgramROMBanks.First().CopyTo(this.ProgramROMLowerBank);
+            this.cartridge.ProgramROMBanks.Last().CopyTo(this.ProgramROMUpperBank);
+
+
         }
 
         public override void AddMemorySegment(IMemorySegment memorySegment)
         {
-            if (!this.cartridge.CharacterRomBanks.Any())
-            {
-                this.cartridge.CharacterRomBanks.Add(new byte[0x2000]);
-            }
-
-            if (memorySegment.Range.IsInRange(MemoryRanges.ProgramRAM))
-            {
-                this.SRAM = this.cartridge.SRAM;
-            }
-            else if (memorySegment.Range.IsInRange(MemoryRanges.ProgramROMFirstBank))
-            {
-                this.programROMFirstBank = this.cartridge.ProgramROMBanks[0];
-            }
-            else if (memorySegment.Range.IsInRange(MemoryRanges.ProgramROMLastBank))
-            {
-                this.programROMLastBank = this.cartridge.ProgramROMBanks.Last();
-            }
-            else if (memorySegment.Range.IsInRange(MemoryRanges.CharacterROM0Range))
-            {
-                this.CharacterROM0Bank = this.cartridge.CharacterRomBanks[0];
-            }
-            else if (memorySegment.Range.IsInRange(MemoryRanges.CharacterROM1Range))
-            {
-                this.CharacterROM1Bank = this.cartridge.CharacterRomBanks.Count == 1
-                    ? this.cartridge.CharacterRomBanks[0]
-                    : this.cartridge.CharacterRomBanks[1];
-            }
-
-            if (MemoryRanges.NametableRange.IsInRange(memorySegment.Range))
-            {
-                this.MapNametable(memorySegment);
-            }
-        }
-
-        private void MapNametable(IMemorySegment memorySegment)
-        {
-            var nametable = (memorySegment as Nametable);
-            if (nametable == null)
-            {
-                throw new InvalidOperationException("NROM was given a non-Nametable memory segment in the range of a Nametable to map: " + memorySegment);
-            }
-
-            if (this.cartridge.MirroringMode == MirroringMode.SingleScreen)
-            {
-                this.nametable2000 = nametable;
-                this.nametable2400 = nametable;
-                this.nametable2800 = nametable;
-                this.nametable2C00 = nametable;
-            }
-            else if (this.cartridge.MirroringMode == MirroringMode.Horizontal)
-            {
-                switch (nametable.Range.Min)
-                {
-                    case 0x2000:
-                        this.nametable2000 = nametable;
-                        break;
-                    case 0x2400:
-                        this.nametable2400 = this.nametable2000;
-                        break;
-                    case 0x2800:
-                        this.nametable2800 = nametable;
-                        break;
-                    case 0x2C00:
-                        this.nametable2C00 = this.nametable2800;
-                        break;
-                }
-            }
-            else if (this.cartridge.MirroringMode == MirroringMode.Vertical)
-            {
-                switch (nametable.Range.Min)
-                {
-                    case 0x2000:
-                        this.nametable2000 = nametable;
-                        break;
-                    case 0x2800:
-                        this.nametable2800 = this.nametable2000;
-                        break;
-                    case 0x2400:
-                        this.nametable2400 = nametable;
-                        break;
-                    case 0x2C00:
-                        this.nametable2C00 = this.nametable2400;
-                        break;
-                }
-            }
         }
 
         /// <summary>
@@ -123,18 +53,9 @@ namespace MICE.Nintendo.Mappers
         /// </summary>
         /// <param name="index">The index to read from.</param>
         /// <returns>The data that was read.</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override ushort ReadShort(int index)
         {
-            switch (index)
-            {
-                case var _ when MemoryRanges.ProgramROMFirstBank.TryGetOffset(index, out int offset):
-                    return (ushort)(this.programROMFirstBank.Span[offset + 1] << 8 | this.programROMFirstBank.Span[offset]);
-                case var _ when MemoryRanges.ProgramROMLastBank.TryGetOffset(index, out int offset):
-                    return (ushort)(this.programROMLastBank.Span[offset + 1] << 8 | this.programROMLastBank.Span[offset]);
-                default:
-                    throw new NotImplementedException();
-            }
+            throw new NotImplementedException();
         }
 
         /// <summary>
@@ -143,69 +64,77 @@ namespace MICE.Nintendo.Mappers
         /// </summary>
         /// <param name="index">The index to read from.</param>
         /// <returns>The data that was read.</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override byte ReadByte(int index)
         {
+            if (index < 0x2000)
+            {
+                return this.cartridge.CharacterRomBanks[0][index];
+            }
+
+            return this.AllMemory.Span[index];
+
             switch (index)
             {
                 case var _ when MemoryRanges.ProgramROMFirstBank.TryGetOffset(index, out int offset):
-                    return this.programROMFirstBank.Span[offset];
+                    return this.AllMemory.Span[index];
                 case var _ when MemoryRanges.ProgramROMLastBank.TryGetOffset(index, out int offset):
-                    return this.programROMLastBank.Span[offset];
-                case var _ when MemoryRanges.CharacterROM1Range.TryGetOffset(index, out int offset):
-                    return this.CharacterROM1Bank.Span[index];
-                case var _ when MemoryRanges.Nametable0Range.TryGetOffset(index, out int offset):
-                    return this.nametable2000.Data[offset];
-                case var _ when MemoryRanges.Nametable1Range.TryGetOffset(index, out int offset):
-                    return this.nametable2400.Data[offset];
-                case var _ when MemoryRanges.Nametable2Range.TryGetOffset(index, out int offset):
-                    return this.nametable2800.Data[offset];
-                case var _ when MemoryRanges.Nametable3Range.TryGetOffset(index, out int offset):
-                    return this.nametable2C00.Data[offset];
-                case var _ when MemoryRanges.CharacterROM0Range.TryGetOffset(index, out int offset):
-                    return this.CharacterROM0Bank.Span[offset];
-                case var _ when MemoryRanges.ProgramRAM.TryGetOffset(index, out int offset):
+                    return this.AllMemory.Span[index];
+                case var _ when MemoryRanges.CharacterROM1.TryGetOffset(index, out int offset):
+                    return this.cartridge.CharacterRomBanks[0][index];
+                case var _ when MemoryRanges.Nametable0.TryGetOffset(index, out int offset):
+                    return this.AllMemory.Span[index];
+                case var _ when MemoryRanges.Nametable1.TryGetOffset(index, out int offset):
+                    return this.AllMemory.Span[index];
+                case var _ when MemoryRanges.Nametable2.TryGetOffset(index, out int offset):
+                    return this.AllMemory.Span[index];
+                case var _ when MemoryRanges.Nametable3.TryGetOffset(index, out int offset):
+                    return this.AllMemory.Span[index];
+                case var _ when MemoryRanges.CharacterROM0.TryGetOffset(index, out int offset):
+                    return this.cartridge.CharacterRomBanks[0][index];
+                case var _ when MemoryRanges.SRAM.TryGetOffset(index, out int offset):
                     return this.SRAM.Span[offset];
                 default:
                     throw new NotImplementedException();
             }
+
+            return this.AllMemory.Span[index];
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override void Write(int index, byte value)
         {
             switch (index)
             {
                 case var _ when MemoryRanges.ProgramROMFirstBank.TryGetOffset(index, out int offset):
-                    this.programROMFirstBank.Span[offset] = value;
+                    this.AllMemory.Span[index] = value;
                     break;
                 case var _ when MemoryRanges.ProgramROMLastBank.TryGetOffset(index, out int offset):
-                    this.programROMLastBank.Span[offset] = value;
+                    this.AllMemory.Span[index] = value;
                     break;
-                case var _ when MemoryRanges.Nametable0Range.TryGetOffset(index, out int offset):
-                    this.nametable2000.Data[offset] = value;
+                case var _ when MemoryRanges.Nametable0.TryGetOffset(index, out int offset):
+                    this.AllMemory.Span[index] = value;
                     break;
-                case var _ when MemoryRanges.Nametable1Range.TryGetOffset(index, out int offset):
-                    this.nametable2400.Data[offset] = value;
+                case var _ when MemoryRanges.Nametable1.TryGetOffset(index, out int offset):
+                    this.AllMemory.Span[index] = value;
                     break;
-                case var _ when MemoryRanges.Nametable2Range.TryGetOffset(index, out int offset):
-                    this.nametable2800.Data[offset] = value;
+                case var _ when MemoryRanges.Nametable2.TryGetOffset(index, out int offset):
+                    this.AllMemory.Span[index] = value;
                     break;
-                case var _ when MemoryRanges.Nametable3Range.TryGetOffset(index, out int offset):
-                    this.nametable2C00.Data[offset] = value;
+                case var _ when MemoryRanges.Nametable3.TryGetOffset(index, out int offset):
+                    this.AllMemory.Span[index] = value;
                     break;
-                case var _ when MemoryRanges.ProgramRAM.TryGetOffset(index, out int offset):
+                case var _ when MemoryRanges.SRAM.TryGetOffset(index, out int offset):
                     this.SRAM.Span[offset] = value;
                     break;
-                case var _ when MemoryRanges.CharacterROM0Range.TryGetOffset(index, out int offset):
-                    this.CharacterROM0Bank.Span[offset] = value;
+                case var _ when MemoryRanges.CharacterROM0.TryGetOffset(index, out int offset):
+                    this.AllMemory.Span[index] = value;
                     break;
-                case var _ when MemoryRanges.CharacterROM1Range.TryGetOffset(index, out int offset):
-                    this.CharacterROM1Bank.Span[offset] = value;
+                case var _ when MemoryRanges.CharacterROM1.TryGetOffset(index, out int offset):
+                    this.AllMemory.Span[index] = value;
                     break;
                 default:
                     throw new NotImplementedException();
             }
+            this.AllMemory.Span[index] = value;
         }
 
         public override void CopyBytes(ushort startAddress, Span<byte> destination, int destinationIndex, int length) => throw new NotImplementedException();

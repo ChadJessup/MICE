@@ -138,11 +138,11 @@ namespace MICE.Nintendo
 
         private void MapToCartridge()
         {
-            this.CPUMemoryMap.GetMemorySegment<SRAM>("SRAM").AttachHandler(this.Cartridge.Mapper);
+            this.CPUMemoryMap.GetMemorySegment<IExternal>("External").AttachHandler(this.Cartridge.Mapper);
 
             // Various parts of a cartridge are mapped into the NES's CPU memory map.
-            this.CPUMemoryMap.GetMemorySegment<IExternal>("PRG-ROM Lower Bank").AttachHandler(this.Cartridge.Mapper);
-            this.CPUMemoryMap.GetMemorySegment<IExternal>("PRG-ROM Upper Bank").AttachHandler(this.Cartridge.Mapper);
+            //this.CPUMemoryMap.GetMemorySegment<IExternal>("PRG-ROM Lower Bank").AttachHandler(this.Cartridge.Mapper);
+            //this.CPUMemoryMap.GetMemorySegment<IExternal>("PRG-ROM Upper Bank").AttachHandler(this.Cartridge.Mapper);
 
             // Various parts of a cartridge are mapped into the NES's PPU memory map.
             this.PPU.MemoryMap.GetMemorySegment<PatternTable>("Pattern Table 0").AttachHandler(this.Cartridge.Mapper);

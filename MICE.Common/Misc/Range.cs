@@ -35,7 +35,12 @@ namespace MICE.Common.Misc
             return this.min.Equals(other.min) && this.max.Equals(other.max);
         }
 
-        public override string ToString() => $"Min: 0x{this.min:X4} Max: 0x{this.max:X4}";
+        public override string ToString() => $"Min: 0x{this.min:X4} Max: 0x{this.max:X4} Length: {(this.max - this.min)}";
+
+        public Memory<byte> SliceRange(byte[] bytes)
+        {
+            return new Memory<byte>(bytes, this.Min, (this.Max - this.Min) + 1);
+        }
 
         public bool TryGetOffset(int index, out int offset)
         {

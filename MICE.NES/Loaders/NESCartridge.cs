@@ -1,4 +1,5 @@
-﻿using MICE.Nintendo.Interfaces;
+﻿using MICE.Common.Interfaces;
+using MICE.Nintendo.Interfaces;
 using MICE.Nintendo.Mappers;
 using System;
 using System.Collections.Generic;

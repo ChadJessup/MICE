@@ -60,6 +60,9 @@ namespace MICE.Common.Misc
         // Standard collection methods...
         public bool IsReadOnly => false;
         public int Count => this.memorySegments.Count;
+
+        public byte[] Data => throw new NotImplementedException();
+
         public void Clear() => this.memorySegments.Clear();
         public bool Remove(IMemorySegment item) => this.memorySegments.Remove(item);
         IEnumerator IEnumerable.GetEnumerator() => this.memorySegments.GetEnumerator();

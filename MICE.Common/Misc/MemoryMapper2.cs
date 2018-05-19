@@ -11,6 +11,8 @@ namespace MICE.Common.Misc
 
         public bool IsReadOnly => throw new NotImplementedException();
 
+        public byte[] Data => throw new NotImplementedException();
+
         public void Add(IMemorySegment item)
         {
             throw new NotImplementedException();
