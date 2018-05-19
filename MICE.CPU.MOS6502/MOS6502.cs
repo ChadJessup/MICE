@@ -214,6 +214,11 @@ namespace MICE.CPU.MOS6502
             this.LastAccessedAddress = "";
             this.StartCycle = this.CurrentCycle + 1;
 
+            if (this.StartCycle == 101)
+            {
+
+            }
+
             this.LastPC = this.Registers.PC.Read();
 
             this.CurrentOpcode = this.Opcodes[this.ReadNextByte()];
