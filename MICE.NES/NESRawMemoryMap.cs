@@ -141,11 +141,11 @@ namespace MICE.Nintendo
             }
             else if (index == 0x4016)
             {
-                this.Controller1?.ReadByte(index);
+                return this.Controller1?.ReadByte(index) ?? 0x40;
             }
             else if (index == 0x4017)
             {
-                this.Controller2?.ReadByte(index);
+                return this.Controller2?.ReadByte(index) ?? 0x40;
             }
             else if (index < 0xFFFF)
             {
