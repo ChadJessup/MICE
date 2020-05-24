@@ -1,5 +1,6 @@
-﻿using MICE.Common.Misc;
-using System;
+﻿using System;
+
+using Range = MICE.Common.Misc.Range;
 
 namespace MICE.Common.Interfaces
 {

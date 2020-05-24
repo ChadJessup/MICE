@@ -23,7 +23,7 @@ namespace MICE.Common.Misc
 
         public bool IsOverlapped(Range other) => Min.CompareTo(other.Max) <= 0 && other.Min.CompareTo(Max) <= 0;
         public override int GetHashCode() => this.min.GetHashCode() + this.max.GetHashCode();
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             if (!(obj is Range))
             {
@@ -51,8 +51,8 @@ namespace MICE.Common.Misc
             }
 
             offset = this.min == 0
-                ? offset = index
-                : offset = index - min;
+                ? index
+                : index - min;
 
             return true;
         }

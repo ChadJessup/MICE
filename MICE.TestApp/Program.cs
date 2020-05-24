@@ -1,5 +1,4 @@
-﻿using BenchmarkDotNet.Running;
-using System;
+﻿using System;
 using System.Windows.Forms;
 
 namespace MICE.TestApp
@@ -14,7 +13,8 @@ namespace MICE.TestApp
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new Form1());
+            using var form = new Form1();
+            Application.Run(form);
         }
     }
 }

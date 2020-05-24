@@ -1,5 +1,5 @@
 ﻿using ByteSizeLib;
-using ICSharpCode.SharpZipLib.Checksums;
+using ICSharpCode.SharpZipLib.Checksum;
 using MICE.Common.Helpers;
 using MICE.Nintendo.Databases;
 using Serilog;

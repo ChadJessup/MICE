@@ -1,6 +1,5 @@
 ﻿using MICE.Common.Interfaces;
 using MICE.WPF.ViewModels;
-using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -23,7 +22,7 @@ namespace MICE.WPF
             this.VM = new MemoryViewerViewModel(nesVM);
             this.DataContext = this.VM;
 
-            this.InitializeComponent();
+            //this.InitializeComponent();
         }
 
         private void MemorySelectorLoaded(object sender, RoutedEventArgs e)
@@ -43,7 +42,7 @@ namespace MICE.WPF
             var comboBox = (sender as ComboBox);
             var memorySegment = (IMemorySegment)comboBox.SelectedItem;
 
-            this.HexEditor.DataContext = memorySegment.GetBytes();
+            //this.HexEditor.DataContext = memorySegment.GetBytes();
 //            var memorySection = this.VM.GetMemorySegment(selectedItem.Key);
         }
     }

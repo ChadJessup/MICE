@@ -1,7 +1,7 @@
-﻿using MICE.Common.Misc;
-using MICE.Components.Memory;
+﻿using MICE.Components.Memory;
 using MICE.Nintendo.Interfaces;
 using System;
+using Range = MICE.Common.Misc.Range;
 
 namespace MICE.Nintendo.Components
 {

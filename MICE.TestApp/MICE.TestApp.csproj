@@ -1,141 +1,24 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{1319AD9A-4AB0-4E69-8951-2C9F17C701F5}</ProjectGuid>
-    <OutputType>Exe</OutputType>
-    <RootNamespace>MICE.TestApp</RootNamespace>
-    <AssemblyName>MICE.TestApp</AssemblyName>
-    <TargetFrameworkVersion>v4.7.1</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
-    <TargetFrameworkProfile />
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net5.0</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <UseWPF>true</UseWPF>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-  </PropertyGroup>
-  <PropertyGroup>
-    <StartupObject />
-  </PropertyGroup>
+
   <ItemGroup>
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Deployment" />
-    <Reference Include="System.Drawing" />
-    <Reference Include="System.Net.Http" />
-    <Reference Include="System.Windows.Forms" />
-    <Reference Include="System.Xml" />
-    <Reference Include="WindowsBase" />
+    <PackageReference Include="SharpDX" Version="4.2.0" />
+    <PackageReference Include="SharpDX.DirectInput" Version="4.2.0" />
   </ItemGroup>
+
   <ItemGroup>
-    <Compile Include="Form1.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Form1.Designer.cs">
-      <DependentUpon>Form1.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Inputs\KeyboardController.cs" />
-    <Compile Include="NintendoModule.cs" />
-    <Compile Include="Program.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <EmbeddedResource Include="Form1.resx">
-      <DependentUpon>Form1.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Properties\Resources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <Compile Include="Properties\Resources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Resources.resx</DependentUpon>
-      <DesignTime>True</DesignTime>
-    </Compile>
-    <None Include="Properties\Settings.settings">
-      <Generator>SettingsSingleFileGenerator</Generator>
-      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
-    </None>
-    <Compile Include="Properties\Settings.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Settings.settings</DependentUpon>
-      <DesignTimeSharedInput>True</DesignTimeSharedInput>
-    </Compile>
+    <ProjectReference Include="..\MICE.Common\MICE.Common.csproj" />
+    <ProjectReference Include="..\MICE.Components\MICE.Components.csproj" />
+    <ProjectReference Include="..\MICE.CPU.MOS6502\MICE.CPU.MOS6502.csproj" />
+    <ProjectReference Include="..\MICE.NES\MICE.Nintendo.csproj" />
+    <ProjectReference Include="..\MICE.PPU.RicohRP2C02\MICE.PPU.RicohRP2C02.csproj" />
   </ItemGroup>
-  <ItemGroup>
-    <None Include="App.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\MICE.Common\MICE.Common.csproj">
-      <Project>{6f9d83f1-abc5-4fee-a358-28f3bd5309a4}</Project>
-      <Name>MICE.Common</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\MICE.Components\MICE.Components.csproj">
-      <Project>{949FFBF4-4E43-439A-A218-CABAF48E32C9}</Project>
-      <Name>MICE.Components</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\MICE.CPU.MOS6502\MICE.CPU.MOS6502.csproj">
-      <Project>{099A3D39-9B43-412B-8B04-BCACA2C281F1}</Project>
-      <Name>MICE.CPU.MOS6502</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\MICE.NES\MICE.Nintendo.csproj">
-      <Project>{30E26A15-7C9F-4602-811E-96D6E27F189C}</Project>
-      <Name>MICE.Nintendo</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\MICE.PPU.RicohRP2C02\MICE.PPU.RicohRP2C02.csproj">
-      <Project>{1c6429e4-5df1-4789-948c-8f076e3aba4e}</Project>
-      <Name>MICE.PPU.RicohRP2C02</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="BenchmarkDotNet">
-      <Version>0.10.14</Version>
-    </PackageReference>
-    <PackageReference Include="Serilog">
-      <Version>2.6.0</Version>
-    </PackageReference>
-    <PackageReference Include="Serilog.Sinks.ColoredConsole">
-      <Version>3.0.1</Version>
-    </PackageReference>
-    <PackageReference Include="Serilog.Sinks.Console">
-      <Version>3.1.1</Version>
-    </PackageReference>
-    <PackageReference Include="Serilog.Sinks.File">
-      <Version>4.0.0</Version>
-    </PackageReference>
-    <PackageReference Include="SharpDX.DirectInput">
-      <Version>4.0.1</Version>
-    </PackageReference>
-    <PackageReference Include="SharpDX.XInput">
-      <Version>4.0.1</Version>
-    </PackageReference>
-    <PackageReference Include="System.Memory">
-      <Version>4.5.0-preview2-26406-04</Version>
-    </PackageReference>
-  </ItemGroup>
-  <ItemGroup />
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+
 </Project>

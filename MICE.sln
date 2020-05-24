@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.27130.2036
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30114.105
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MICE.Common", "MICE.Common\MICE.Common.csproj", "{6F9D83F1-ABC5-4FEE-A358-28F3BD5309A4}"
 EndProject
@@ -21,15 +21,16 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WpfHexaEditor.NET47", "WpfH
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{CB330F42-053F-4B36-9F6C-4908DF2E89ED}"
 	ProjectSection(SolutionItems) = preProject
+		.gitattributes = .gitattributes
+		.gitignore = .gitignore
+		Directory.Build.props = Directory.Build.props
 		Performance1.psess = Performance1.psess
+		README.md = README.md
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MICE.Benchmark", "MICE.Benchmark\MICE.Benchmark.csproj", "{05E9207E-CC06-48F1-AA17-B73A37C6F301}"
 EndProject
 Global
-	GlobalSection(Performance) = preSolution
-		HasPerformanceSessions = true
-	EndGlobalSection
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		WpfHexEditorControl\WpfHexaEditor.Shared\WpfHexaEditor.Shared.projitems*{cf6ac02d-02fa-4ee9-a507-bd94f489972e}*SharedItemsImports = 4
 	EndGlobalSection
@@ -80,6 +81,9 @@ Global
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {4E411B99-DC47-4BC5-B7F1-FFE93268C599}
+	EndGlobalSection
+	GlobalSection(Performance) = preSolution
+		HasPerformanceSessions = true
 	EndGlobalSection
 	GlobalSection(Performance) = preSolution
 		HasPerformanceSessions = true

@@ -168,7 +168,10 @@ namespace MICE.CPU.MOS6502
             this.CurrentCycle = -1;
             this.Opcodes = new Opcodes(this);
             this.Registers = new Registers();
-            this.Registers.PC.Write(this.MemoryMap.ReadShort(this.InterruptOffsets[InterruptType.Reset]));
+
+            var resetVector = this.InterruptOffsets[InterruptType.Reset];
+            var startMemoryLocation = this.MemoryMap.ReadShort(resetVector);
+            this.Registers.PC.Write(startMemoryLocation);
 
             this.stack = new Stack(Stack.Constants.MemoryRange.SliceRange(this.MemoryMap.Data), "Stack");
 

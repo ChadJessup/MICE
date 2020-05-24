@@ -6,6 +6,7 @@ using MICE.Nintendo.Interfaces;
 using SharpDX.DirectInput;
 using System;
 using System.Threading.Tasks;
+using Range = MICE.Common.Misc.Range;
 
 namespace MICE.TestApp
 {

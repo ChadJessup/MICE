@@ -1,7 +1,6 @@
 ﻿using MICE.WPF.ViewModels;
 using Microsoft.Win32;
-using System;
-using System.Linq;
+using System.IO;
 using System.Windows;
 using System.Windows.Input;
 
@@ -23,12 +22,12 @@ namespace MICE.WPF
 
         private void OpenCommandExecuted(object sender, ExecutedRoutedEventArgs e)
         {
-            if (string.IsNullOrWhiteSpace(Properties.Settings.Default.LastDirectory))
-            {
-                Properties.Settings.Default.LastDirectory = Environment.CurrentDirectory;
-            }
+            // if (string.IsNullOrWhiteSpace(Properties.Settings.Default.LastDirectory))
+            // {
+            //     Properties.Settings.Default.LastDirectory = Environment.CurrentDirectory;
+            // }
 
-            var initialDirectory = Properties.Settings.Default.LastDirectory;
+            var initialDirectory = Directory.GetCurrentDirectory();// Properties.Settings.Default.LastDirectory;
 
             OpenFileDialog openFileDialog = new OpenFileDialog
             {
@@ -39,8 +38,8 @@ namespace MICE.WPF
 
             if (openFileDialog.ShowDialog() == true)
             {
-                Properties.Settings.Default.LastDirectory = System.IO.Path.GetDirectoryName(openFileDialog.FileName);
-                Properties.Settings.Default.Save();
+                // Properties.Settings.Default.LastDirectory = System.IO.Path.GetDirectoryName(openFileDialog.FileName);
+                // Properties.Settings.Default.Save();
 
                 (this.viewport.DataContext as NESViewModel).LoadCartridge(openFileDialog.FileName);
             }

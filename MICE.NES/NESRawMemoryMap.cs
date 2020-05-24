@@ -1,14 +1,13 @@
 ﻿using MICE.Common.Interfaces;
-using MICE.Common.Misc;
 using MICE.Components.CPU;
 using MICE.Nintendo.Handlers;
 using MICE.Nintendo.Interfaces;
-using MICE.Nintendo.Loaders;
 using MICE.PPU.RicohRP2C02;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using Range = MICE.Common.Misc.Range;
 
 namespace MICE.Nintendo
 {

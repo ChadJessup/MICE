@@ -1,6 +1,6 @@
 ﻿using MICE.Common.Interfaces;
-using MICE.Common.Misc;
 using System;
+using Range = MICE.Common.Misc.Range;
 
 namespace MICE.Nintendo
 {

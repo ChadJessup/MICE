@@ -1,8 +1,8 @@
 ﻿using MICE.Common.Interfaces;
-using MICE.Common.Misc;
 using MICE.Components.CPU;
 using MICE.Components.Memory;
 using System;
+using Range = MICE.Common.Misc.Range;
 
 namespace MICE.CPU.MOS6502
 {

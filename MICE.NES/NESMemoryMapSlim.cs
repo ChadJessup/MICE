@@ -1,5 +1,4 @@
 ﻿using MICE.Common.Interfaces;
-using MICE.Common.Misc;
 using MICE.Components.CPU;
 using MICE.Components.Memory;
 using MICE.Nintendo.Handlers;
@@ -9,6 +8,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using Range = MICE.Common.Misc.Range;
 
 namespace MICE.Nintendo
 {
