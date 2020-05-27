@@ -13,7 +13,7 @@ namespace MICE.Nintendo.Loaders
     {
         private static class Constants
         {
-            public static int ROMBankSize = (int)ByteSize.FromKiloBytes(16.0).Bytes;
+            public static int ROMBankSize = (int)ByteSize.FromKibiBytes(16.0).Bytes;
             public const int ChrBankSize = 8192;
 
             public const int SizeOfHeader = 16;

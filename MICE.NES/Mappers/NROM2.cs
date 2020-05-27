@@ -1,6 +1,8 @@
 ﻿using MICE.Common.Interfaces;
 using MICE.Nintendo.Loaders;
 using System;
+using System.Buffers;
+using System.IO;
 using System.Linq;
 
 namespace MICE.Nintendo.Mappers
@@ -11,6 +13,8 @@ namespace MICE.Nintendo.Mappers
         private byte[] memory = new byte[0x10000];
         public Memory<byte> AllMemory { get; }
 
+        private readonly MemoryHandle memoryHandle;
+
         public Memory<byte> ExpansionROM { get; }
         public Memory<byte> SRAM { get; private set; }
         public Memory<byte> ProgramROMLowerBank { get; private set; }
@@ -20,12 +24,27 @@ namespace MICE.Nintendo.Mappers
             : base(id.ToString(), cartridge)
         {
             this.AllMemory = new Memory<byte>(this.memory);
-            this.SRAM = MemoryRanges.SRAM.SliceRange(this.memory);
-            this.ExpansionROM = MemoryRanges.ExpansionROM.SliceRange(this.memory);
-            this.ProgramROMLowerBank = MemoryRanges.ProgramROMLowerBank.SliceRange(this.memory);
-            this.ProgramROMUpperBank = MemoryRanges.ProgramROMUpperBank.SliceRange(this.memory);
+            this.memoryHandle = this.AllMemory.Pin();
+            this.SRAM = MemoryRanges.SRAM.SliceRange(this.AllMemory);
+            this.ExpansionROM = MemoryRanges.ExpansionROM.SliceRange(this.AllMemory);
+            this.ProgramROMLowerBank = MemoryRanges.ProgramROMLowerBank.SliceRange(this.AllMemory);
+            this.ProgramROMUpperBank = MemoryRanges.ProgramROMUpperBank.SliceRange(this.AllMemory);
 
             this.CopyCartridgeToLocal();
+
+            // this.DumpMemoryBanks();
+        }
+
+        private void DumpMemoryBanks()
+        {
+            var path = @"c:\dumps\";
+            Directory.CreateDirectory(path);
+
+            File.WriteAllBytes(Path.Combine(path, "allMemory.hex"), this.AllMemory.ToArray());
+            File.WriteAllBytes(Path.Combine(path, "sram.hex"), this.SRAM.ToArray());
+            File.WriteAllBytes(Path.Combine(path, "expansion.hex"), this.ExpansionROM.ToArray());
+            File.WriteAllBytes(Path.Combine(path, "progromlow.hex"), this.ProgramROMLowerBank.ToArray());
+            File.WriteAllBytes(Path.Combine(path, "progromup.hex"), this.ProgramROMUpperBank.ToArray());
         }
 
         private void CopyCartridgeToLocal()
@@ -37,8 +56,6 @@ namespace MICE.Nintendo.Mappers
 
             this.cartridge.ProgramROMBanks.First().CopyTo(this.ProgramROMLowerBank);
             this.cartridge.ProgramROMBanks.Last().CopyTo(this.ProgramROMUpperBank);
-
-
         }
 
         public override void AddMemorySegment(IMemorySegment memorySegment)

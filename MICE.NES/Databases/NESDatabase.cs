@@ -101,17 +101,17 @@ namespace MICE.Nintendo.Databases
                     switch (board)
                     {
                         case DatabaseGameCartridgeBoardPrg prg:
-                            newEntry.ProgramROMSize = (int)ByteSize.FromKiloBytes(double.Parse(prg.size.Replace("k", ""))).Bytes;
+                            newEntry.ProgramROMSize = (int)ByteSize.FromKibiBytes(double.Parse(prg.size.Replace("k", ""))).Bytes;
                             break;
                         case DatabaseGameCartridgeBoardVram vram:
-                            newEntry.VideoRAMSize = (int)ByteSize.FromKiloBytes(double.Parse(vram.size.Replace("k", ""))).Bytes;
+                            newEntry.VideoRAMSize = (int)ByteSize.FromKibiBytes(double.Parse(vram.size.Replace("k", ""))).Bytes;
                             break;
                         case DatabaseGameCartridgeBoardWram wram:
-                            newEntry.WritableRAMSize = (int)ByteSize.FromKiloBytes(double.Parse(wram.size.Replace("k", ""))).Bytes;
+                            newEntry.WritableRAMSize = (int)ByteSize.FromKibiBytes(double.Parse(wram.size.Replace("k", ""))).Bytes;
                             newEntry.HasBattery = wram.battery == 1 ? true : false;
                             break;
                         case DatabaseGameCartridgeBoardChr chr:
-                            newEntry.CharacterRomSize = (int)ByteSize.FromKiloBytes(double.Parse(chr.size.Replace("k", ""))).Bytes;
+                            newEntry.CharacterRomSize = (int)ByteSize.FromKibiBytes(double.Parse(chr.size.Replace("k", ""))).Bytes;
                             break;
                         case DatabaseGameCartridgeBoardChip chip:
                             break;

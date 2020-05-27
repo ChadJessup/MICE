@@ -37,10 +37,15 @@ namespace MICE.Common.Misc
 
         public override string ToString() => $"Min: 0x{this.min:X4} Max: 0x{this.max:X4} Length: {(this.max - this.min)}";
 
-        public Memory<byte> SliceRange(byte[] bytes)
+        public Memory<byte> SliceRange(Memory<byte> memory)
         {
-            return new Memory<byte>(bytes, this.Min, (this.Max - this.Min) + 1);
+            return memory.Slice(this.Min, (this.Max - this.Min) + 1);
         }
+
+        // public Memory<byte> SliceRange(byte[] bytes)
+        // {
+        //     return new Memory<byte>(bytes, this.Min, (this.Max - this.Min) + 1);
+        // }
 
         public bool TryGetOffset(int index, out int offset)
         {
