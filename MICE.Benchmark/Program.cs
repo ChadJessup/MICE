@@ -1,4 +1,5 @@
 ﻿using MICE.Nintendo;
+using MICE.Nintendo.Loaders;
 using Ninject;
 using System;
 using System.Diagnostics;
