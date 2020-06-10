@@ -1,6 +1,5 @@
 ﻿using MICE.Common.Interfaces;
 using MICE.PPU.RicohRP2C02.Components;
-using Ninject;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,7 +21,7 @@ namespace MICE.PPU.RicohRP2C02.Handlers
 
         private readonly PPURawMemoryMap memoryMap;
 
-        public PaletteHandler([Named("PPU")] IMemoryMap memoryMap)
+        public PaletteHandler(IPPUMemoryMap memoryMap)
         {
             this.memoryMap = (PPURawMemoryMap)memoryMap;
 

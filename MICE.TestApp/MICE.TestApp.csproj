@@ -19,6 +19,7 @@
     <ProjectReference Include="..\MICE.CPU.MOS6502\MICE.CPU.MOS6502.csproj" />
     <ProjectReference Include="..\MICE.NES\MICE.Nintendo.csproj" />
     <ProjectReference Include="..\MICE.PPU.RicohRP2C02\MICE.PPU.RicohRP2C02.csproj" />
+    <ProjectReference Include="..\Processors\LR35902\MICE.CPU.LR35902.csproj" />
   </ItemGroup>
 
 </Project>

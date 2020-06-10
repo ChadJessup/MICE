@@ -1,14 +1,22 @@
-﻿using MICE.Common.Misc;
+﻿using MICE.Common.Interfaces;
+using MICE.Common.Misc;
 using MICE.Components.Memory;
 using MICE.PPU.RicohRP2C02.Components;
-using System.IO;
 
 namespace MICE.PPU.RicohRP2C02
 {
+    public interface IPPUMemoryMap : IMemoryMap
+    {
+        /// <summary>
+        /// Gets or sets the read buffer that is buffered by certain PPU Reads/Writes.
+        /// </summary>
+        public byte ReadBuffer { get; set; }
+    }
+
     /// <summary>
     /// A class that represents how the NES PPU's memory is mapped out.
     /// </summary>
-    public class PPURawMemoryMap : MemoryMapper
+    public class PPURawMemoryMap : MemoryMapper, IPPUMemoryMap
     {
         public PPURawMemoryMap() : base()
         {

@@ -1,10 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace MICE.Common.Interfaces
+﻿namespace MICE.Common.Interfaces
 {
-    public interface ILoader
+    public interface ILoader : IMICEComponent
     {
+        TCartridge Load<TCartridge>(string path) where TCartridge : ICartridge;
     }
 }

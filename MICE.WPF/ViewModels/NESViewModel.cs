@@ -2,6 +2,7 @@
 using MICE.Nintendo;
 using MICE.Nintendo.Loaders;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
@@ -63,11 +64,13 @@ namespace MICE.WPF.ViewModels
 
         public string Name => this.NES.Name;
 
+        public IEnumerable<IMICEComponent> Components { get; }
+
         public void LoadCartridge(string fileName)
         {
-            this.Cartridge = NESLoader.CreateCartridge(fileName);
-
-            this.NES.LoadCartridge(this.Cartridge);
+            //this.Cartridge = NESLoader.CreateCartridge(fileName);
+            //
+            //this.NES.Load(this.Cartridge);
 
             this.IsPoweredOn = true;
 
@@ -109,6 +112,16 @@ namespace MICE.WPF.ViewModels
             => this.PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 
         public void InputChanged(object inputs)
+        {
+            throw new NotImplementedException();
+        }
+
+        public ILoader GetLoader()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Load<TCartridge>(TCartridge cartridge)
         {
             throw new NotImplementedException();
         }

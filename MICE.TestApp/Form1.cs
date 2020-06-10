@@ -1,6 +1,5 @@
 ﻿using MICE.Nintendo;
 using MICE.Nintendo.Loaders;
-using Ninject;
 using System;
 using System.Drawing;
 using System.Drawing.Drawing2D;
@@ -19,13 +18,11 @@ namespace MICE.TestApp
         private NES nes;
         private Bitmap bitmap;
         private Graphics graphics;
-        private IKernel injectionKernel;
 
         public Form1()
         {
             this.InitializeComponent();
-
-            this.injectionKernel = new StandardKernel(new NintendoModule());
+            NES.IsDebug = true;
 
             this.graphics = this.CreateGraphics();
             this.graphics.InterpolationMode = InterpolationMode.NearestNeighbor;
@@ -103,12 +100,12 @@ namespace MICE.TestApp
 
         private void Go()
         {
-            this.nes = this.injectionKernel.Get<NES>();
+            //this.nes = this.injectionKernel.Get<NES>();
 
             this.nes.InputHandler.SetController1(new KeyboardController(this.nes.InputHandler, new Range(0x4016, 0x4016), "Control Input 1"));
             //this.nes.InputHandler.SetController2(new KeyboardController(new Range(0x4017, 0x4017), "Control Input 2"));
 
-            var cartridge = NESLoader.CreateCartridge(@"C:\Emulators\NES\Games\World\Donkey Kong (JU).nes");
+            //var cartridge = NESLoader.CreateCartridge(@"C:\Emulators\NES\Games\World\Donkey Kong (JU).nes");
             //var cartridge = NESLoader.CreateCartridge(@"C:\Emulators\NES\Games\Super Mario Bros.nes");
             //var cartridge = NESLoader.CreateCartridge(@"C:\Emulators\NES\Games\USA\Legend of Zelda, The (U) (PRG 1).nes");
             //var cartridge = NESLoader.CreateCartridge(@"C:\Emulators\NES\Games\USA\Bionic Commando (U).nes");
@@ -120,7 +117,7 @@ namespace MICE.TestApp
 
             // CPU Tests
             // PASSING
-            //var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\nes_instr_test\rom_singles\01-implied.nes");
+            var cartridge = new NESLoader().Load<NESCartridge>(@"C:\src\emulators\nes-test-roms\nes_instr_test\rom_singles\01-implied.nes");
             //var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\nes_instr_test\rom_singles\02-immediate.nes");
             //var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\nes_instr_test\rom_singles\03-zero_page.nes");
             //var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\nes_instr_test\rom_singles\04-zp_xy.nes");
@@ -189,7 +186,7 @@ namespace MICE.TestApp
             //var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\sprite_overflow_tests\4.Obscure.nes");
             //var cartridge = NESLoader.CreateCartridge(@"C:\src\emulators\nes-test-roms\sprite_overflow_tests\5.Emulator.nes");
 
-            this.nes.LoadCartridge(cartridge);
+            this.nes.Load(cartridge);
 
             this.nes.PowerOn();
 

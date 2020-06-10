@@ -1,6 +1,5 @@
 ﻿using MICE.Common.Interfaces;
 using MICE.PPU.RicohRP2C02.Components;
-using Ninject;
 using System.Collections.Generic;
 
 namespace MICE.PPU.RicohRP2C02.Handlers
@@ -15,15 +14,16 @@ namespace MICE.PPU.RicohRP2C02.Handlers
 
         private readonly PPURegisters registers;
         private readonly IMemoryMap ppuMemoryMap;
-        private readonly IMemoryMap cpuMemoryMap;
         private readonly PaletteHandler paletteHandler;
         private readonly List<Sprite> currentSprites = new List<Sprite>(Constants.MaxSprites);
         private readonly List<Sprite> currentScanlineSprites = new List<Sprite>(Constants.MaxSprites);
 
-        public SpriteHandler([Named("PPU")] IMemoryMap ppuMemoryMap, PPURegisters registers, PaletteHandler paletteHandler, [Named("CPU")] IMemoryMap cpuMemoryMap)
+        public SpriteHandler(
+            IPPUMemoryMap ppuMemoryMap,
+            PPURegisters registers,
+            PaletteHandler paletteHandler)
         {
             this.registers = registers;
-            this.cpuMemoryMap = cpuMemoryMap;
             this.ppuMemoryMap = ppuMemoryMap;
             this.paletteHandler = paletteHandler;
         }
@@ -184,7 +184,7 @@ namespace MICE.PPU.RicohRP2C02.Handlers
                 {
                     // I think NESDev is wrong here?...would cause issues. 0 in-range sprites would take up
                     // entire secondary OAM twice-over, methinks?
-                   // secondaryOAM[secondaryOAMIndex++] = spriteY;
+                    // secondaryOAM[secondaryOAMIndex++] = spriteY;
                 }
 
                 int spriteRow = scanLine - spriteY;

@@ -1,10 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <PackageReference Include="BenchmarkDotNet.Core" Version="0.10.14" />
     <PackageReference Include="ByteSize" Version="2.0.0" />
-    <PackageReference Include="Ninject" Version="4.0.0-beta-0134" />
-    <PackageReference Include="Serilog" Version="2.9.1-dev-01177" />
+    <PackageReference Include="Serilog" Version="2.10.0-dev-01187" />
     <PackageReference Include="Serilog.Sinks.ColoredConsole" Version="3.0.1" />
     <PackageReference Include="Serilog.Sinks.Console" Version="4.0.0-dev-00839" />
     <PackageReference Include="Serilog.Sinks.File" Version="5.0.0-dev-00880" />

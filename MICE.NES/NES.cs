@@ -53,7 +53,7 @@ namespace MICE.Nintendo
 
         public NES(NESContext context)
         {
-            NES.IsDebug = false;
+            NES.IsDebug = true;
 
             this.context = context;
 
@@ -277,9 +277,9 @@ namespace MICE.Nintendo
         /// Loads an <seealso cref="NESCartridge"/> into the NES system.
         /// </summary>
         /// <param name="cartridge">The cartridge to load.</param>
-        public void LoadCartridge(NESCartridge cartridge)
+        public void Load<TCartridge>(TCartridge cartridge)
         {
-            this.Cartridge = cartridge;
+            this.Cartridge = cartridge as NESCartridge;
             this.CartridgeLoaded?.Invoke(this, new CartridgeLoadedArgs(this.Cartridge));
         }
 
@@ -339,5 +339,11 @@ namespace MICE.Nintendo
         public EventHandler<NintendoStepArgs> StepCompleted { get; set; }
         public EventHandler<FrameCompleteArgs> FrameFinished { get; set; }
         public EventHandler<CartridgeLoadedArgs> CartridgeLoaded { get; set; }
+        public IEnumerable<IMICEComponent> Components { get; }
+
+        public ILoader GetLoader()
+        {
+            return new NESLoader();
+        }
     }
 }
