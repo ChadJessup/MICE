@@ -53,7 +53,7 @@ namespace MICE.Nintendo
 
         public NES(NESContext context)
         {
-            NES.IsDebug = true;
+            NES.IsDebug = false;
 
             this.context = context;
 

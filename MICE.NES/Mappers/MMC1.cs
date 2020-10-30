@@ -6,6 +6,7 @@ using MICE.PPU.RicohRP2C02.Components;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 
 namespace MICE.Nintendo.Mappers
 {
@@ -52,6 +53,7 @@ namespace MICE.Nintendo.Mappers
             if (!this.cartridge.CharacterRomBanks.Any())
             {
                 this.cartridge.CharacterRomBanks.Add(new byte[0x2000]);
+//                this.currentProgramROMBankC000 = this.cartridge.ProgramROMBanks.First();
             }
 
             if (memorySegment.Range.Min >= 0x2000 && memorySegment.Range.Min <= 0x2C00)
@@ -96,6 +98,7 @@ namespace MICE.Nintendo.Mappers
         /// </summary>
         /// <param name="index">The index to read from.</param>
         /// <returns>The data that was read.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override ushort ReadShort(int index) => (ushort) (this.ReadByte(index + 1) << 8 | this.ReadByte(index));
 
         /// <summary>
@@ -104,6 +107,7 @@ namespace MICE.Nintendo.Mappers
         /// </summary>
         /// <param name="index">The index to read from.</param>
         /// <returns>The data that was read.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override byte ReadByte(int address)
         {
             switch (address)
@@ -128,6 +132,7 @@ namespace MICE.Nintendo.Mappers
             throw new InvalidOperationException($"Invalid memory range and/or size (byte) was requested to be read from in NROM Mapper: 0x{address:X4}");
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override void Write(int address, byte value)
         {
             switch (address)
@@ -154,6 +159,7 @@ namespace MICE.Nintendo.Mappers
         public override void CopyBytes(ushort startAddress, Span<byte> destination, int destinationIndex, int length) => throw new NotImplementedException();
 
         private int loadRegisterWriteCount = 0;
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void HandleLoadRegister(int address, byte value)
         {
             if (value.GetBit(7))
@@ -244,6 +250,7 @@ namespace MICE.Nintendo.Mappers
             this.currentProgramROMBank8000 = this.cartridge.ProgramROMBanks[newBank];
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void ParseLoadRegister(int address)
         {
             switch (address)
@@ -273,6 +280,7 @@ namespace MICE.Nintendo.Mappers
             this.ProgramRomBankMode = (ProgramROMBankMode)((this.Control >> 2) & 3);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void SetCharacterRomBank(int romBankNumber, byte value)
         {
             var bank0 = (byte)(value & 0x0F);

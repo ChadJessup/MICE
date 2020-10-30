@@ -117,6 +117,7 @@ namespace MICE.Nintendo
             this.inputHandler.ControllerChanged += this.OnControllerChanged;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public byte ReadByte(int index)
         {
             if (this.ppuRegisterLookup.ContainsKey(index))
@@ -166,8 +167,10 @@ namespace MICE.Nintendo
 
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ushort ReadShort(int index) => (ushort)(this.ReadByte(index + 1) << 8 | this.ReadByte(index));
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Write(int index, byte value)
         {
             if (MemoryRanges.RegisterRanges.IsInRange(index))
@@ -188,6 +191,7 @@ namespace MICE.Nintendo
             }
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void WriteRegister(int index, byte value)
         {
             if (this.ppuRegisterLookup.TryGetValue(index, out Register8Bit ppuRegister))

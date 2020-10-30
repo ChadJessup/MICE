@@ -22,21 +22,21 @@ namespace MICE.TestApp
             var nesBuilder = new SystemBuilder()
                 .WithCPU<Ricoh2A03>()
                 .WithLoader<NESLoader>()
-                .WithMemoryMap<NESMemoryMap>()
+                .WithMemoryMap<NESRawMemoryMap>()
                 .WithComponent<RicohRP2C02>()
                 .WithNESComponents();
 
             var nes = nesBuilder.Build<NES>();
-            ILoader loader = nes.GetLoader();
-            var cartridge = loader.Load<NESCartridge>(@"C:\Emulators\NES\Games\Super Mario Bros.nes");
-            nes.Load<NESCartridge>(cartridge);
-
-            nes.PowerOn();
-            await nes.Run();
+            //ILoader loader = nes.GetLoader();
+            //var cartridge = loader.Load<NESCartridge>(@"C:\Emulators\NES\Games\Super Mario Bros.nes");
+            //nes.Load<NESCartridge>(cartridge);
+            //
+            //nes.PowerOn();
+            // await nes.Run();
 
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            using var form = new Form1();
+            using var form = new Form1(nes);
             Application.Run(form);
         }
     }
