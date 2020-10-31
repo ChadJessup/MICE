@@ -222,7 +222,7 @@ namespace MICE.Nintendo
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private int GetOffset(Range range, int index)
+        private static int GetOffset(Range range, int index)
         {
             if (range.Min == 0)
             {

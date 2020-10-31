@@ -15,7 +15,7 @@ namespace MICE.PPU.RicohRP2C02.Components
         public NametableAttribute GetAttribute(Tile tile, ushort v)
         {
             var offset = (short)((v & 0x0C00) | ((v >> 4) & 0x38) | ((v >> 2) & 0x07));
-            return new NametableAttribute(tile.attributeByte, (ushort)(this.Data.Offset + offset));
+            return new NametableAttribute(tile.AttributeByte, (ushort)(this.Data.Offset + offset));
         }
     }
 }

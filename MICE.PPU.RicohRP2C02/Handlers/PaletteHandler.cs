@@ -3,6 +3,7 @@ using MICE.PPU.RicohRP2C02.Components;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 
 namespace MICE.PPU.RicohRP2C02.Handlers
 {
@@ -40,6 +41,7 @@ namespace MICE.PPU.RicohRP2C02.Handlers
 
         public byte UniversalBackgroundColor => this.backgroundPalette0.GetColor(0);
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public byte GetBackgroundColor(int paletteId, byte colorIndex)
         {
             var address = (ushort)(0x3f00 + 4 * paletteId + colorIndex);
@@ -51,6 +53,7 @@ namespace MICE.PPU.RicohRP2C02.Handlers
             return this.memoryMap.ReadBuffer;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public byte GetSpriteColor(Sprite sprite)
         {
             sprite.PaletteAddress = (ushort)(0x3f10 + 4 * sprite.PaletteNumber + sprite.ColorIndex);
@@ -62,6 +65,7 @@ namespace MICE.PPU.RicohRP2C02.Handlers
             return this.memoryMap.ReadBuffer;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private byte GetColorFromAddress(ushort address)
         {
             Palette currentPalette;

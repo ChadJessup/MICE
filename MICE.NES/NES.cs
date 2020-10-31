@@ -55,7 +55,7 @@ namespace MICE.Nintendo
         {
             NES.IsDebug = false;
 
-            this.context = context;
+            this.context = context ?? throw new ArgumentNullException(nameof(context));
 
             this.PPU = this.context.PPU;
 
@@ -68,7 +68,7 @@ namespace MICE.Nintendo
         public string Name { get; } = "Nintendo Entertainment System";
         public long CurrentFrame { get; private set; } = 1;
 
-        private static bool isDebug = false;
+        private static bool isDebug;
         public static bool IsDebug
         {
             get => NES.isDebug;
@@ -90,7 +90,7 @@ namespace MICE.Nintendo
 
         public bool IsPoweredOn => (this.CPU?.IsPowered ?? false) && (this.PPU?.IsPowered ?? false);
 
-        public bool IsPaused { get; private set; } = false;
+        public bool IsPaused { get; private set; }
 
         private Action cycleCompleteAction;
 
@@ -204,7 +204,7 @@ namespace MICE.Nintendo
             // TODO: APU Cycles
         }
 
-        private long frameStartClock = 0;
+        private long frameStartClock;
 
         public void PowerOff()
         {
@@ -219,7 +219,7 @@ namespace MICE.Nintendo
             this.Run();
         }
 
-        private bool isInDMA = false;
+        private bool isInDMA;
         public void DMATransfer(int? address, byte value)
         {
             this.isInDMA = true;

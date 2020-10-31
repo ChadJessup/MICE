@@ -158,7 +158,7 @@ namespace MICE.Nintendo.Mappers
 
         public override void CopyBytes(ushort startAddress, Span<byte> destination, int destinationIndex, int length) => throw new NotImplementedException();
 
-        private int loadRegisterWriteCount = 0;
+        private int loadRegisterWriteCount;
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void HandleLoadRegister(int address, byte value)
         {

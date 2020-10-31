@@ -3,6 +3,7 @@ using MICE.Common.Interfaces;
 using MICE.PPU.RicohRP2C02.Components;
 using MICE.PPU.RicohRP2C02.Handlers;
 using System;
+using System.Runtime.CompilerServices;
 
 namespace MICE.PPU.RicohRP2C02
 {
@@ -165,6 +166,7 @@ namespace MICE.PPU.RicohRP2C02
 
         public bool ShouldSetVBlank => this.IsPostRenderLine && this.Cycle == 1;
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int Step()
         {
             ++this.Cycle;
@@ -377,6 +379,7 @@ namespace MICE.PPU.RicohRP2C02
             this.ClearOutput();
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private bool OnFinalCycleOnLine()
         {
             return this.Cycle > 339;
@@ -393,6 +396,7 @@ namespace MICE.PPU.RicohRP2C02
             return isFinalCycle;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void DrawPixel(int x, int y)
         {
             var backgroundPixel = BackgroundHandler.GetBackgroundPixel(x, y);

@@ -126,15 +126,12 @@ namespace MICE.Nintendo.Mappers
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override ushort ReadShort(int index)
         {
-            switch (index)
+            return index switch
             {
-                case var _ when MemoryRanges.ProgramROMFirstBank.TryGetOffset(index, out int offset):
-                    return (ushort)(this.programROMFirstBank.Span[offset + 1] << 8 | this.programROMFirstBank.Span[offset]);
-                case var _ when MemoryRanges.ProgramROMLastBank.TryGetOffset(index, out int offset):
-                    return (ushort)(this.programROMLastBank.Span[offset + 1] << 8 | this.programROMLastBank.Span[offset]);
-                default:
-                    throw new NotImplementedException();
-            }
+                var _ when MemoryRanges.ProgramROMFirstBank.TryGetOffset(index, out int offset) => (ushort)(this.programROMFirstBank.Span[offset + 1] << 8 | this.programROMFirstBank.Span[offset]),
+                var _ when MemoryRanges.ProgramROMLastBank.TryGetOffset(index, out int offset) => (ushort)(this.programROMLastBank.Span[offset + 1] << 8 | this.programROMLastBank.Span[offset]),
+                _ => throw new NotImplementedException(),
+            };
         }
 
         /// <summary>
@@ -146,29 +143,19 @@ namespace MICE.Nintendo.Mappers
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override byte ReadByte(int index)
         {
-            switch (index)
+            return index switch
             {
-                case var _ when MemoryRanges.ProgramROMFirstBank.TryGetOffset(index, out int offset):
-                    return this.programROMFirstBank.Span[offset];
-                case var _ when MemoryRanges.ProgramROMLastBank.TryGetOffset(index, out int offset):
-                    return this.programROMLastBank.Span[offset];
-                case var _ when MemoryRanges.CharacterROM1.TryGetOffset(index, out int offset):
-                    return this.CharacterROM1Bank.Span[index];
-                case var _ when MemoryRanges.Nametable0.TryGetOffset(index, out int offset):
-                    return this.nametable2000.Data[offset];
-                case var _ when MemoryRanges.Nametable1.TryGetOffset(index, out int offset):
-                    return this.nametable2400.Data[offset];
-                case var _ when MemoryRanges.Nametable2.TryGetOffset(index, out int offset):
-                    return this.nametable2800.Data[offset];
-                case var _ when MemoryRanges.Nametable3.TryGetOffset(index, out int offset):
-                    return this.nametable2C00.Data[offset];
-                case var _ when MemoryRanges.CharacterROM0.TryGetOffset(index, out int offset):
-                    return this.CharacterROM0Bank.Span[offset];
-                case var _ when MemoryRanges.SRAM.TryGetOffset(index, out int offset):
-                    return this.SRAM.Span[offset];
-                default:
-                    throw new NotImplementedException();
-            }
+                var _ when MemoryRanges.ProgramROMFirstBank.TryGetOffset(index, out int offset) => this.programROMFirstBank.Span[offset],
+                var _ when MemoryRanges.ProgramROMLastBank.TryGetOffset(index, out int offset) => this.programROMLastBank.Span[offset],
+                var _ when MemoryRanges.CharacterROM1.TryGetOffset(index, out int offset) => this.CharacterROM1Bank.Span[index],
+                var _ when MemoryRanges.Nametable0.TryGetOffset(index, out int offset) => this.nametable2000.Data[offset],
+                var _ when MemoryRanges.Nametable1.TryGetOffset(index, out int offset) => this.nametable2400.Data[offset],
+                var _ when MemoryRanges.Nametable2.TryGetOffset(index, out int offset) => this.nametable2800.Data[offset],
+                var _ when MemoryRanges.Nametable3.TryGetOffset(index, out int offset) => this.nametable2C00.Data[offset],
+                var _ when MemoryRanges.CharacterROM0.TryGetOffset(index, out int offset) => this.CharacterROM0Bank.Span[offset],
+                var _ when MemoryRanges.SRAM.TryGetOffset(index, out int offset) => this.SRAM.Span[offset],
+                _ => throw new NotImplementedException(),
+            };
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

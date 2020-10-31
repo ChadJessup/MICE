@@ -12,7 +12,7 @@ namespace MICE.TestApp
 {
     public class KeyboardController : MemorySegment, INESInput
     {
-        private int readCount = 0;
+        private int readCount;
         private Task keyboardPollTask;
         private readonly Keyboard keyboard;
         private readonly InputHandler inputHandler;
@@ -39,46 +39,27 @@ namespace MICE.TestApp
         {
             if (this.IsStrobing)
             {
-                return this.BuildReturnValue(this.GetInput(NESInputs.A));
+                return BuildReturnValue(this.GetInput(NESInputs.A));
             }
 
             byte returnValue = 0x0;
 
-            switch (this.readCount++)
+            returnValue = (this.readCount++) switch
             {
-                case 0:
-                    returnValue = this.BuildReturnValue(this.GetInput(NESInputs.A));
-                    break;
-                case 1:
-                    returnValue = this.BuildReturnValue(this.GetInput(NESInputs.B));
-                    break;
-                case 2:
-                    returnValue = this.BuildReturnValue(this.GetInput(NESInputs.Select));
-                    break;
-                case 3:
-                    returnValue = this.BuildReturnValue(this.GetInput(NESInputs.Start));
-                    break;
-                case 4:
-                    returnValue = this.BuildReturnValue(this.GetInput(NESInputs.Up));
-                    break;
-                case 5:
-                    returnValue = this.BuildReturnValue(this.GetInput(NESInputs.Down));
-                    break;
-                case 6:
-                    returnValue = this.BuildReturnValue(this.GetInput(NESInputs.Left));
-                    break;
-                case 7:
-                    returnValue = this.BuildReturnValue(this.GetInput(NESInputs.Right));
-                    break;
-                default:
-                    returnValue = this.BuildReturnValue(isPressed: true);
-                    break;
-            }
-
+                0 => BuildReturnValue(this.GetInput(NESInputs.A)),
+                1 => BuildReturnValue(this.GetInput(NESInputs.B)),
+                2 => BuildReturnValue(this.GetInput(NESInputs.Select)),
+                3 => BuildReturnValue(this.GetInput(NESInputs.Start)),
+                4 => BuildReturnValue(this.GetInput(NESInputs.Up)),
+                5 => BuildReturnValue(this.GetInput(NESInputs.Down)),
+                6 => BuildReturnValue(this.GetInput(NESInputs.Left)),
+                7 => BuildReturnValue(this.GetInput(NESInputs.Right)),
+                _ => BuildReturnValue(isPressed: true),
+            };
             return returnValue;
         }
 
-        private byte BuildReturnValue(bool isPressed) => (byte)(0b01000000 | (isPressed ? 1 : 0));
+        private static byte BuildReturnValue(bool isPressed) => (byte)(0b01000000 | (isPressed ? 1 : 0));
         private bool GetInput(NESInputs input) => this.Inputs.HasFlag(input);
         public void InputsChanged(NESInputs inputs) => this.Inputs = inputs;
 

@@ -1,4 +1,5 @@
 ﻿using MICE.PPU.RicohRP2C02.Components;
+using System.Runtime.CompilerServices;
 
 namespace MICE.PPU.RicohRP2C02
 {
@@ -35,25 +36,19 @@ namespace MICE.PPU.RicohRP2C02
             set => this.registers.PPUMASK.SetBit(7, value);
         }
 
-        public byte MuxPixel((byte pixel, Sprite sprite) drawnSprite, byte backgroundPixel, Tile backgroundTile)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static byte MuxPixel((byte pixel, Sprite sprite) drawnSprite, byte backgroundPixel, Tile backgroundTile)
         {
-            switch (backgroundPixel)
+            return backgroundPixel switch
             {
-                case var _ when drawnSprite.sprite == null:
-                    return backgroundPixel;
-                case var _ when drawnSprite.sprite.IsTransparentPixel && backgroundTile.IsTransparentPixel:
-                    return backgroundPixel;
-                case var _ when backgroundTile.IsTransparentPixel:
-                    return drawnSprite.pixel;
-                case var _ when drawnSprite.sprite.IsTransparentPixel:
-                    return backgroundPixel;
-                case var _ when drawnSprite.sprite.IsBehindBackground:
-                    return backgroundPixel;
-                case var _ when !drawnSprite.sprite.IsTransparentPixel && !drawnSprite.sprite.IsBehindBackground:
-                    return drawnSprite.pixel;
-                default:
-                    return backgroundPixel;
-            }
+                var _ when drawnSprite.sprite is null => backgroundPixel,
+                var _ when drawnSprite.sprite.IsTransparentPixel && backgroundTile.IsTransparentPixel => backgroundPixel,
+                var _ when backgroundTile.IsTransparentPixel => drawnSprite.pixel,
+                var _ when drawnSprite.sprite.IsTransparentPixel => backgroundPixel,
+                var _ when drawnSprite.sprite.IsBehindBackground => backgroundPixel,
+                var _ when !drawnSprite.sprite.IsTransparentPixel && !drawnSprite.sprite.IsBehindBackground => drawnSprite.pixel,
+                _ => backgroundPixel,
+            };
         }
     }
 }
