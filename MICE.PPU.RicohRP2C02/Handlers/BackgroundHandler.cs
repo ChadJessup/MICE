@@ -1,5 +1,6 @@
 ﻿using MICE.Common.Interfaces;
 using MICE.PPU.RicohRP2C02.Components;
+using System.Runtime.CompilerServices;
 
 namespace MICE.PPU.RicohRP2C02.Handlers
 {
@@ -96,6 +97,7 @@ namespace MICE.PPU.RicohRP2C02.Handlers
             set => this.registers.PPUCTRL.SetBit(4, value);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public byte GetBackgroundPixel(int x, int y)
         {
             if (x <= 7 && !this.DrawLeft8BackgroundPixels)
@@ -125,10 +127,12 @@ namespace MICE.PPU.RicohRP2C02.Handlers
             return this.paletteHandler.GetBackgroundColor(paletteId, this.CurrentTile.ColorIndex);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void NextCycle() => tileData <<= 4;
 
-        private NametableAttribute currentAttribute = new NametableAttribute();
+        private NametableAttribute currentAttribute;
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void FetchNametableByte()
         {
             var address = (ushort)(0x2000 | this.internalRegisters.v & 0x0FFF);
@@ -136,6 +140,7 @@ namespace MICE.PPU.RicohRP2C02.Handlers
             this.nameTableByte = this.ppuMemoryMap.ReadByte(address);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void FetchAttributeByte()
         {
             var v = this.internalRegisters.v;
@@ -145,6 +150,7 @@ namespace MICE.PPU.RicohRP2C02.Handlers
             this.currentAttribute.Address = v;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void FetchLowBGTile()
         {
             var baseAddress = this.IsBackgroundPatternTableAddress1000
@@ -158,6 +164,7 @@ namespace MICE.PPU.RicohRP2C02.Handlers
                 : this.patternTable0.ReadByte(baseAddress + address);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void FetchHighBGTile()
         {
             var baseAddress = this.IsBackgroundPatternTableAddress1000
@@ -172,6 +179,7 @@ namespace MICE.PPU.RicohRP2C02.Handlers
         }
 
         // Temp from EmuNES...
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void StoreTileData()
         {
             uint data = 0;

@@ -90,30 +90,19 @@ namespace MICE.Nintendo.Mappers
 
             return this.AllMemory.Span[index];
 
-            switch (index)
+            return index switch
             {
-                case var _ when MemoryRanges.ProgramROMFirstBank.TryGetOffset(index, out int offset):
-                    return this.AllMemory.Span[index];
-                case var _ when MemoryRanges.ProgramROMLastBank.TryGetOffset(index, out int offset):
-                    return this.AllMemory.Span[index];
-                case var _ when MemoryRanges.CharacterROM1.TryGetOffset(index, out int offset):
-                    return this.cartridge.CharacterRomBanks[0][index];
-                case var _ when MemoryRanges.Nametable0.TryGetOffset(index, out int offset):
-                    return this.AllMemory.Span[index];
-                case var _ when MemoryRanges.Nametable1.TryGetOffset(index, out int offset):
-                    return this.AllMemory.Span[index];
-                case var _ when MemoryRanges.Nametable2.TryGetOffset(index, out int offset):
-                    return this.AllMemory.Span[index];
-                case var _ when MemoryRanges.Nametable3.TryGetOffset(index, out int offset):
-                    return this.AllMemory.Span[index];
-                case var _ when MemoryRanges.CharacterROM0.TryGetOffset(index, out int offset):
-                    return this.cartridge.CharacterRomBanks[0][index];
-                case var _ when MemoryRanges.SRAM.TryGetOffset(index, out int offset):
-                    return this.SRAM.Span[offset];
-                default:
-                    throw new NotImplementedException();
-            }
-
+                var _ when MemoryRanges.ProgramROMFirstBank.TryGetOffset(index, out int offset) => this.AllMemory.Span[index],
+                var _ when MemoryRanges.ProgramROMLastBank.TryGetOffset(index, out int offset) => this.AllMemory.Span[index],
+                var _ when MemoryRanges.CharacterROM1.TryGetOffset(index, out int offset) => this.cartridge.CharacterRomBanks[0][index],
+                var _ when MemoryRanges.Nametable0.TryGetOffset(index, out int offset) => this.AllMemory.Span[index],
+                var _ when MemoryRanges.Nametable1.TryGetOffset(index, out int offset) => this.AllMemory.Span[index],
+                var _ when MemoryRanges.Nametable2.TryGetOffset(index, out int offset) => this.AllMemory.Span[index],
+                var _ when MemoryRanges.Nametable3.TryGetOffset(index, out int offset) => this.AllMemory.Span[index],
+                var _ when MemoryRanges.CharacterROM0.TryGetOffset(index, out int offset) => this.cartridge.CharacterRomBanks[0][index],
+                var _ when MemoryRanges.SRAM.TryGetOffset(index, out int offset) => this.SRAM.Span[offset],
+                _ => throw new NotImplementedException(),
+            };
             return this.AllMemory.Span[index];
         }
 

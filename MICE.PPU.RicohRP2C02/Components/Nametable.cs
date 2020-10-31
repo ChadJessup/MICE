@@ -21,7 +21,7 @@ namespace MICE.PPU.RicohRP2C02.Components
 
         public AttributeTable AttributeTable { get; private set; }
 
-        public Tile GetTileFromPixel(int x, int y, ScrollHandler scrollHandler, Tile workingTile, int bgOffset, PPUInternalRegisters registers)
+        public static Tile GetTileFromPixel(int x, int y, ScrollHandler scrollHandler, Tile workingTile, int bgOffset, PPUInternalRegisters registers)
         {
             var scrolledX = scrollHandler.vCoarseXScroll - 1;
             var scrolledY = scrollHandler.vCoarseYScroll;
@@ -31,7 +31,7 @@ namespace MICE.PPU.RicohRP2C02.Components
             tile.PPUAddress = (ushort)(0x2000 + x + (y * Constants.NumberOfColumns));
             tile.Location = (x, y);
 
-            var colorIndex = this.GetColorIndex(tile, scrollHandler);
+            var colorIndex = GetColorIndex(tile, scrollHandler);
 
             byte paletteId = 0;
             if (colorIndex != 0)
@@ -61,13 +61,13 @@ namespace MICE.PPU.RicohRP2C02.Components
             }
         }
 
-        private byte GetColorIndex(Tile tile, ScrollHandler scrollHandler)
+        private static byte GetColorIndex(Tile tile, ScrollHandler scrollHandler)
         {
             // To get a color index, we slice down the data even further to grab specific pixel details
             // and pull the color details from the ROMs pattern table(s).
 
-            byte lowBits = tile.lowTileByte;
-            byte highBits = tile.highTileByte;
+            byte lowBits = tile.LowTileByte;
+            byte highBits = tile.HighTileByte;
 
             byte lowBit = (byte)((lowBits >> (7 - scrollHandler.FineXScroll)) & 1);
             byte highBit = (byte)((highBits >> (7 - scrollHandler.FineXScroll)) & 1);

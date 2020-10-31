@@ -16,7 +16,7 @@ namespace MICE.Nintendo.Databases
             public const string NesCartsPath = "NesCarts.xml";
         }
 
-        private static bool hasParsed = false;
+        private static bool hasParsed;
 
         private static Dictionary<string, NESDatabaseEntry> entries = new Dictionary<string, NESDatabaseEntry>();
 

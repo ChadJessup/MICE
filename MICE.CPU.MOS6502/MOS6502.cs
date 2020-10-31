@@ -20,7 +20,7 @@ namespace MICE.CPU.MOS6502
             => this.MemoryMap = memoryMap;
 
         public static long FrequencyHz = 1789773;
-        public static bool IsDebug { get; set; } = false;
+        public static bool IsDebug { get; set; }
 
         public long CurrentOpcodeCycle => (this.CurrentCycle + 1) - this.StartCycle;
 

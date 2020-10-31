@@ -18,9 +18,9 @@
 
         public bool IsTransparentPixel => this.ColorIndex % 4 == 0;
 
-        public byte nameTableByte = 0;
-        public byte attributeByte = 0;
-        public byte highTileByte = 0;
-        public byte lowTileByte = 0;
+        public byte NameTableByte { get; set; }
+        public byte AttributeByte { get; set; }
+        public byte HighTileByte { get; set; }
+        public byte LowTileByte { get; set; }
     }
 }

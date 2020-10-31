@@ -24,7 +24,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		.gitattributes = .gitattributes
 		.gitignore = .gitignore
 		Directory.Build.props = Directory.Build.props
-		Performance1.psess = Performance1.psess
 		README.md = README.md
 	EndProjectSection
 EndProject
@@ -34,7 +33,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Processors", "Processors", 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MICE.CPU.LR35902", "Processors\LR35902\MICE.CPU.LR35902.csproj", "{C73434D8-94B3-4358-BD42-80B568D68826}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MICE.Extensions", "MICE.Extensions\MICE.Extensions.csproj", "{79BC2797-69B6-40BA-B2BE-A1E729B9C951}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MICE.Extensions", "MICE.Extensions\MICE.Extensions.csproj", "{79BC2797-69B6-40BA-B2BE-A1E729B9C951}"
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution

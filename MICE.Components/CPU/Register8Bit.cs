@@ -18,11 +18,9 @@ namespace MICE.Components.CPU
         public void SetBit(int index, bool bit)
             => this.Bits[index] = bit;
 
-
         public bool GetBit(int index)
             => this.Bits[index];
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override void Write(byte value)
         {
             this.Bits[0] = (value & (1 << 0)) != 0;
@@ -53,6 +51,7 @@ namespace MICE.Components.CPU
             => $"0x{this.Value:X4} - 0b{Convert.ToString(this.Value, 2).PadLeft(8, '0')} - {this.Name}";
 
         public byte ReadInternal() => this.Value;
+
         public void WriteInternal(byte value) => this.Value = value;
     }
 }

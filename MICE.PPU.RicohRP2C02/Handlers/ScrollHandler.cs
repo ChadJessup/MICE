@@ -1,4 +1,6 @@
-﻿namespace MICE.PPU.RicohRP2C02.Handlers
+﻿using System.Runtime.CompilerServices;
+
+namespace MICE.PPU.RicohRP2C02.Handlers
 {
     public class ScrollHandler
     {
@@ -49,7 +51,10 @@
 
         public int vFineYScroll
         {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => (this.internalRegisters.v & 0b11100000_00000000) >> 13;
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             set => this.internalRegisters.v = (ushort)((this.internalRegisters.v & ~0b11100000_00000000) | (0b11100000_00000000 & (value << 13)));
         }
 
@@ -61,6 +66,7 @@
 
         public int FineXScroll { get; set; }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void IncrementCoarseX()
         {
             if (this.vCoarseXScroll == 31)
@@ -113,6 +119,8 @@
             }
 
         }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void IncrementCoarseY()
         {
             if (this.vFineYScroll < 7)
@@ -138,6 +146,7 @@
             }
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public (int scrollX, int scrollY) GetScrollValues()
         {
             int scrollX = (this.registers.PPUSCROLL >> 8) & 0xFF;
@@ -149,12 +158,14 @@
             return (scrollX, scrollY);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void CopyHorizontalBits()
         {
             // v: ....F.. ...EDCBA = t: ....F.. ...EDCBA
             this.internalRegisters.v = (ushort)((this.internalRegisters.v & 0xFBE0) | (this.internalRegisters.t & 0x041F));
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void CopyVerticalBits()
         {
             // v: IHGF.ED CBA..... = t: IHGF.ED CBA.....
@@ -162,6 +173,7 @@
         }
 
         // $2005/PPUSCROLL in some docs
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void PPUScrollWrittenTo(int? address, ushort value)
         {
             if (this.internalRegisters.w)

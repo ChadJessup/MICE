@@ -18,7 +18,7 @@ namespace MICE.Nintendo.Loaders
                 .ToDictionary(t => t.attr.Id, t => (t.type, t.attr));
         }
 
-        private bool WasMapperInitialized { get; set; } = false;
+        private bool WasMapperInitialized { get; set; }
 
         public MirroringMode MirroringMode { get; set; }
 

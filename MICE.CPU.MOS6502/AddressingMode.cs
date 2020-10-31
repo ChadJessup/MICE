@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 
 namespace MICE.CPU.MOS6502
 {
@@ -8,6 +9,7 @@ namespace MICE.CPU.MOS6502
         private static byte operandValue;
         private static ushort address;
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ushort GetZeroPageX(MOS6502 CPU)
         {
             intermediateAddress = CPU.ReadNextByte();
@@ -20,6 +22,7 @@ namespace MICE.CPU.MOS6502
             return address;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ushort GetZeroPageY(MOS6502 CPU)
         {
             intermediateAddress = CPU.ReadNextByte();
@@ -32,6 +35,7 @@ namespace MICE.CPU.MOS6502
             return address;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ushort GetIndirect(MOS6502 CPU)
         {
             intermediateAddress = CPU.ReadNextShort();
@@ -48,6 +52,7 @@ namespace MICE.CPU.MOS6502
             return CPU.ReadShortAt(intermediateAddress);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ushort GetZeroPage(MOS6502 CPU)
         {
             var pc = CPU.ReadNextByte();
@@ -56,6 +61,7 @@ namespace MICE.CPU.MOS6502
             return pc;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ushort GetImmediate(MOS6502 CPU)
         {
             var pc = CPU.Registers.PC.Read();
@@ -66,6 +72,7 @@ namespace MICE.CPU.MOS6502
             return pc;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ushort GetAbsolute(MOS6502 CPU)
         {
             var nextShort = CPU.ReadNextShort();
@@ -74,6 +81,7 @@ namespace MICE.CPU.MOS6502
             return nextShort;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ushort GetAbsoluteX(MOS6502 CPU)
         {
             intermediateAddress = CPU.ReadNextShort();
@@ -84,6 +92,7 @@ namespace MICE.CPU.MOS6502
             return nextShort;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ushort GetAbsoluteXWrite(MOS6502 CPU)
         {
             intermediateAddress = CPU.ReadNextShort();
@@ -95,6 +104,7 @@ namespace MICE.CPU.MOS6502
             return nextShort;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ushort GetAbsoluteY(MOS6502 CPU)
         {
             intermediateAddress = CPU.ReadNextShort();
@@ -105,6 +115,7 @@ namespace MICE.CPU.MOS6502
             return nextShort;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ushort GetIndirectX(MOS6502 CPU)
         {
             var incompleteXAddress = CPU.ReadNextByte();
@@ -117,6 +128,7 @@ namespace MICE.CPU.MOS6502
                 : CPU.ReadShortAt(intermediateAddress);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ushort GetIndirectY(MOS6502 CPU)
         {
             intermediateAddress = CPU.ReadNextByte();
@@ -136,6 +148,7 @@ namespace MICE.CPU.MOS6502
             return finalAddress;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ushort GetIndirectYWrite(MOS6502 CPU)
         {
             intermediateAddress = CPU.ReadNextByte();
@@ -152,6 +165,7 @@ namespace MICE.CPU.MOS6502
 
         private static ushort GetRelative(MOS6502 CPU) => 0x0000;
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ushort GetAddressedOperand(MOS6502 CPU, OpcodeContainer container)
         {
             operandValue = 0;

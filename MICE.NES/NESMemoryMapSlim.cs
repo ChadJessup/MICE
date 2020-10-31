@@ -88,8 +88,8 @@ namespace MICE.Nintendo
         public byte[] Data => this.memory;
 
         // These memory segments are asked for specifically by the NES system
-        private ExternalFacade prgROMLowerBank = null;
-        private ExternalFacade prgROMUpperBank = null;
+        private ExternalFacade prgROMLowerBank;
+        private ExternalFacade prgROMUpperBank;
         private CPU.MOS6502.Stack stack;
         private INESInput Controller1;
         private INESInput Controller2;

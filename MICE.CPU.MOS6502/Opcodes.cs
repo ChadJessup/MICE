@@ -1,4 +1,5 @@
-﻿using MICE.Components.CPU;
+﻿#pragma warning disable CA1801 // Review unused parameters
+using MICE.Components.CPU;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -136,7 +137,7 @@ namespace MICE.CPU.MOS6502
         [MOS6502Opcode(0x7E, "ROR", AddressingModes.AbsoluteX, timing: 7, length: 3)]
         public void ROR(OpcodeContainer container, ushort address)
         {
-            switch (container.AddressingMode)
+            switch (container!.AddressingMode)
             {
                 case AddressingModes.Accumulator:
                     this.WriteByteToRegister(CPU.Registers.A, this.ROR(CPU.Registers.A, consumeCycle: false), S: false, Z: false);
@@ -158,7 +159,7 @@ namespace MICE.CPU.MOS6502
         [MOS6502Opcode(0x3E, "ROL", AddressingModes.AbsoluteX, timing: 7, length: 3)]
         public void ROL(OpcodeContainer container, ushort address)
         {
-            switch (container.AddressingMode)
+            switch (container!.AddressingMode)
             {
                 case AddressingModes.Accumulator:
                     this.WriteByteToRegister(CPU.Registers.A, this.ROL(CPU.Registers.A, consumeCycle: false), S: false, Z: false);
@@ -176,7 +177,7 @@ namespace MICE.CPU.MOS6502
         [MOS6502Opcode(0x1E, "ASL", AddressingModes.AbsoluteX, timing: 7, length: 3)]
         public void ASL(OpcodeContainer container, ushort address)
         {
-            byte value = container.AddressingMode == AddressingModes.Accumulator
+            byte value = container!.AddressingMode == AddressingModes.Accumulator
                 ? CPU.Registers.A
                 : CPU.ReadByteAt(address);
 
@@ -867,6 +868,7 @@ namespace MICE.CPU.MOS6502
         //SYA - this seems to be a very poopy opcode to implement: http://forums.nesdev.com/viewtopic.php?f=3&t=3831&start=30
         // Implementation below is how Mesen implemented it.
         [MOS6502Opcode(0x9C, "SHY", AddressingModes.AbsoluteX, timing: 5, length: 3, unofficial: true)]
+
         public void SHY(OpcodeContainer container, ushort address)
         {
             byte addrHigh = (byte)(address >> 8);
@@ -1109,3 +1111,4 @@ namespace MICE.CPU.MOS6502
         }
     }
 }
+#pragma warning restore CA1801 // Review unused parameters
