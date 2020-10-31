@@ -892,7 +892,7 @@ namespace MICE.CPU.MOS6502
 
         #endregion
 
-        private void ADD(OpcodeContainer container, byte operand)
+        public void ADD(OpcodeContainer container, byte operand)
         {
             var originalValue = CPU.Registers.A.Read();
             var sum = originalValue + operand + (CPU.IsCarry ? 1 : 0);

@@ -1,6 +1,5 @@
 ﻿using MICE.Common.Interfaces;
 using MICE.PPU.RicohRP2C02.Components;
-using Ninject;
 
 namespace MICE.PPU.RicohRP2C02.Handlers
 {
@@ -9,8 +8,7 @@ namespace MICE.PPU.RicohRP2C02.Handlers
         private readonly PPUInternalRegisters internalRegisters;
         private readonly PaletteHandler paletteHandler;
         private readonly ScrollHandler scrollHandler;
-        private readonly IMemoryMap ppuMemoryMap;
-        private readonly IMemoryMap cpuMemoryMap;
+        private readonly IPPUMemoryMap ppuMemoryMap;
         private readonly PPURegisters registers;
 
         // Having issues, going to reproduce EmuNES's methods for now then break it down if possible.
@@ -32,11 +30,15 @@ namespace MICE.PPU.RicohRP2C02.Handlers
         public Tile PreviousTile { get; set; }
         public Tile CurrentTile { get; set; } = new Tile();
 
-        public BackgroundHandler([Named("PPU")] IMemoryMap ppuMemoryMap, PPURegisters registers, PPUInternalRegisters internalRegisters, ScrollHandler scrollHandler, PaletteHandler paletteHandler, [Named("CPU")] IMemoryMap cpuMemoryMap)
+        public BackgroundHandler(
+            IPPUMemoryMap ppuMemoryMap,
+            PPURegisters registers,
+            PPUInternalRegisters internalRegisters,
+            ScrollHandler scrollHandler,
+            PaletteHandler paletteHandler)
         {
             this.registers = registers;
             this.ppuMemoryMap = ppuMemoryMap;
-            this.cpuMemoryMap = cpuMemoryMap;
             this.scrollHandler = scrollHandler;
             this.paletteHandler = paletteHandler;
             this.internalRegisters = internalRegisters;

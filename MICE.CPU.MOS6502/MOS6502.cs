@@ -1,6 +1,5 @@
 ﻿using MICE.Common;
 using MICE.Common.Interfaces;
-using Ninject;
 using Serilog;
 using System;
 using System.Collections.Generic;
@@ -14,10 +13,11 @@ namespace MICE.CPU.MOS6502
             public const int ExtraNMIHandledCycles = 7;
         }
 
-        private Opcodes Opcodes;
+        public Opcodes Opcodes { get; private set; }
         private ushort address;
 
-        public MOS6502([Named("CPU")] IMemoryMap memoryMap) => this.MemoryMap = memoryMap;
+        public MOS6502(IMemoryMap memoryMap)
+            => this.MemoryMap = memoryMap;
 
         public static long FrequencyHz = 1789773;
         public static bool IsDebug { get; set; } = false;

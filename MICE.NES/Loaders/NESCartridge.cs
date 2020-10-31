@@ -8,7 +8,7 @@ using System.Reflection;
 
 namespace MICE.Nintendo.Loaders
 {
-    public class NESCartridge
+    public class NESCartridge : ICartridge
     {
         private static class Constants
         {

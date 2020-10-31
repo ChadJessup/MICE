@@ -18,16 +18,14 @@ namespace MICE.Nintendo
             public const string DebugFile = @"C:\Emulators\NES\MICE - Trace.txt";
         }
 
-        public NESContext
-        (
+        public NESContext(
             ICPU cpu,
             RicohRP2C02 ppu,
             PixelMuxer pixelMuxer,
             InputHandler inputHandler,
             ScrollHandler scrollHandler,
             PaletteHandler paletteHandler,
-            BackgroundHandler backgroundHandler
-        )
+            BackgroundHandler backgroundHandler)
         {
             this.CPU = cpu;
             this.PPU = ppu;

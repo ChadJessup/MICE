@@ -2,7 +2,6 @@
 using MICE.Common.Interfaces;
 using MICE.PPU.RicohRP2C02.Components;
 using MICE.PPU.RicohRP2C02.Handlers;
-using Ninject;
 using System;
 
 namespace MICE.PPU.RicohRP2C02
@@ -19,18 +18,15 @@ namespace MICE.PPU.RicohRP2C02
             public const int NTSCHeight = 224;
         }
 
-        public RicohRP2C02
-            (
-                [Named("PPU")] IMemoryMap memoryMap,
-                [Named("CPU")] IMemoryMap cpuMemoryMap,
-                PPURegisters registers,
-                PPUInternalRegisters internalRegisters,
-                ScrollHandler scrollHandler,
-                PaletteHandler paletteHandler,
-                BackgroundHandler backgroundHandler,
-                PixelMuxer pixelMuxer,
-                SpriteHandler spriteHandler
-            )
+        public RicohRP2C02(
+            IPPUMemoryMap memoryMap,
+            PPURegisters registers,
+            PPUInternalRegisters internalRegisters,
+            ScrollHandler scrollHandler,
+            PaletteHandler paletteHandler,
+            BackgroundHandler backgroundHandler,
+            PixelMuxer pixelMuxer,
+            SpriteHandler spriteHandler)
         {
             this.InternalRegisters = internalRegisters;
 
@@ -66,7 +62,7 @@ namespace MICE.PPU.RicohRP2C02
         public ScrollHandler ScrollHandler { get; private set; }
         public PixelMuxer PixelMuxer { get; private set; }
 
-        public PPURawMemoryMap MemoryMap { get; private set; }
+        public IPPUMemoryMap MemoryMap { get; private set; }
 
         /// <summary>
         /// Gets the externally accessible PPU Registers. These are manipulated via the CPU.

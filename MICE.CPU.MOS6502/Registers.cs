@@ -11,6 +11,7 @@ namespace MICE.CPU.MOS6502
             this.X.Write(0);
             this.Y.Write(0);
         }
+
         // The MOS 6502 has six registers, 3 for general processing, and 3 for program use:
 
         // Main registers:

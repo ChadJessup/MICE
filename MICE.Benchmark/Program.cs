@@ -1,6 +1,5 @@
 ﻿using MICE.Nintendo;
 using MICE.Nintendo.Loaders;
-using Ninject;
 using System;
 using System.Diagnostics;
 
@@ -9,10 +8,9 @@ namespace MICE.Benchmark
     public class Program
     {
         private NESContext nesContext;
-        private IKernel kernel;
         private NES nes;
 
-        public static void Main(string[] args)
+        public static void Main2(string[] args)
         {
             var program = new Program();
             program.Go();
@@ -39,13 +37,9 @@ namespace MICE.Benchmark
 
         public void Go()
         {
-            this.kernel = new StandardKernel(new NintendoModule());
+            var cartridge = new NESLoader().Load<NESCartridge>(@"C:\Emulators\NES\Games\World\Donkey Kong (JU).nes");
 
-            this.nesContext = this.kernel.Get<NESContext>();
-            var cartridge = NESLoader.CreateCartridge(@"C:\Emulators\NES\Games\World\Donkey Kong (JU).nes");
-
-            this.nes = this.kernel.Get<NES>();
-            this.nes.LoadCartridge(cartridge);
+            this.nes.Load(cartridge);
 
             this.nes.PowerOn();
         }
@@ -56,7 +50,7 @@ namespace MICE.Benchmark
         {
             sw.Restart();
             this.nes.StepFrame();
-            Console.WriteLine($"Frame {this.nes.PPU.FrameNumber} took: {sw.Elapsed.TotalMilliseconds} milliseconds");
+            // Console.WriteLine($"Frame {this.nes.PPU.FrameNumber} took: {sw.Elapsed.TotalMilliseconds} milliseconds");
         }
 
         private void StepNES()

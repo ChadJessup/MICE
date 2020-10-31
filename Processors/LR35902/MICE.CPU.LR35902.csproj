@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net5.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\MICE.Common\MICE.Common.csproj" />
+    <ProjectReference Include="..\..\MICE.Components\MICE.Components.csproj" />
+  </ItemGroup>
+
+</Project>

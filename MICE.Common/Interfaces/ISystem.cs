@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace MICE.Common.Interfaces
 {
@@ -7,6 +8,8 @@ namespace MICE.Common.Interfaces
     /// </summary>
     public interface ISystem
     {
+        IEnumerable<IMICEComponent> Components { get; }
+
         string Name { get; }
 
         bool IsPoweredOn { get; }
@@ -19,5 +22,7 @@ namespace MICE.Common.Interfaces
         void Reset();
         Task Run();
         void Step();
+        ILoader GetLoader();
+        void Load<TCartridge>(TCartridge cartridge);
     }
 }

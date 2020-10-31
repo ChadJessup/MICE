@@ -4,6 +4,7 @@ using System;
 using System.Buffers;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 
 namespace MICE.Nintendo.Mappers
 {
@@ -79,6 +80,7 @@ namespace MICE.Nintendo.Mappers
         /// </summary>
         /// <param name="index">The index to read from.</param>
         /// <returns>The data that was read.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override byte ReadByte(int index)
         {
             if (index < 0x2000)
@@ -115,6 +117,7 @@ namespace MICE.Nintendo.Mappers
             return this.AllMemory.Span[index];
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override void Write(int index, byte value)
         {
             switch (index)
@@ -152,6 +155,7 @@ namespace MICE.Nintendo.Mappers
             this.AllMemory.Span[index] = value;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override void CopyBytes(ushort startAddress, Span<byte> destination, int destinationIndex, int length) => throw new NotImplementedException();
         public override void Write(int index, ushort value) => throw new NotImplementedException();
     }
