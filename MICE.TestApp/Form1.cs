@@ -208,7 +208,7 @@ namespace MICE.TestApp
                 CancellationToken.None,
                 TaskCreationOptions.LongRunning,
                 TaskScheduler.Current);
-            
+
             var uiDispatcher = Dispatcher.CurrentDispatcher;
 
             Task.Factory.StartNew(() =>

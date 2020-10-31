@@ -1,6 +1,5 @@
 ﻿using MICE.Common.Interfaces;
 using MICE.Components;
-using MICE.CPU.LR35902;
 using MICE.CPU.MOS6502;
 using MICE.Nintendo;
 using MICE.Nintendo.Loaders;
@@ -17,7 +16,7 @@ namespace MICE.TestApp
         /// The main entry point for the application.
         /// </summary>
         [STAThread]
-        public async static Task Main()
+        public static void Main()
         {
             var nesBuilder = new SystemBuilder()
                 .WithCPU<Ricoh2A03>()
@@ -27,12 +26,6 @@ namespace MICE.TestApp
                 .WithNESComponents();
 
             var nes = nesBuilder.Build<NES>();
-            //ILoader loader = nes.GetLoader();
-            //var cartridge = loader.Load<NESCartridge>(@"C:\Emulators\NES\Games\Super Mario Bros.nes");
-            //nes.Load<NESCartridge>(cartridge);
-            //
-            //nes.PowerOn();
-            // await nes.Run();
 
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
