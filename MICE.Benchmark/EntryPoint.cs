@@ -18,6 +18,8 @@ namespace MICE.Benchmark
 
         private static readonly Type[] AllBenchmarks = new[]
         {
+            typeof(RegisterWriteBenchmarks),
+            typeof(RegisterReadBenchmarks),
             typeof(OpCodeBenchmarks),
             typeof(MICEBenchmarks),
         };

@@ -32,11 +32,6 @@ namespace MICE.Benchmark
             // this.nes.PowerOn();
         }
 
-
-
-        /// <summary>
-        /// Baseline writing the data to the pipe with out Bedrock; used to compare the cost of adding the protocol reader.
-        /// </summary>
         [Benchmark(Baseline = true)]
         public void StepFrame()
         {

@@ -33,6 +33,14 @@ namespace MICE.Components
         public IServiceCollection ServiceCollection { get; }
         public IConfiguration Configuration { get; }
 
+        public ISystemBuilder WithClock<TClock>()
+            where TClock : class, IClock
+        {
+            this.ServiceCollection.TryAddSingleton<IClock, TClock>();
+
+            return this;
+        }
+
         public ISystemBuilder WithCPU<TCPU>()
             where TCPU : class, ICPU
         {

@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "MICE.Benchmark": {
+      "commandName": "Project",
+      "commandLineArgs": "--filter *Register*"
+    }
+  }
+}

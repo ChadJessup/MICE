@@ -30,7 +30,7 @@ namespace MICE.Components.Memory
 
         public abstract void CopyBytes(ushort startAddress, Span<byte> destination, int destinationIndex, int length);
 
-        public Action<int, byte> AfterReadAction { get; set; }
-        public Action<int, byte> AfterWriteAction { get; set; }
+        public Action<int, byte>? AfterReadAction { get; set; }
+        public Action<int, byte>? AfterWriteAction { get; set; }
     }
 }

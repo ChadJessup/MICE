@@ -19,10 +19,11 @@ namespace MICE.TestApp
         public static void Main()
         {
             var nesBuilder = new SystemBuilder()
+                .WithClock<LockedFramerateClock>()
                 .WithCPU<Ricoh2A03>()
                 .WithLoader<NESLoader>()
                 .WithMemoryMap<NESRawMemoryMap>()
-                .WithComponent<RicohRP2C02>()
+                .WithComponent<RicohRP2C02>() // The GPU/PPU of a Nintendo
                 .WithNESComponents();
 
             var nes = nesBuilder.Build<NES>();

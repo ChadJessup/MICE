@@ -5,6 +5,7 @@ using MICE.Nintendo.Handlers;
 using MICE.PPU.RicohRP2C02;
 using MICE.PPU.RicohRP2C02.Handlers;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using System;
 
 namespace MICE.Components
 {
@@ -12,6 +13,11 @@ namespace MICE.Components
     {
         public static ISystemBuilder WithNESComponents(this ISystemBuilder builder)
         {
+            if (builder is null)
+            {
+                throw new ArgumentNullException(nameof(builder));
+            }
+
             var collection = builder.ServiceCollection;
 
             collection.TryAddSingleton<Registers>();
@@ -27,7 +33,6 @@ namespace MICE.Components
             collection.TryAddSingleton<ScrollHandler>();
             collection.TryAddSingleton<InputHandler>();
             collection.TryAddSingleton<PixelMuxer>();
-
 
             return builder;
         }

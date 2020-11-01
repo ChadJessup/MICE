@@ -24,8 +24,8 @@ namespace MICE.Common.Interfaces
         void Write(int index, ushort value);
         void CopyBytes(ushort startAddress, Span<byte> destination, int destinationIndex, int length);
 
-        Action<int, byte> AfterReadAction { get; }
-        Action<int, byte> AfterWriteAction { get; }
+        Action<int, byte>? AfterReadAction { get; }
+        Action<int, byte>? AfterWriteAction { get; }
 
         byte[] GetBytes();
     }

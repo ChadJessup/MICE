@@ -5,7 +5,7 @@ namespace MICE.Components.Memory
 {
     public abstract class BinaryMemorySegment : MemorySegment
     {
-        public BinaryMemorySegment(Range range, string name, Action<int, byte> afterWriteAction = null, Action<int, byte> afterReadAction = null)
+        public BinaryMemorySegment(Range range, string name, Action<int, byte>? afterWriteAction = null, Action<int, byte>? afterReadAction = null)
             : base(range, name)
         {
             var length = this.Range.Max - this.Range.Min;
